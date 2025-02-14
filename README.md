@@ -38,7 +38,7 @@ By fostering connections between people who care about animals, Pawlly aims to c
 ---
 ### **Rigel L. Baltazar**  
 - **Course & Year:** BSIT - 3  
-- **About Me:** _(Add description here)_  
+- **About Me:** I AM A GAMER! AND I LIKE WOMEN!
 
 ### **Louie James F. Carbungco**  
 - **Course & Year:** BSIT - 2  
