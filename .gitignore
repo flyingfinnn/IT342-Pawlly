@@ -1,0 +1,57 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Build output
+build/
+dist/
+public/build/
+
+# Dependency directories
+/.pnp
+.pnp.js
+
+# IDEs and Editors
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# React Native specific
+.expo/
+android/
+ios/
+*.keystore
+
+# Cache
+.cache/
+coverage/
+tmp/
+temp/
+
+# Static files
+public/static/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+
+# Miscellaneous
+*.lock
+*.swp
+*.swo
+*.swn
