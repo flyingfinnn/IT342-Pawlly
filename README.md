@@ -42,7 +42,7 @@ By fostering connections between people who care about animals, Pawlly aims to c
 
 ### **Louie James F. Carbungco**  
 - **Course & Year:** BSIT - 2  
-- **About Me:** _(Add description here)_  
+- **About Me:** I love to think I love reading books. 
 
 ### **Keith Ruezyl Tagarao**  
 - **Course & Year:** BSIT - 3  
