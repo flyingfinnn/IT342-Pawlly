@@ -108,7 +108,7 @@ const Navbar = () => {
                         justifyContent: "center",
                     }}
                 >
-                    {["Home", "Adopt"].map((text) => {
+                    {["Home", "Adopt", "Lost and Found"].map((text) => {
                         const linkPath = `/${text.toLowerCase().replace(/\s/g, "-")}`;
                         const isActive = location.pathname === linkPath;
                         return (

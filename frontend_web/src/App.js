@@ -4,6 +4,7 @@ import Signup from "./components/Signup";
 import Login from "./components/Login";
 import UserDashboard from "./components/Dashboards/UserDashboard";
 import Home from "./components/Home";
+import LostAndFound from "./components/LostAndFound";
 import Sponsor from "./components/Sponsor";
 
 
@@ -78,6 +79,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/" element={<Home />} /> {/* Default to login */}
             <Route path="/home" element={<Home />} />
+            <Route path="/lost-and-found" element={<LostAndFound />} />
             <Route path="/article_dash" element={<ArticleDashboard />} />
             <Route path="/sponsor" element={<Sponsor />} />
             <Route path="/adopt" element={<PetList />} />
