@@ -1,0 +1,94 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+    <script>
+        async function register() {
+            const user = {
+                username: document.getElementById("regUsername").value,
+                firstName: document.getElementById("regFirstName").value,
+                lastName: document.getElementById("regLastName").value,
+                email: document.getElementById("regEmail").value,
+                password: document.getElementById("regPassword").value,
+                address: document.getElementById("regAddress").value,
+                phoneNumber: document.getElementById("regPhoneNumber").value,
+                role: "USER" // Default role
+            };
+
+            const response = await fetch("/api/users", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(user)
+            });
+
+            if (response.ok) {
+                alert("User registered successfully!");
+            } else {
+                alert("Registration failed.");
+            }
+        }
+
+        async function login() {
+            const authRequest = {
+                username: document.getElementById("loginUsername").value,
+                password: document.getElementById("loginPassword").value
+            };
+
+            const response = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(authRequest)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem("token", data.token); // Store token
+                alert("Login successful!");
+            } else {
+                alert("Login failed.");
+            }
+        }
+
+        async function getUser() {
+            const token = localStorage.getItem("token");
+
+            const response = await fetch("/api/users", {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const users = await response.json();
+                console.log(users);
+            } else {
+                alert("Unauthorized access.");
+            }
+        }
+    </script>
+</head>
+<body>
+<h2>Signup</h2>
+<input type="text" id="regUsername" placeholder="Username"><br>
+<input type="text" id="regFirstName" placeholder="First Name"><br>
+<input type="text" id="regLastName" placeholder="Last Name"><br>
+<input type="email" id="regEmail" placeholder="Email"><br>
+<input type="password" id="regPassword" placeholder="Password"><br>
+<input type="text" id="regAddress" placeholder="Address"><br>
+<input type="text" id="regPhoneNumber" placeholder="Phone Number"><br>
+<button onclick="register()">Signup</button>
+
+<h2>Login</h2>
+<input type="text" id="loginUsername" placeholder="Username"><br>
+<input type="password" id="loginPassword" placeholder="Password"><br>
+<button onclick="login()">Login</button>
+
+<h2>Get Users</h2>
+<button onclick="getUser()">Fetch Users</button>
+</body>
+</html>

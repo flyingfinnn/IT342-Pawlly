@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-HubbitsApplication<Hubbits>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.g1appdev.Hubbits.HubbitsApplication",
+            "projectName": "Hubbits",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
