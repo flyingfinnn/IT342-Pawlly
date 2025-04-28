@@ -34,9 +34,6 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/uploads/pets/**")
-                .addResourceLocations("file:uploads/pets/");
-
         registry.addResourceHandler("/lostfound-images/**")
                 .addResourceLocations("classpath:/static/lostfound-images/");
 

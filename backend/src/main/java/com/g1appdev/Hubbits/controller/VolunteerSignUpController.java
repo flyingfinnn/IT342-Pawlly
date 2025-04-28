@@ -27,11 +27,9 @@ public class VolunteerSignUpController {
             return new ResponseEntity<>(createdSignUp, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // Invalid input or opportunity not found
-        } catch (IllegalStateException e) {
-            return new ResponseEntity<>(HttpStatus.CONFLICT); // Duplicate sign-up
         }
     }
-    
+
     // Get all volunteer sign-ups
     @GetMapping("/signup")
     public ResponseEntity<List<VolunteerSignUp>> getAllVolunteers() {

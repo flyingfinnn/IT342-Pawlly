@@ -40,6 +40,16 @@ public class UserController {
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
+    // Get a user by ID
+//    @GetMapping("/{id}")
+//    public ResponseEntity<UserEntity> getUserById(@PathVariable Long id) {
+//        Optional<UserEntity> user = userService.findUserById(id);
+//        if (user.isPresent()) {
+//            return new ResponseEntity<>(user.get(), HttpStatus.OK);
+//        }
+//        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+//    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> getUserById(@PathVariable Long id) {
         Optional<UserEntity> user = userService.findUserById(id);
@@ -64,39 +74,29 @@ public class UserController {
     // Update a user by ID with profile picture support
     @PutMapping("/{id}")
 //    @PreAuthorize("hasRole('ADMIN')") or  @com.g1appdev.Hubbits.service.UserService.isOwner(#id)")
-    public ResponseEntity<Map<String, Object>> updateUser(
+    public ResponseEntity<UserEntity> updateUser(
             @PathVariable Long id,
             @RequestParam("user") String userJson,
             @RequestParam(value = "profilePicture", required = false) MultipartFile profilePicture) {
 
+        if (userService.isOwnerOrAdmin(id)) {
+            // Proceed with update logic
+        } else {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
         try {
-            System.out.println("Received userJson: " + userJson);
-            if (profilePicture != null) {
-                System.out.println("Received profilePicture: " + profilePicture.getOriginalFilename());
-            }
-
-            // Deserialize user JSON
             UserEntity updatedUser = new ObjectMapper().readValue(userJson, UserEntity.class);
-
-            // Perform update
             UserEntity user = userService.updateUser(id, updatedUser, profilePicture);
-
             if (user != null) {
-                Map<String, Object> response = Map.of(
-                        "updatedUser", user,
-                        "newToken", userService.generateTokenForUser(user) // Generate token if needed
-                );
-                return new ResponseEntity<>(response, HttpStatus.OK);
+                return new ResponseEntity<>(user, HttpStatus.OK);
             }
-
-            return new ResponseEntity<>(Map.of("error", "User not found"), HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-//    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteUser(@PathVariable Long id) {
         try {
@@ -171,4 +171,10 @@ public class UserController {
 
         return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
     }
+
+
+
+
+
+
 }

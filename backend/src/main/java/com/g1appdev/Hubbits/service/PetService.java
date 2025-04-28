@@ -29,21 +29,31 @@ public class PetService {
     }
 
     public PetEntity getPetById(int id) {
-        Optional<PetEntity> pet = prepo.findById(id); 
-        return pet.orElse(null); 
+        Optional<PetEntity> pet = prepo.findById(id); // Assuming findById method exists
+        return pet.orElse(null); // Return null if not found (handle this in the controller if needed)
   
     }
     // Update a record
     @SuppressWarnings("finally")
     public PetEntity putPetDetails(int pid, PetEntity newPetDetails){
-        PetEntity pet = prepo.findById(pid).orElse(null); 
+        PetEntity pet = new PetEntity();
 
-        if (pet != null) {
-            pet.setStatus(newPetDetails.getStatus()); 
-            return prepo.save(pet); 
-        } else {
-            System.out.println("Pet " + pid + " not found.");
-            return null; 
+        try{
+            pet = prepo.findById(pid).get();
+
+            pet.setName(newPetDetails.getName());
+            pet.setType(newPetDetails.getType());
+            pet.setBreed(newPetDetails.getBreed());
+            pet.setAge(newPetDetails.getAge());
+            pet.setGender(newPetDetails.getGender());
+            pet.setDescription(newPetDetails.getDescription());
+            pet.setPhoto(newPetDetails.getPhoto());
+            pet.setStatus(newPetDetails.getStatus());
+
+        }catch(IllegalArgumentException nex){
+            System.out.println("Pet " + pid + "not found.");
+        }finally{
+            return prepo.save(pet);
         }
     }
 
@@ -59,4 +69,7 @@ public class PetService {
         return msg;
     }
 
+   /*  public List<PetEntity> findPetsByName(String name){
+        return prepo.findPetsByName(name);
+    }*/
 }

@@ -2,15 +2,9 @@ package com.g1appdev.Hubbits.service;
 
 import com.g1appdev.Hubbits.entity.NewsFeedEntity;
 import com.g1appdev.Hubbits.repository.NewsFeedRepository;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,78 +12,43 @@ import java.util.Optional;
 public class NewsFeedService {
 
     @Autowired
-    private NewsFeedRepository repository;
+    private NewsFeedRepository newsFeedRepository;
 
-    private static final String UPLOAD_DIR = "src/main/resources/static/newsfeed-images";
-
-    public String uploadImage(MultipartFile file) throws IOException {
-        Path uploadPath = Path.of(UPLOAD_DIR);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
-
-        String originalFilename = file.getOriginalFilename();
-        String newFilename = System.currentTimeMillis() + "-" + originalFilename;
-        Path targetPath = uploadPath.resolve(newFilename);
-        Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-
-        return "/newsfeed-images/" + newFilename;
-    }
-
+    // Retrieve all news feed articles
     public List<NewsFeedEntity> getAllArticles() {
-        return repository.findAll();
+        return newsFeedRepository.findAll();
     }
 
-    // Get a specific article by ID
-    public Optional<NewsFeedEntity> getArticleById(Long id) {
-        return repository.findById(id);
+    // Retrieve a news feed article by ID
+    public Optional<NewsFeedEntity> getArticleById(Long articleID) {
+        return newsFeedRepository.findById(articleID);
     }
 
-    public NewsFeedEntity createArticle(NewsFeedEntity article, MultipartFile imageFile) {
-        if (imageFile != null && !imageFile.isEmpty()) {
-            try {
-                String imageUrl = uploadImage(imageFile);
-                article.setImageUrl(imageUrl);
-            } catch (IOException e) {
-                throw new RuntimeException("Error saving image file", e);
-            }
+    // Create a new news feed article
+    public NewsFeedEntity createArticle(NewsFeedEntity newsFeed) {
+        return newsFeedRepository.save(newsFeed);
+    }
+
+    // Update an existing news feed article by ID
+    public NewsFeedEntity updateArticle(Long articleID, NewsFeedEntity updatedNewsFeed) {
+        Optional<NewsFeedEntity> newsFeedOpt = newsFeedRepository.findById(articleID);
+        if (newsFeedOpt.isPresent()) {
+            NewsFeedEntity newsFeed = newsFeedOpt.get();
+            newsFeed.setTitle(updatedNewsFeed.getTitle());
+            newsFeed.setContent(updatedNewsFeed.getContent());
+            newsFeed.setPublishedDate(updatedNewsFeed.getPublishedDate());
+            newsFeed.setAuthor(updatedNewsFeed.getAuthor());
+            return newsFeedRepository.save(newsFeed);
         }
-        // publishedDate is auto-set by the entity's @PrePersist method
-        return repository.save(article);
+        return null;
     }
 
-    public NewsFeedEntity updateArticle(Long id, NewsFeedEntity updatedArticle, MultipartFile imageFile) {
-        return repository.findById(id).map(existingArticle -> {
-            existingArticle.setTitle(updatedArticle.getTitle());
-            existingArticle.setContent(updatedArticle.getContent());
-            existingArticle.setAuthor(updatedArticle.getAuthor());
-            existingArticle.setLink(updatedArticle.getLink());
-            
-            // Preserve existing publishedDate
-            if (updatedArticle.getPublishedDate() != null) {
-                existingArticle.setPublishedDate(updatedArticle.getPublishedDate());
-            }
-
-            if (imageFile != null && !imageFile.isEmpty()) {
-                try {
-                    String imageUrl = uploadImage(imageFile);
-                    existingArticle.setImageUrl(imageUrl);
-                } catch (IOException e) {
-                    throw new RuntimeException("Error updating image file", e);
-                }
-            }
-
-            return repository.save(existingArticle);
-        }).orElseThrow(() -> new IllegalArgumentException("Article not found"));
-    }
-
-    public boolean deleteArticle(Long id) {
-        Optional<NewsFeedEntity> article = repository.findById(id);
-        if (article.isPresent()) {
-            repository.deleteById(id);
+    // Delete a news feed article by ID
+    public boolean deleteArticle(Long articleID) {
+        if (newsFeedRepository.existsById(articleID)) {
+            newsFeedRepository.deleteById(articleID);
             return true;
         }
         return false;
     }
-    
 }

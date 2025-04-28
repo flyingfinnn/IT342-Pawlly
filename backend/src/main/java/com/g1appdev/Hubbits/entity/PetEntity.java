@@ -21,70 +21,23 @@ public class PetEntity {
     private String description;
     private String photo;
     private String status;
-    
-    // New fields for user information
-    private String userName;
-    private String address;
-    private String contactNumber;
-    private String submissionDate;
 
-    // Default constructor
     public PetEntity(){
         super();
     }
     
-    // Updated constructor with new fields
-    public PetEntity(int pid, String name, String type, String breed, int age, String gender, String description, String photo, String status, String userName, String address, String contactNumber, String submissionDate){
+    public PetEntity(int pid, String name,String type, String breed, int age, String gender, String description, String photo, String status){
         super();
         this.pid = pid;
         this.name = name;
         this.type = type;
         this.age = age;
-        this.breed = breed;
         this.gender = gender;
         this.description = description;
         this.photo = photo;
         this.status = status;
-        this.userName = userName;
-        this.address = address;
-        this.contactNumber = contactNumber;
-        this.submissionDate = submissionDate;
     }
 
-    // Getter and setter methods for new fields
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getContactNumber() {
-        return contactNumber;
-    }
-
-    public void setContactNumber(String contactNumber) {
-        this.contactNumber = contactNumber;
-    }
-
-    public String getSubmissionDate() {
-        return submissionDate;
-    }
-
-    public void setSubmissionDate(String submissionDate) {
-        this.submissionDate = submissionDate;
-    }
-
-    // Other getter and setter methods
     public int getPid(){
         return pid;
     } 

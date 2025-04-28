@@ -28,18 +28,11 @@ public class VolunteerSignUpService {
 
         VolunteerOpportunity opportunity = opportunityRepository.findById(opportunityId)
                 .orElseThrow(() -> new IllegalArgumentException("Opportunity with ID " + opportunityId + " not found"));
-
-        // Check for duplicate sign-up
-        if (signUpRepository.existsByEmailAndVolunteerOpportunity_OpportunityID(signUp.getEmail(), opportunityId)) {
-            throw new IllegalStateException("Volunteer with email " + signUp.getEmail() + 
-                    " is already signed up for opportunity ID " + opportunityId);
-        }
-
+        
         signUp.setVolunteerOpportunity(opportunity); // Set the associated opportunity
         signUp.setDateRegistered(LocalDateTime.now()); // Automatically set the registration date
         return signUpRepository.save(signUp);
     }
-    
 
     // Retrieve all sign-ups
     public List<VolunteerSignUp> getAllSignUps() {

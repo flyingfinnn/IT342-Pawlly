@@ -2,7 +2,6 @@ package com.g1appdev.Hubbits.service;
 
 import com.g1appdev.Hubbits.entity.UserEntity;
 import com.g1appdev.Hubbits.repository.UserRepository;
-import com.g1appdev.Hubbits.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -209,12 +208,5 @@ public class UserService {
         boolean exists = userRepository.existsByEmail(email);
         logger.info("Email {} exists: {}", email, exists);
         return exists;
-    }
-
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    public String generateTokenForUser(UserEntity user) {
-        return jwtUtil.generateToken(user.getUsername(), List.of(user.getRole()));
     }
 }

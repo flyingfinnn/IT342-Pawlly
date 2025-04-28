@@ -19,25 +19,13 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.beans.factory.annotation.Value;
-import javax.crypto.spec.SecretKeySpec;
-import java.util.Base64;
-
 @Service
 public class JwtUtil {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
 
-    // private final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
-    @Value("${jwt.secret}")
-    private String secret;
-
-    private Key getSigningKey() {
-        byte[] keyBytes = Base64.getDecoder().decode(secret);
-        return new SecretKeySpec(keyBytes, SignatureAlgorithm.HS256.getJcaName());
-    }
-
-    private final long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 30; // 15 minutes
+    private final long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 15; // 15 minutes
     private final long REFRESH_TOKEN_VALIDITY = 1000 * 60 * 60 * 24 * 7; // 7 days
 
     public String extractUsername(String token) {
@@ -53,11 +41,18 @@ public class JwtUtil {
         return claimsResolver.apply(claims);
     }
 
+    // private Claims extractAllClaims(String token) {
+    // return Jwts.parserBuilder()
+    // .setSigningKey(SECRET_KEY)
+    // .build()
+    // .parseClaimsJws(token)
+    // .getBody();
+    // }
 
     private Claims extractAllClaims(String token) {
         try {
             return Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
+                    .setSigningKey(SECRET_KEY)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
@@ -89,11 +84,29 @@ public class JwtUtil {
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + validityPeriod))
-                .signWith(getSigningKey())
+                .signWith(SECRET_KEY)
                 .compact();
     }
 
-
+//    public String generateToken(String username, List<String> roles) {
+//        logger.info("Generating JWT token for user: {}", username);
+//        Map<String, Object> claims = new HashMap<>();
+//        claims.put("roles", roles);
+//        String token = createToken(claims, username);
+//        logger.info("Generated token: {}", token);
+//        return token;
+//    }
+//
+//    private String createToken(Map<String, Object> claims, String subject) {
+//        long EXPIRATION_TIME = 1000 * 60 * 60 * 10; // 10 hours validity
+//        return Jwts.builder()
+//                .setClaims(claims)
+//                .setSubject(subject)
+//                .setIssuedAt(new Date(System.currentTimeMillis()))
+//                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+//                .signWith(SECRET_KEY)
+//                .compact();
+//    }
 
     public Boolean validateToken(String token, String username) {
         logger.info("Validating token for user: {}", username);
