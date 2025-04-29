@@ -19,6 +19,7 @@ import { createPortal } from "react-dom";
 import logo from "../assets/logo_colored.png";
 import authBg from "../assets/auth_bg.png";
 import { useUser } from "../components/UserContext";
+import { msalInstance } from "./msalConfig";
 
 const AuthModal = ({ open, handleClose }) => {
     const [showPassword, setShowPassword] = useState(false);
@@ -36,6 +37,64 @@ const AuthModal = ({ open, handleClose }) => {
     });
 
     const toggleShowPassword = () => setShowPassword(!showPassword);
+
+    // Microsoft login function
+    const handleMicrosoftLogin = async () => {
+        try {
+            // Ensure MSAL is initialized
+            await msalInstance.initialize();
+    
+            const loginResponse = await msalInstance.loginPopup({
+                scopes: ["User.Read"], // Adjust scopes as needed
+            });
+    
+            console.log("Login Response:", loginResponse);
+    
+            const tokenResponse = await msalInstance.acquireTokenSilent({
+                scopes: ["User.Read"],
+                account: loginResponse.account,
+            });
+    
+            console.log("Access Token:", tokenResponse.accessToken);
+    
+            // Send the token to the backend
+            const response = await axios.post("http://localhost:8080/api/auth/microsoft-login", {
+                token: tokenResponse.accessToken, // Ensure this is the correct access token
+            });
+    
+            console.log("Backend Response:", response.data);
+    
+            // Save the JWT in local storage
+            localStorage.setItem("token", response.data.token);
+    
+            // Fetch user details from the backend
+            const userResponse = await axios.get("http://localhost:8080/api/users/me", {
+                headers: { Authorization: `Bearer ${response.data.token}` },
+            });
+    
+            console.log("User Details:", userResponse.data);
+    
+            // Update the user context
+            updateUser(userResponse.data);
+    
+            // Show success message
+            setSnackbar({
+                open: true,
+                message: `Welcome, ${userResponse.data.firstName}!`,
+                severity: "success",
+            });
+    
+            // Close the modal
+            handleClose();
+        } catch (error) {
+            console.error("Microsoft login error:", error);
+            setSnackbar({
+                open: true,
+                message: "Error logging in with Microsoft. Please try again.",
+                severity: "error",
+            });
+        }
+    };
 
     // Login state and handlers
     const [loginCredentials, setLoginCredentials] = useState({
@@ -278,68 +337,79 @@ const AuthModal = ({ open, handleClose }) => {
                         </IconButton>
 
                         <Box sx={{ width: "100%", textAlign: "center" }}>
-                            {isLogin ? (
-                                <>
-                                    <Box mb={2}>
-                                        <img src={logo} alt="Logo" style={{ maxWidth: "60%" }} />
-                                    </Box>
-                                    <Typography variant="h5" sx={{ mb: 3 }}>
-                                        Login
-                                    </Typography>
+                        {isLogin ? (
+                            <>
+                                <Box mb={2}>
+                                    <img src={logo} alt="Logo" style={{ maxWidth: "60%" }} />
+                                </Box>
+                                <Typography variant="h5" sx={{ mb: 3 }}>
+                                    Login
+                                </Typography>
 
-                                    <form onSubmit={handleLoginSubmit} style={{ width: "100%" }}>
-                                        <Grid container spacing={2}>
-                                            <Grid item xs={12}>
-                                                <TextField
-                                                    label="Username"
-                                                    name="username"
-                                                    variant="outlined"
-                                                    fullWidth
-                                                    value={loginCredentials.username}
-                                                    onChange={handleLoginChange}
-                                                    required
-                                                />
-                                            </Grid>
-                                            <Grid item xs={12}>
-                                                <TextField
-                                                    label="Password"
-                                                    name="password"
-                                                    type={showPassword ? "text" : "password"}
-                                                    variant="outlined"
-                                                    fullWidth
-                                                    value={loginCredentials.password}
-                                                    onChange={handleLoginChange}
-                                                    required
-                                                    InputProps={{
-                                                        endAdornment: (
-                                                            <InputAdornment position="end">
-                                                                <IconButton onClick={toggleShowPassword}>
-                                                                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                                                                </IconButton>
-                                                            </InputAdornment>
-                                                        ),
-                                                    }}
-                                                />
-                                            </Grid>
-                                            <Grid item xs={12}>
-                                                <Button type="submit" variant="contained" color="primary" fullWidth>
-                                                    Login
-                                                </Button>
-                                            </Grid>
+                                <form onSubmit={handleLoginSubmit} style={{ width: "100%" }}>
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={12}>
+                                            <TextField
+                                                label="Username"
+                                                name="username"
+                                                variant="outlined"
+                                                fullWidth
+                                                value={loginCredentials.username}
+                                                onChange={handleLoginChange}
+                                                required
+                                            />
                                         </Grid>
-                                        <Typography variant="body2" sx={{ mt: 2 }}>
-                                            Don't have an account?{" "}
-                                            <Box
-                                                component="span"
-                                                onClick={() => setIsLogin(false)}
-                                                sx={{ color: "blue", cursor: "pointer", textDecoration: "none" }}
+                                        <Grid item xs={12}>
+                                            <TextField
+                                                label="Password"
+                                                name="password"
+                                                type={showPassword ? "text" : "password"}
+                                                variant="outlined"
+                                                fullWidth
+                                                value={loginCredentials.password}
+                                                onChange={handleLoginChange}
+                                                required
+                                                InputProps={{
+                                                    endAdornment: (
+                                                        <InputAdornment position="end">
+                                                            <IconButton onClick={toggleShowPassword}>
+                                                                {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                            </IconButton>
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <Button type="submit" variant="contained" color="primary" fullWidth>
+                                                Login
+                                            </Button>
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            {/* Add the Microsoft login button here */}
+                                            <Button
+                                                variant="contained"
+                                                color="secondary"
+                                                fullWidth
+                                                onClick={handleMicrosoftLogin}
                                             >
-                                                Sign up
-                                            </Box>
-                                            .
-                                        </Typography>
-                                    </form>
-                                </>
+                                                Login with Microsoft
+                                            </Button>
+                                        </Grid>
+                                    </Grid>
+                                    <Typography variant="body2" sx={{ mt: 2 }}>
+                                        Don't have an account?{" "}
+                                        <Box
+                                            component="span"
+                                            onClick={() => setIsLogin(false)}
+                                            sx={{ color: "blue", cursor: "pointer", textDecoration: "none" }}
+                                        >
+                                            Sign up
+                                        </Box>
+                                        .
+                                    </Typography>
+                                </form>
+                            </>
                             ) : (
                                 <>
                                     <Typography variant="h5" sx={{ mb: 3, textAlign: "center" }}>

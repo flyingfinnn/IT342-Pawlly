@@ -27,22 +27,22 @@ const Home = () => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchArticles();
-  }, []);
+  // useEffect(() => {
+  //   fetchArticles();
+  // }, []);
 
-  const fetchArticles = async () => {
-    try {
-      const response = await axios.get('http://localhost:8080/api/newsfeed');
-      const updatedArticles = response.data.map((article) => ({
-        ...article,
-        image: article.imageUrl ? `http://localhost:8080${article.imageUrl}` : petPlaceholder,
-      }));
-      setArticles(updatedArticles);
-    } catch (error) {
-      console.error('Error fetching articles:', error);
-    }
-  };
+  // const fetchArticles = async () => {
+  //   try {
+  //     const response = await axios.get('http://localhost:8080/api/newsfeed');
+  //     const updatedArticles = response.data.map((article) => ({
+  //       ...article,
+  //       image: article.imageUrl ? `http://localhost:8080${article.imageUrl}` : petPlaceholder,
+  //     }));
+  //     setArticles(updatedArticles);
+  //   } catch (error) {
+  //     console.error('Error fetching articles:', error);
+  //   }
+  // };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);

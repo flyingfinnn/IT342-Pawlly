@@ -22,19 +22,24 @@ public class CustomUserDetailsService implements UserDetailsService {
     private static final Logger logger = LoggerFactory.getLogger(CustomUserDetailsService.class);
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // Fetch the UserEntity from the database
-        UserEntity userEntity = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    logger.info("Attempting to load user by username: {}", username);
 
-        // Log the username and the stored password for debugging purposes
-        logger.info("User found: {} with stored password: {}", userEntity.getUsername(), userEntity.getPassword());
+    // Fetch the UserEntity from the database
+    UserEntity userEntity = userRepository.findByUsername(username)
+            .orElseThrow(() -> {
+                logger.warn("User not found with username: {}", username);
+                return new UsernameNotFoundException("User not found");
+            });
 
-        // Return a Spring Security User object
-        return new org.springframework.security.core.userdetails.User(
-                userEntity.getUsername(),
-                userEntity.getPassword(),
-                new ArrayList<>());
+    // Log the username and the stored password for debugging purposes
+    logger.info("User found: {} with stored password: {}", userEntity.getUsername(), userEntity.getPassword());
+
+    // Return a Spring Security User object
+    return new org.springframework.security.core.userdetails.User(
+            userEntity.getUsername(),
+            userEntity.getPassword(),
+            new ArrayList<>()); // Add roles/authorities if needed
     }
 
 }

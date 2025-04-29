@@ -57,7 +57,7 @@ public class SecurityConfig {
                 .csrf().disable()
                 .authorizeHttpRequests()
                 .requestMatchers("/api/auth/login", "/api/auth/signup", "/api/users", "/api/lostandfound",
-                        "/api/users/me", "api/admin")
+                        "/api/users/me", "api/admin", "api/auth/microsoft-login", "/api/auth/microsoft/callback", "/api/auth/microsoft/refresh")
                 .permitAll()
 //                .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasAuthority("ROLE_ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/users/**").permitAll()
