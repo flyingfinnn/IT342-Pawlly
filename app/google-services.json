@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "881577237406",
+    "project_id": "crafty-stock-435311-i8",
+    "storage_bucket": "crafty-stock-435311-i8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:881577237406:android:ec6b996bcbece22a15548f",
+        "android_client_info": {
+          "package_name": "com.sysinteg.pawlly"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "881577237406-u9bfr4veg007l5e6rgb8l13ce8c0f2n9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sysinteg.pawlly",
+            "certificate_hash": "441fd7ca949735786d28b738d69b4f0af081ba27"
+          }
+        },
+        {
+          "client_id": "881577237406-f0p3ledjdf8tau49s88ipgpd7amn8t4q.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmOuXtpYQd6h2ztJRjbT03WWbhb9Vvn1k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "881577237406-f0p3ledjdf8tau49s88ipgpd7amn8t4q.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

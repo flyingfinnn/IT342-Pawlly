@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Pawlly</string>
+    <string name="login">Login</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Password</string>
+    <string name="confirm_password_hint">Confirm Password</string>
+    <string name="or">OR</string>
+    <string name="welcome_message">Welcome to Pawlly!</string>
+    <string name="default_web_client_id">881577237406-u9bfr4veg007l5e6rgb8l13ce8c0f2n9.apps.googleusercontent.com</string>
 </resources>
