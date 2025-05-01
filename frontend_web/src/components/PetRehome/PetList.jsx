@@ -40,10 +40,21 @@ const PetList = ({ onPetAdded }) => {
       const adoptionResponse = await axios.get(
         `${process.env.REACT_APP_BACKEND_URL}/api/adoptions`
       );
-
-      const filteredPets = petResponse.data.filter((pet) => {
-        const isInAdoptionProcess = adoptionResponse.data.some((adoption) => {
-          console.log("Adoption Status:", adoption.status);
+  
+      const petData = Array.isArray(petResponse.data)
+        ? petResponse.data
+        : Array.isArray(petResponse.data.data)
+          ? petResponse.data.data
+          : [];
+  
+      const adoptionData = Array.isArray(adoptionResponse.data)
+        ? adoptionResponse.data
+        : Array.isArray(adoptionResponse.data.data)
+          ? adoptionResponse.data.data
+          : [];
+  
+      const filteredPets = petData.filter((pet) => {
+        const isInAdoptionProcess = adoptionData.some((adoption) => {
           return (
             (adoption.status === "PENDING" || adoption.status === "APPROVED") &&
             adoption.breed === pet.breed &&
@@ -51,15 +62,15 @@ const PetList = ({ onPetAdded }) => {
             adoption.description === pet.description
           );
         });
-
+  
         return pet.status === "ACCEPTED_REHOME" && !isInAdoptionProcess;
       });
-
+  
       setPets(filteredPets);
     } catch (error) {
       console.error("Failed to fetch updated PetList", error);
     }
-  };
+  };    
 
   const handleNewPet = (newPet) => {
     setPets((prevPets) => [...prevPets, newPet]);

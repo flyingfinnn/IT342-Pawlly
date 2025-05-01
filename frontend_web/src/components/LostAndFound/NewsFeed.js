@@ -22,11 +22,18 @@ const NewsFeed = () => {
   const fetchLostItems = async () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/lostandfound`);
-      setLostItems(response.data);
+      console.log("Fetched lost items:", response.data); // Check the structure of the data
+      if (Array.isArray(response.data)) {
+        setLostItems(response.data);
+      } else {
+        console.error("Fetched data is not an array:", response.data);
+        setLostItems([]);  // Fallback to empty array if data is not in expected format
+      }
     } catch (error) {
       console.error("Error fetching lost items:", error);
     }
   };
+  
 
 
   useEffect(() => {
