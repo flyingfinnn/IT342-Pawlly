@@ -33,12 +33,23 @@ const CreatePostDialog = ({
   const [userId, setUserId] = useState(null);
 
   useEffect(() => {
-    // Retrieve user ID from local storage
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser && storedUser.userId) {
-      setUserId(storedUser.userId);
+    // Retrieve user info from local storage
+    const storedUser = localStorage.getItem("user");
+
+    // Check if there's data in localStorage and parse it correctly
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser && parsedUser.userId) {
+          setUserId(parsedUser.userId);  // Set the userId from the stored user data
+        } else {
+          console.error("User ID not found in stored user object.");
+        }
+      } catch (error) {
+        console.error("Error parsing user data from localStorage:", error);
+      }
     } else {
-      console.error("User ID not found in local storage.");
+      console.error("User not found in localStorage.");
     }
   }, []);
 
