@@ -29,7 +29,7 @@ const VolunteerDashboard = () => {
     const fetchVolunteerOpportunities = async () => {
         try {
             // Fetch data from the API
-            const response = await axios.get('http://localhost:8080/api/volunteer/opportunities');
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/volunteer/opportunities`);
             
             // Get user object from localStorage
             const user = JSON.parse(localStorage.getItem('user'));
@@ -103,7 +103,7 @@ const VolunteerDashboard = () => {
                 }
 
                 // Send the PUT request with form data
-                await axios.put(`http://localhost:8080/api/volunteer/opportunity/${selectedOpportunity.opportunityID}`, formData, {
+                await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/volunteer/opportunity/${selectedOpportunity.opportunityID}`, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                     },
@@ -121,7 +121,7 @@ const VolunteerDashboard = () => {
         const confirmDelete = window.confirm("Are you sure you want to delete this opportunity?");
         if (confirmDelete) {
             try {
-                await axios.delete(`http://localhost:8080/api/volunteer/opportunity/${id}`);
+                await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/volunteer/opportunity/${id}`);
                 fetchVolunteerOpportunities();
             } catch (error) {
                 console.error("Error deleting opportunity:", error);
@@ -143,8 +143,8 @@ const VolunteerDashboard = () => {
                                 height="140"
                                 image={
                                     opportunity.volunteerImageUrl
-                                        ? `http://localhost:8080${opportunity.volunteerImageUrl}`  // Use the volunteerImageUrl if available
-                                        : 'http://localhost:3000/images/default.png'  // Fallback to default image if not available
+                                        ? `${process.env.REACT_APP_BACKEND_URL}${opportunity.volunteerImageUrl}`  // Use the volunteerImageUrl if available
+                                        : `${process.env.REACT_APP_FRONTEND_URL}/images/default.png`  // Fallback to default image if not available
                                 }
                                 alt={opportunity.title}
                             />

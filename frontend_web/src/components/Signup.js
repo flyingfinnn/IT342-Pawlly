@@ -40,7 +40,7 @@ const Signup = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/auth/signup",
+        `${process.env.REACT_APP_BACKEND_URL}/api/auth/signup`,
         user
       ); // Correct API URL
       console.log(response.data);

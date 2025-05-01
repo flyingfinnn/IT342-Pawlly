@@ -25,11 +25,11 @@ const User = () => {
     useEffect(() => {
         const fetchUserDetails = async () => {
             try {
-                const userResponse = await axios.get(`http://localhost:8080/api/users/${id}`);
+                const userResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users/${id}`);
                 setUser(userResponse.data);
 
                 const postsResponse = await axios.get(
-                    `http://localhost:8080/api/lostandfound?creatorid=${id}`
+                    `${process.env.REACT_APP_BACKEND_URL}/api/lostandfound?creatorid=${id}`
                 ); // Assuming API supports filtering by `creatorid`
                 setUserPosts(postsResponse.data);
             } catch (error) {
@@ -121,8 +121,8 @@ const User = () => {
                                 height="140"
                                 image={
                                     post.imageurl
-                                        ? `http://localhost:8080${post.imageurl}`
-                                        : "http://localhost:8080/images/default_image.jpg"
+                                        ? `${process.env.REACT_APP_BACKEND_URL}${post.imageurl}`
+                                        : `${process.env.REACT_APP_BACKEND_URL}/images/default_image.jpg`
                                 }
                                 title={post.description}
                             />

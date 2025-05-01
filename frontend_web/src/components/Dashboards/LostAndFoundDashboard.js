@@ -22,7 +22,7 @@ const LostAndFoundDashboard = () => {
 
   const fetchLostItems = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/api/lostandfound");
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/lostandfound`);
       setLostItems(response.data);
     } catch (error) {
       console.error("Error fetching lost items:", error);
@@ -58,7 +58,7 @@ const LostAndFoundDashboard = () => {
     }
 
     try {
-      await axios.delete(`http://localhost:8080/api/lostandfound/${reportId}`, {
+      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/lostandfound/${reportId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

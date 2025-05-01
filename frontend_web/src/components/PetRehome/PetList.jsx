@@ -35,10 +35,10 @@ const PetList = ({ onPetAdded }) => {
   const fetchRecords = async () => {
     try {
       const petResponse = await axios.get(
-        "http://localhost:8080/api/pet/getAllPets"
+        `${process.env.REACT_APP_BACKEND_URL}/api/pet/getAllPets`
       );
       const adoptionResponse = await axios.get(
-        "http://localhost:8080/api/adoptions"
+        `${process.env.REACT_APP_BACKEND_URL}/api/adoptions`
       );
 
       const filteredPets = petResponse.data.filter((pet) => {

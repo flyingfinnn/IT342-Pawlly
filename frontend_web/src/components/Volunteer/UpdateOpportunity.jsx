@@ -89,7 +89,7 @@ const UpdateOpportunity = ({ open, onClose, opportunity }) => {
                 formDataToSend.append('volunteerImage', image);
             }
 
-            const response = await axios.put(`http://localhost:8080/api/volunteer/opportunity/${opportunity.opportunityID}`, formDataToSend, {
+            const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/volunteer/opportunity/${opportunity.opportunityID}`, formDataToSend, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },

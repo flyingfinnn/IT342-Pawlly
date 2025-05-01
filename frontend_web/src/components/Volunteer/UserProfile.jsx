@@ -15,7 +15,7 @@ const UserProfile = () => {
 
     const fetchUsers = async () => {
         try {
-            const response = await axios.get('http://localhost:8080/api/users');
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users`);
             console.log('Fetched Users:', response.data); // Log the fetched data
             setUsers(response.data);
         } catch (error) {
@@ -25,7 +25,7 @@ const UserProfile = () => {
 
     const fetchOpportunity = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/api/volunteer/opportunity/${id}`);
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/volunteer/opportunity/${id}`);
             console.log('Fetched Opportunity:', response.data);
             setOpportunity(response.data);
         } catch (error) {

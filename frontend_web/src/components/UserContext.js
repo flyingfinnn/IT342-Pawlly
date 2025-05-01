@@ -13,7 +13,7 @@ export const UserProvider = ({ children }) => {
             const refreshToken = localStorage.getItem('refreshToken');
             if (token) {
                 try {
-                    const response = await axios.get('http://localhost:8080/api/users/me', {
+                    const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users/me`, {
                         headers: {
                             'Authorization': `Bearer ${token}`,
                         },
@@ -23,7 +23,7 @@ export const UserProvider = ({ children }) => {
                     if (error.response?.status === 401 && refreshToken) {
                         try {
                             const refreshResponse = await axios.post(
-                                'http://localhost:8080/api/auth/refresh',
+                                `${process.env.REACT_APP_BACKEND_URL}/api/auth/refresh`,
                                 {},
                                 { headers: { 'Refresh-Token': refreshToken } }
                             );

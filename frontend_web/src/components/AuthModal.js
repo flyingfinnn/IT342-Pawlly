@@ -58,9 +58,10 @@ const AuthModal = ({ open, handleClose }) => {
             console.log("Access Token:", tokenResponse.accessToken);
     
             // Send the token to the backend
-            const response = await axios.post("http://localhost:8080/api/auth/microsoft-login", {
+            const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/auth/microsoft-login`, {
                 token: tokenResponse.accessToken, // Ensure this is the correct access token
             });
+            
     
             console.log("Backend Response:", response.data);
     
@@ -68,7 +69,7 @@ const AuthModal = ({ open, handleClose }) => {
             localStorage.setItem("token", response.data.token);
     
             // Fetch user details from the backend
-            const userResponse = await axios.get("http://localhost:8080/api/users/me", {
+            const userResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users/me`, {
                 headers: { Authorization: `Bearer ${response.data.token}` },
             });
     
@@ -113,13 +114,13 @@ const AuthModal = ({ open, handleClose }) => {
         e.preventDefault();
         try {
             const response = await axios.post(
-                "http://localhost:8080/api/auth/login",
+                `${process.env.REACT_APP_BACKEND_URL}/api/auth/login`,
                 loginCredentials,
                 { headers: { "Content-Type": "application/json" } }
             );
             localStorage.setItem("token", response.data);
 
-            const userResponse = await axios.get("http://localhost:8080/api/users/me", {
+            const userResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users/me`, {
                 headers: { Authorization: `Bearer ${response.data}` },
             });
 
@@ -184,7 +185,7 @@ const AuthModal = ({ open, handleClose }) => {
             return;
         }
         try {
-            await axios.post("http://localhost:8080/api/auth/signup", signupCredentials);
+            await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/auth/signup`, signupCredentials);
             setSnackbar({
                 open: true,
                 message: "Signup successful! Please log in.",
@@ -214,7 +215,7 @@ const AuthModal = ({ open, handleClose }) => {
     const checkUsername = async (username) => {
         try {
             const response = await axios.get(
-                `http://localhost:8080/api/auth/check-username?username=${username}`
+                `${process.env.REACT_APP_BACKEND_URL}/api/auth/check-username?username=${username}`
             );
             setUsernameExists(response.data);
         } catch (error) {
@@ -225,7 +226,7 @@ const AuthModal = ({ open, handleClose }) => {
     const checkEmail = async (email) => {
         try {
             const response = await axios.get(
-                `http://localhost:8080/api/auth/check-email?email=${email}`
+                `${process.env.REACT_APP_BACKEND_URL}/api/auth/check-email?email=${email}`
             );
             setEmailExists(response.data);
         } catch (error) {

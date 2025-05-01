@@ -284,7 +284,7 @@ const CreateOpportunity = () => {
       if (userId) requestData.append('creatorId', userId);
       if (imageFile) requestData.append('volunteerImage', imageFile);
 
-      await axios.post('http://localhost:8080/api/volunteer/opportunity', requestData);
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/volunteer/opportunity`, requestData);
 
       navigate('/volunteer', { replace: true });
       window.location.reload();
