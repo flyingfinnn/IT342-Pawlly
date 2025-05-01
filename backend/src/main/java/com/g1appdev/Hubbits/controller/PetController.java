@@ -55,7 +55,11 @@ public PetEntity postPetRecord(@RequestParam("name") String name,
         photo.transferTo(filePath);
 
         // Generate file URL
-        String fileUrl = "http://localhost:8080/uploads/pets/" + fileName;
+        String baseUrl = System.getenv("BACKEND_URL");
+        if (baseUrl == null || baseUrl.isEmpty()) {
+            baseUrl = "http://localhost:8080"; // Default to localhost for local development
+        }
+        String fileUrl = baseUrl + "/uploads/pets/" + fileName;
 
         // Create and save PetEntity
         PetEntity pet = new PetEntity(0, name, type, breed, age, gender, description, fileUrl, status, userName, address, contactNumber, submissionDate);
