@@ -30,7 +30,7 @@ const PostCard = ({ item, fetchLostItems, onEdit }) => {
     // Fetch the creator's username
     const fetchCreatorUsername = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/api/users/${item.creatorid}`);
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users/${item.creatorid}`);
         if (response.status === 200) {
           setCreatorUsername(response.data.username);
         } else {
@@ -59,7 +59,7 @@ const PostCard = ({ item, fetchLostItems, onEdit }) => {
   const handleDelete = async () => {
     console.log("Attempting to delete report ID:", item.reportid);
     try {
-      await axios.delete(`http://localhost:8080/api/lostandfound/${item.reportid}`, {
+      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/lostandfound/${item.reportid}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`, // Ensure token is sent
         },
@@ -94,8 +94,8 @@ const PostCard = ({ item, fetchLostItems, onEdit }) => {
         flexDirection: "column",
         boxShadow: 5,
         backgroundImage: item.imageurl
-          ? `url(http://localhost:8080${item.imageurl})`
-          : `url(http://localhost:8080/images/default_image.jpg)`,
+        ? `url(${process.env.REACT_APP_BACKEND_URL}${item.imageurl})`
+        : `url(${process.env.REACT_APP_BACKEND_URL}/images/default_image.jpg)`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         color: "white",

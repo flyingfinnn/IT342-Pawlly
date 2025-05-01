@@ -93,7 +93,7 @@ const RehomeForm = () => {
     form.append("status", "PENDING_REHOME");
   
     try {
-      await axios.post("http://localhost:8080/api/pet/postpetrecord", form, {
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/pet/postpetrecord`, form, {
         headers: { "Content-Type": "multipart/form-data" },
       });
   

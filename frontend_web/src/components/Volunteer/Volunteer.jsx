@@ -85,7 +85,7 @@ const Volunteer = () => {
   useEffect(() => {
     const fetchVolunteerOpportunities = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/volunteer/opportunities');
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/volunteer/opportunities`);
         console.log(response.data);  // Log the response to check the structure and values
         setVolunteerOpportunities(response.data);
       } catch (error) {
@@ -303,8 +303,8 @@ const Volunteer = () => {
                   height="200"
                   image={
                     opportunity.volunteerImageUrl
-                      ? `http://localhost:8080${opportunity.volunteerImageUrl}`  // Use the volunteerImageUrl if available
-                      : 'http://localhost:3000/images/default.png'
+                      ? `${process.env.REACT_APP_BACKEND_URL}${opportunity.volunteerImageUrl}`  // Use the volunteerImageUrl if available
+                      : `${process.env.REACT_APP_FRONTEND_URL}/images/default.png`
                   }
                   title={opportunity.title}
                 />

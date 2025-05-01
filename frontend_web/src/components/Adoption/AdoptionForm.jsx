@@ -79,7 +79,7 @@ const AdoptionForm = ({ pet }) => {
         resetForm();
 
         try {
-            await axios.post('http://localhost:8080/api/adoptions', newAdoption);
+            await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions`, newAdoption);
             setSuccessMessage('Adoption form submitted successfully!');
         } catch (error) {
             console.error('Failed to submit the adoption form:', error);

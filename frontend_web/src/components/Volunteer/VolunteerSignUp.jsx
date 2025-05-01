@@ -24,7 +24,7 @@ const VolunteerSignUp = () => {
 
   const fetchOpportunityDetail = async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/volunteer/opportunity/${id}`);
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/volunteer/opportunity/${id}`);
       setOpportunity(response.data);
     } catch (error) {
       console.error('Error fetching opportunity details:', error);
@@ -48,7 +48,7 @@ const VolunteerSignUp = () => {
   const handleConfirmSubmit = async () => {
     try {
       const dataToSubmit = { ...formData, opportunityId: id };
-      await axios.post(`http://localhost:8080/api/volunteer/signup/${id}`, dataToSubmit);
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/volunteer/signup/${id}`, dataToSubmit);
       setSuccessMessage('Successfully signed up for the opportunity!');
       setSnackbarOpen(true);
       setTimeout(() => navigate('/volunteer'), 2000);

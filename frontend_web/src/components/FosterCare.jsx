@@ -44,7 +44,7 @@ const FosterCare = () => {
     e.preventDefault(); // Prevent default form submission behavior
 
     try {
-        const response = await axios.post('http://localhost:8080/api/volunteer/signup', formData);
+        const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/volunteer/signup`, formData);
         console.log(response.data);
         alert('Registration successful!'); // Handle successful registration
         setFormData({ firstName: '', lastName: '', email: '', password: '', address: '', phoneNumber: '' }); // Reset form

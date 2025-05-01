@@ -68,7 +68,7 @@ const OpportunityDetail = () => {
     //fetch number of sign-ups
     const fetchSignUpCount = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/api/volunteer/opportunity/${id}/signups`);
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/volunteer/opportunity/${id}/signups`);
             setSignUpCount(response.data); // Set the number of sign-ups
         } catch (error) {
             console.error('Error fetching sign-up count:', error);
@@ -78,7 +78,7 @@ const OpportunityDetail = () => {
     // Fetch opportunity details
     const fetchOpportunityDetail = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/api/volunteer/opportunity/${id}`);
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/volunteer/opportunity/${id}`);
             setOpportunity(response.data);
             fetchSignUpCount();
         } catch (error) {
@@ -94,7 +94,7 @@ const OpportunityDetail = () => {
         const token = localStorage.getItem("token");
         if (token) {
             try {
-                const response = await axios.get('http://localhost:8080/api/users/me', {
+                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users/me`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -163,7 +163,7 @@ const OpportunityDetail = () => {
             };
 
             // Make the API call
-            await axios.post(`http://localhost:8080/api/volunteer/signup/${id}`, dataToSubmit);
+            await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/volunteer/signup/${id}`, dataToSubmit);
 
             // Success alert
             Swal.fire({
@@ -333,7 +333,7 @@ const OpportunityDetail = () => {
                         <Paper elevation={0} sx={{ padding: 3, borderRadius: 2, flex: 1 }}>
                             <Box sx={{ marginBottom: 3 }}>
                                 <img
-                                    src={opportunity.volunteerImageUrl ? `http://localhost:8080${opportunity.volunteerImageUrl}` : "http://localhost:3000/images/default.png"}
+                                    src={opportunity.volunteerImageUrl ? `${process.env.REACT_APP_BACKEND_URL}${opportunity.volunteerImageUrl}` : `${process.env.REACT_APP_FRONTEND_URL}/images/someImage.png`}
                                     alt="Opportunity"
                                     style={{ width: '100%', height: '550px', objectFit: 'cover', borderRadius: 8 }}
                                 />

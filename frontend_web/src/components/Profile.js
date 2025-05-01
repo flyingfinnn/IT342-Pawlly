@@ -92,7 +92,7 @@ const Profile = () => {
         try {
             if (username !== user.username) {
                 const response = await axios.get(
-                    `http://localhost:8080/api/auth/check-username?username=${username}`
+                    `${process.env.REACT_APP_BACKEND_URL}/api/auth/check-username?username=${username}`
                 );
                 setUsernameExists(response.data);
             } else {
@@ -107,7 +107,7 @@ const Profile = () => {
         try {
             if (email !== user.email) {
                 const response = await axios.get(
-                    `http://localhost:8080/api/auth/check-email?email=${email}`
+                    `${process.env.REACT_APP_BACKEND_URL}/api/auth/check-email?email=${email}`
                 );
                 setEmailExists(response.data);
             } else {
@@ -147,7 +147,7 @@ const Profile = () => {
 
         try {
             const response = await axios.put(
-                `http://localhost:8080/api/users/${user.userId}`,
+                `${process.env.REACT_APP_BACKEND_URL}/api/users/${user.userId}`,
                 formData,
                 {
                     headers: {
@@ -165,7 +165,7 @@ const Profile = () => {
                 }
 
                 const updatedResponse = await axios.get(
-                    `http://localhost:8080/api/users/me`,
+                    `${process.env.REACT_APP_BACKEND_URL}/api/users/me`,
                     {
                         headers: { Authorization: `Bearer ${newToken || token}` },
                     }
@@ -220,7 +220,7 @@ const Profile = () => {
         }
         try {
             const response = await axios.post(
-                `http://localhost:8080/api/users/change-password`,
+                `${process.env.REACT_APP_BACKEND_URL}/api/users/change-password`,
                 passwordData,
                 {
                     headers: {

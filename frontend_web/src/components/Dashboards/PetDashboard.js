@@ -32,7 +32,7 @@ const PetDashboard = ({ onPetAdded = () => {} }) => {
     useEffect(() => {
         const fetchRehomes = async () => {
             try {
-                const response = await axios.get('http://localhost:8080/api/pet/getAllPets');
+                const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/pet/getAllPets`);
                 setRehomes(response.data);
             } catch (error) {
                 setError('Failed to load rehome records.');
@@ -68,11 +68,11 @@ const PetDashboard = ({ onPetAdded = () => {} }) => {
                 };
 
                 if (newStatus === 'REJECTED') {
-                    await axios.delete(`http://localhost:8080/api/pet/deletePetDetails/${editRehome.pid}`);
+                    await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/pet/deletePetDetails/${editRehome.pid}`);
                     setRehomes((prev) => prev.filter((rehome) => rehome.pid !== editRehome.pid));
                     setSuccessMessage('Rehome record rejected and deleted.');
                 } else if (newStatus === 'ACCEPTED_REHOME') {
-                    await axios.put(`http://localhost:8080/api/pet/putPetDetails`, petToUpdate, {
+                    await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/pet/putPetDetails`, petToUpdate, {
                         params: {
                             pid: editRehome.pid 
                         }
@@ -104,7 +104,7 @@ const PetDashboard = ({ onPetAdded = () => {} }) => {
 
     const handleDeleteRehome = async () => {
         try {
-            await axios.delete(`http://localhost:8080/api/pet/deletePetDetails/${deleteRehomeId}`);
+            await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/pet/deletePetDetails/${deleteRehomeId}`);
             setRehomes((prev) => prev.filter((rehome) => rehome.pid !== deleteRehomeId));
             setSuccessMessage('Rehome record deleted.');
         } catch (error) {

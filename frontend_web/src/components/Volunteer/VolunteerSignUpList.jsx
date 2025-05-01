@@ -32,7 +32,7 @@ const VolunteerSignUpList = () => {
 
     const fetchSignUps = async () => {
         try {
-            const response = await axios.get('http://localhost:8080/api/volunteer/signup');
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/volunteer/signup`);
             console.log(response.data); // Check what data you're receiving
             setSignUps(response.data);
         } catch (error) {
@@ -43,7 +43,7 @@ const VolunteerSignUpList = () => {
     const handleDelete = async (id) => {
         const confirmed = window.confirm('Are you sure you want to delete this sign-up?');
         if (confirmed) {
-            await axios.delete(`http://localhost:8080/api/volunteer/signup/${id}`);
+            await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/volunteer/signup/${id}`);
             fetchSignUps(); // Refresh the list
         }
     };
@@ -71,7 +71,7 @@ const VolunteerSignUpList = () => {
                 console.log('Saving updated data:', updatedSignUp);
 
                 // Use PUT request with updated fields, without changing opportunityId
-                await axios.put(`http://localhost:8080/api/volunteer/signup/${selectedSignUp.signUpID}`, updatedSignUp);
+                await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/volunteer/signup/${selectedSignUp.signUpID}`, updatedSignUp);
                 fetchSignUps(); // Refresh the list after saving
                 handleClose(); // Close the dialog
                 setOpenConfirmationDialog(false); // Close the confirmation dialog

@@ -120,8 +120,8 @@ const CreatePostDialog = ({
 
     try {
       const url = isEditing
-        ? `http://localhost:8080/api/lostandfound/${postToEdit.reportid}`
-        : `http://localhost:8080/api/lostandfound`;
+      ? `${process.env.REACT_APP_BACKEND_URL}/api/lostandfound/${postToEdit.reportid}`
+      : `${process.env.REACT_APP_BACKEND_URL}/api/lostandfound`;
 
       const method = isEditing ? "put" : "post";
       const response = await axios[method](url, dataToSubmit, {
@@ -309,7 +309,7 @@ const CreatePostDialog = ({
                 {isEditing && postToEdit.imageurl ? (
                   // Display the existing image if editing
                   <img
-                    src={`http://localhost:8080${postToEdit.imageurl}`}
+                    src={`${process.env.REACT_APP_BACKEND_URL}${postToEdit.imageurl}`}
                     alt="Existing Post"
                     style={{
                       width: "100%",

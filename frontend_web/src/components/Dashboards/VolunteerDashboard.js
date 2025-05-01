@@ -29,7 +29,7 @@ const VolunteerDashboard = () => {
 
     const fetchVolunteerOpportunities = async () => {
         try {
-            const response = await axios.get('http://localhost:8080/api/volunteer/opportunities');
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/volunteer/opportunities`);
             setVolunteerOpportunities(response.data);
         } catch (error) {
             console.error("Error fetching volunteer opportunities:", error);
@@ -104,7 +104,7 @@ const VolunteerDashboard = () => {
                 }
 
                 // Send the PUT request with form data
-                await axios.put(`http://localhost:8080/api/volunteer/opportunity/${selectedOpportunity.opportunityID}`, formData, {
+                await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/volunteer/opportunity/${selectedOpportunity.opportunityID}`, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                     },
@@ -122,7 +122,7 @@ const VolunteerDashboard = () => {
         const confirmDelete = window.confirm("Are you sure you want to delete this opportunity?");
         if (confirmDelete) {
             try {
-                await axios.delete(`http://localhost:8080/api/volunteer/opportunity/${id}`);
+                await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/volunteer/opportunity/${id}`);
                 fetchVolunteerOpportunities();
             } catch (error) {
                 console.error("Error deleting opportunity:", error);
@@ -139,15 +139,14 @@ const VolunteerDashboard = () => {
                 {volunteerOpportunities.map((opportunity) => (
                     <Grid item xs={12} sm={6} md={4} key={opportunity.opportunityID}>
                         <Card variant="outlined" sx={{ height: '100%' }}>
-                            <CardMedia
-                                component="img"
-                                height="140"
-                                image={
-                                    opportunity.volunteerImageUrl
-                                        ? `http://localhost:8080${opportunity.volunteerImageUrl}`  // Use the volunteerImageUrl if available
-                                        : 'http://localhost:3000/images/default.png'  // Fallback to default image if not available
-                                }
-                                alt={opportunity.title}
+                        <CardMedia
+                            component="img"
+                            height="140"
+                            image={
+                                opportunity.volunteerImageUrl
+                                ? `${process.env.REACT_APP_BACKEND_URL}${opportunity.volunteerImageUrl}`
+                                : 'http://localhost:3000/images/default.png'
+                            }
                             />
                             <CardContent>
                                 <Typography variant="h4">{opportunity.title}</Typography>
