@@ -4,6 +4,7 @@ import com.g1appdev.Hubbits.entity.UserEntity;
 import com.g1appdev.Hubbits.repository.UserRepository;
 import com.g1appdev.Hubbits.service.UserService;
 import com.g1appdev.Hubbits.security.JwtUtil;
+import com.fasterxml.jackson.databind.ObjectMapper; // Add this import
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile; // Add this import
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,19 +42,23 @@ public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
-    @PostMapping("/signup")
-    public ResponseEntity<String> signupUser(@RequestBody UserEntity newUser) {
-        // Log the incoming request for debugging purposes
-        logger.info(
-                "Signup request received: FirstName={}, LastName={}, Username={}, Email={}, Address={}, PhoneNumber={}",
-                newUser.getFirstName(), newUser.getLastName(), newUser.getUsername(), newUser.getEmail(),
-                newUser.getAddress(), newUser.getPhoneNumber());
+    @PostMapping(value = "/signup", consumes = {"multipart/form-data"}) // Important: consumes attribute
+    public ResponseEntity<String> signupUser(
+            @RequestPart("user") String userJson,
+            @RequestPart(value = "profilePicture", required = false) MultipartFile profilePicture) { // Changed to RequestPart
 
         try {
+            UserEntity newUser = new ObjectMapper().readValue(userJson, UserEntity.class);
+
+            // Log the incoming request for debugging purposes
+            logger.info(
+                    "Signup request received: FirstName={}, LastName={}, Username={}, Email={}, Address={}, PhoneNumber={}",
+                    newUser.getFirstName(), newUser.getLastName(), newUser.getUsername(), newUser.getEmail(),
+                    newUser.getAddress(), newUser.getPhoneNumber());
 
             newUser.setRole("ROLE_USER");
 
-            userService.createUser(newUser);
+            userService.createUser(newUser, profilePicture); // Now passing profilePicture
 
             logger.info("User successfully saved: Username={}", newUser.getUsername());
             return ResponseEntity.ok("User saved successfully");
@@ -128,5 +134,4 @@ public class AuthController {
         boolean exists = userService.existsByEmail(email); // Check if email exists
         return ResponseEntity.ok(exists); // Return true if exists, false otherwise
     }
-
 }
