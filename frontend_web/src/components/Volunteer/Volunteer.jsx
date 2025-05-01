@@ -43,13 +43,9 @@ const Volunteer = () => {
 
   // Function to handle dialog close
   const handleCloseFormDialog = () => {
-    setIsBlurred(false); // Remove blur effect when dialog is closed
+    setIsBlurred(false);
     setOpenFormDialog(false);
-
-  // Fetch the userID from localStorage
-  const userId = JSON.parse(localStorage.getItem('user'));
-  console.log('User ID:', userId);
-  };
+  };  
 
   // Function to handle form submission success
   const handleFormSubmitSuccess = () => {
@@ -108,16 +104,15 @@ const Volunteer = () => {
   };
 
   // Handle "Book" button click
-  const handleBookButtonClick = () => {
+  const handleBookButtonClick = (opportunityId) => {
     const token = localStorage.getItem("token");
     if (!token) {
-      // If no token found, open the AuthModal
-      setAuthModalOpen(true);
-    } else {
-      // Proceed to booking functionality or form dialog
-      handleOpenFormDialog();
+      setAuthModalOpen(true); // Show auth modal if not logged in
+      return;
     }
+    navigate(`/volunteer/book/${opportunityId}`);
   };
+  
 
   return (
     <motion.div
