@@ -20,7 +20,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "${FRONTEND_URL}")
 public class UserController {
 
     @Autowired
@@ -113,37 +113,58 @@ public class UserController {
 
 
     @GetMapping("/me")
-    public ResponseEntity<Map<String, Object>> getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUsername = authentication != null ? authentication.getName() : null;
+public ResponseEntity<?> getCurrentUser() {
+    try {
+        System.out.println("Processing /me request...");
 
-        if (currentUsername == null) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        // Step 1: Extract authentication from SecurityContext
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
+            return new ResponseEntity<>("Unauthorized", HttpStatus.UNAUTHORIZED);
         }
 
+        // Step 2: Extract username from authentication
+        String currentUsername = authentication.getName();
+        System.out.println("Extracted username: " + currentUsername);
+
+        // Step 3: Fetch user details from the database
+        System.out.println("Fetching user details for username: " + currentUsername);
         Optional<UserEntity> user = userService.findByUsername(currentUsername);
+
         if (user.isPresent()) {
             UserEntity foundUser = user.get();
+            System.out.println("User found in database: " + foundUser.getUsername());
+
+            // Step 4: Convert profile picture to Base64 if it exists
             String profilePictureBase64 = foundUser.getProfilePicture() != null
                     ? Base64.getEncoder().encodeToString(foundUser.getProfilePicture())
-                    : ""; // Default to empty string if profile picture is null
+                    : "";
+            System.out.println("Profile picture processed successfully");
 
+            // Step 5: Build the response with null-safe values
             Map<String, Object> response = Map.of(
-                    "userId", foundUser.getUserId(),
-                    "username", foundUser.getUsername(),
-                    "firstName", foundUser.getFirstName(),
-                    "lastName", foundUser.getLastName(),
-                    "email", foundUser.getEmail(),
-                    "address", foundUser.getAddress(),
-                    "phoneNumber", foundUser.getPhoneNumber(),
-                    "role", foundUser.getRole(),
-                    "profilePicture", profilePictureBase64 // Send Base64 encoded or default empty string
+                    "userId", foundUser.getUserId() != null ? foundUser.getUserId() : -1,
+                    "username", foundUser.getUsername() != null ? foundUser.getUsername() : "N/A",
+                    "firstName", foundUser.getFirstName() != null ? foundUser.getFirstName() : "N/A",
+                    "lastName", foundUser.getLastName() != null ? foundUser.getLastName() : "N/A",
+                    "email", foundUser.getEmail() != null ? foundUser.getEmail() : "N/A",
+                    "address", foundUser.getAddress() != null ? foundUser.getAddress() : "N/A",
+                    "phoneNumber", foundUser.getPhoneNumber() != null ? foundUser.getPhoneNumber() : "N/A",
+                    "role", foundUser.getRole() != null ? foundUser.getRole() : "N/A",
+                    "profilePicture", profilePictureBase64
             );
+            System.out.println("Response built successfully: " + response);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            System.out.println("User not found in the database for username: " + currentUsername);
+            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
         }
+    } catch (Exception e) {
+        System.out.println("Error occurred while processing /me request: " + e.getMessage());
+        e.printStackTrace();
+        return new ResponseEntity<>("An error occurred while fetching user details", HttpStatus.INTERNAL_SERVER_ERROR);
     }
+}
 
 
     @PostMapping("/change-password")

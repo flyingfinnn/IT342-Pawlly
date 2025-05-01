@@ -3,6 +3,7 @@ import { Box, CssBaseline, Typography } from '@mui/material';
 import UserDashboard from './UserDashboard';
 import AdoptionDashboard from './AdoptionDashboard';
 import PetDashboard from './PetDashboard';
+import LostAndFoundDashboard from './LostAndFoundDashboard';
 import VolunteerDashboard from './VolunteerDashboard';
 import AdminNavbar from './AdminNavbar';
 import ArticleDashboard from './ArticleDashboard';
@@ -24,6 +25,8 @@ const AdminDashboard = () => {
                 return <PetDashboard />;
             case 'Volunteers':
                 return <VolunteerDashboard />;
+            case 'Lost and Found':
+                return <LostAndFoundDashboard />;
             default:
                 return <UserDashboard />;
         }

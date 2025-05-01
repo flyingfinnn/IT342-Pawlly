@@ -86,6 +86,16 @@ public class UserService {
         logger.info("Total users found: {}", users.size());
         return users;
     }
+    public Optional<UserEntity> findByEmail(String email) {
+        logger.info("Fetching user by email: {}", email);
+        Optional<UserEntity> user = userRepository.findByEmail(email);
+        if (user.isPresent()) {
+            logger.info("User found with email: {}", email);
+        } else {
+            logger.warn("User not found with email: {}", email);
+        }
+        return user;
+    }
 
     public Optional<UserEntity> findUserById(Long userId) {
         logger.info("Fetching user by ID: {}", userId);
@@ -215,6 +225,7 @@ public class UserService {
     private JwtUtil jwtUtil;
 
     public String generateTokenForUser(UserEntity user) {
-        return jwtUtil.generateToken(user.getUsername(), List.of(user.getRole()));
+        List<String> roles = List.of(user.getRole());
+        return jwtUtil.generateToken(user.getUsername(), roles);
     }
 }

@@ -4,7 +4,9 @@ import Signup from "./components/Signup";
 import Login from "./components/Login";
 import UserDashboard from "./components/Dashboards/UserDashboard";
 import Home from "./components/Home";
+import LostAndFound from "./components/LostAndFound";
 import Sponsor from "./components/Sponsor";
+import MicrosoftCallback from "./components/MicrosoftCallback";
 
 
 import VolunteerSignUp from "./components/Volunteer/VolunteerSignUpList";
@@ -73,11 +75,13 @@ function App() {
           <Routes>
             <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/auth/microsoft/callback" element={<MicrosoftCallback />} />;
             <Route path="/users" element={<UserDashboard />} />
 
             <Route path="/profile" element={<Profile />} />
             <Route path="/" element={<Home />} /> {/* Default to login */}
             <Route path="/home" element={<Home />} />
+            <Route path="/lost-and-found" element={<LostAndFound />} />
             <Route path="/article_dash" element={<ArticleDashboard />} />
             <Route path="/sponsor" element={<Sponsor />} />
             <Route path="/adopt" element={<PetList />} />
