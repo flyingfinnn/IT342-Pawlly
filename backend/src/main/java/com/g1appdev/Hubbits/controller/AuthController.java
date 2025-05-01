@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "${FRONTEND_URL}")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
