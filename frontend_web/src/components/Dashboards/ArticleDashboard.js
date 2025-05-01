@@ -34,12 +34,6 @@ const ArticleDashboard = () => {
 
   const fetchArticles = async () => {
     try {
-      await axios.put(
-        `${process.env.REACT_APP_BACKEND_URL}/api/adoptions/${editAdoption.adoptionID}`,
-        updatedAdoption
-      );
-  
-      // Fetch updated articles (assuming this part is missing and needed)
       const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions`);
   
       const updatedArticles = response.data.map((article) => ({
@@ -53,7 +47,8 @@ const ArticleDashboard = () => {
     } catch (error) {
       console.error('Error fetching articles:', error);
     }
-  };  
+  };
+  
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];

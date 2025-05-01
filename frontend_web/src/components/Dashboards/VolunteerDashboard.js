@@ -139,15 +139,14 @@ const VolunteerDashboard = () => {
                 {volunteerOpportunities.map((opportunity) => (
                     <Grid item xs={12} sm={6} md={4} key={opportunity.opportunityID}>
                         <Card variant="outlined" sx={{ height: '100%' }}>
-                            <CardMedia
-                                component="img"
-                                height="140"
-                                image={
-                                    opportunity.volunteerImageUrl
-                                        ? `${BACKEND_URL}${opportunity.volunteerImageUrl}` // Use the volunteerImageUrl if available
-                                        : `${FRONTEND_URL}/images/default.png`  // Fallback to default image if not available
-                                }
-                                alt={opportunity.title}
+                        <CardMedia
+                            component="img"
+                            height="140"
+                            image={
+                                opportunity.volunteerImageUrl
+                                ? `${process.env.REACT_APP_BACKEND_URL}${opportunity.volunteerImageUrl}`
+                                : 'http://localhost:3000/images/default.png'
+                            }
                             />
                             <CardContent>
                                 <Typography variant="h4">{opportunity.title}</Typography>
