@@ -1,4 +1,4 @@
-# Purr (Spring Boot Project) - CSIT321 Application Development
+# Pawlly (Spring Boot Project) - CSIT321 Application Development
 
 ## Overview
 
