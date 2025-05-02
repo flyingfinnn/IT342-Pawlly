@@ -16,7 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @RestController
-@RequestMapping(method = RequestMethod.GET, path = "/api/pet")
+@RequestMapping("/api/pet")
 public class PetController {
     @Autowired
     PetService pserv;
@@ -39,38 +39,45 @@ public PetEntity postPetRecord(@RequestParam("name") String name,
                                @RequestParam("address") String address,
                                @RequestParam("contactNumber") String contactNumber,
                                @RequestParam("submissionDate") String submissionDate) {
-    try {
-        if (photo == null || photo.isEmpty()) {
-            throw new IllegalArgumentException("Photo is required for pet rehome records.");
-        }
-
-        // Save photo to a directory
-        String fileName = StringUtils.cleanPath(photo.getOriginalFilename());
-        Path uploadDir = Paths.get("uploads/pets");
-        if (!Files.exists(uploadDir)) {
-            Files.createDirectories(uploadDir);
-        }
-
-        Path filePath = uploadDir.resolve(fileName);
-        photo.transferTo(filePath);
-
-        // Generate file URL
-        String baseUrl = System.getenv("BACKEND_URL");
-        if (baseUrl == null || baseUrl.isEmpty()) {
-            baseUrl = "http://localhost:8080"; // Default to localhost for local development
-        }
-        String fileUrl = baseUrl + "/uploads/pets/" + fileName;
-
-        // Create and save PetEntity
-        PetEntity pet = new PetEntity(0, name, type, breed, age, gender, description, fileUrl, status, userName, address, contactNumber, submissionDate);
-        return pserv.postPetRecord(pet);
-
-    } catch (Exception e) {
-        e.printStackTrace();
-        return null; // Handle and log this error appropriately
-    }
-}
-
+                            try {
+                                if (photo == null || photo.isEmpty()) {
+                                    throw new IllegalArgumentException("Photo is required for pet rehome records.");
+                                }
+                                
+                                // Save photo to a directory
+                                String fileName = StringUtils.cleanPath(photo.getOriginalFilename());
+                                Path uploadDir = Paths.get("uploads/pets");
+                                if (!Files.exists(uploadDir)) {
+                                    Files.createDirectories(uploadDir);
+                                }
+                                
+                                Path filePath = uploadDir.resolve(fileName);
+                                photo.transferTo(filePath);
+                                
+                                // Determine the base URL with fallbacks
+                                List<String> fallbackUrls = List.of(
+                                    System.getenv("BACKEND_URL"),
+                                    "https://pawlly-y4wm.onrender.com",           // Render backend
+                                    "https://it-342-pawlly.vercel.app",           // Vercel frontend
+                                    "http://localhost:8080"                       // Local dev
+                                );
+                                
+                                String baseUrl = fallbackUrls.stream()
+                                    .filter(url -> url != null && !url.isEmpty())
+                                    .findFirst()
+                                    .orElseThrow(() -> new IllegalStateException("No valid BACKEND_URL or fallback URL found."));
+                                
+                                String fileUrl = baseUrl + "/uploads/pets/" + fileName;
+                                
+                                // Create and save PetEntity
+                                PetEntity pet = new PetEntity(0, name, type, breed, age, gender, description, fileUrl, status, userName, address, contactNumber, submissionDate);
+                                return pserv.postPetRecord(pet);
+                                
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                return null; // Log or handle more gracefully in production
+                            }
+                    }                                
 
     @GetMapping("/getAllPets")
     public List<PetEntity> getAllPets(){
