@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.sysinteg.pawlly.ui.theme.Purple
 import com.sysinteg.pawlly.ui.theme.White
 import android.graphics.BitmapFactory
+import androidx.compose.foundation.clickable
 
 @Composable
 fun AdoptAdoptionStep4Screen(
@@ -29,10 +30,16 @@ fun AdoptAdoptionStep4Screen(
 ) {
     val context = LocalContext.current
     var imageUris by remember { mutableStateOf(listOf<Uri>()) }
+    var selectedImageIndex by remember { mutableStateOf<Int?>(null) }
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
     ) { uris ->
         if (uris.size <= 4) imageUris = uris
+    }
+
+    fun removeImage(index: Int) {
+        imageUris = imageUris.toMutableList().apply { removeAt(index) }
+        selectedImageIndex = null
     }
 
     Scaffold(
@@ -100,29 +107,112 @@ fun AdoptAdoptionStep4Screen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                imageUris.forEach { uri ->
-                    val bitmap = remember(uri) {
-                        context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                            BitmapFactory.decodeStream(inputStream)?.asImageBitmap()
-                        }
-                    }
-                    if (bitmap != null) {
-                        Image(
-                            bitmap = bitmap,
-                            contentDescription = "Home Image",
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    (0..1).forEach { index ->
+                        Box(
                             modifier = Modifier
-                                .size(80.dp)
+                                .fillMaxWidth()
+                                .aspectRatio(1f)
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(Color.LightGray)
-                        )
+                                .clickable {
+                                    if (index < imageUris.size) {
+                                        selectedImageIndex = index
+                                    } else {
+                                        imagePicker.launch("image/*")
+                                    }
+                                }
+                        ) {
+                            if (index < imageUris.size) {
+                                val bitmap = remember(imageUris[index]) {
+                                    context.contentResolver.openInputStream(imageUris[index])?.use { inputStream ->
+                                        BitmapFactory.decodeStream(inputStream)?.asImageBitmap()
+                                    }
+                                }
+                                if (bitmap != null) {
+                                    Image(
+                                        bitmap = bitmap,
+                                        contentDescription = "Home Image",
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                    if (selectedImageIndex == index) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .background(Color.Black.copy(alpha = 0.5f))
+                                                .clickable { removeImage(index) },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text("×", color = Color.White, fontSize = 32.sp)
+                                        }
+                                    }
+                                }
+                            } else {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("+", fontSize = 24.sp)
+                                }
+                            }
+                        }
                     }
                 }
-                if (imageUris.size < 4) {
-                    OutlinedButton(
-                        onClick = { imagePicker.launch("image/*") },
-                        modifier = Modifier.size(80.dp)
-                    ) {
-                        Text("+")
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    (2..3).forEach { index ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.LightGray)
+                                .clickable {
+                                    if (index < imageUris.size) {
+                                        selectedImageIndex = index
+                                    } else {
+                                        imagePicker.launch("image/*")
+                                    }
+                                }
+                        ) {
+                            if (index < imageUris.size) {
+                                val bitmap = remember(imageUris[index]) {
+                                    context.contentResolver.openInputStream(imageUris[index])?.use { inputStream ->
+                                        BitmapFactory.decodeStream(inputStream)?.asImageBitmap()
+                                    }
+                                }
+                                if (bitmap != null) {
+                                    Image(
+                                        bitmap = bitmap,
+                                        contentDescription = "Home Image",
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                    if (selectedImageIndex == index) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .background(Color.Black.copy(alpha = 0.5f))
+                                                .clickable { removeImage(index) },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text("×", color = Color.White, fontSize = 32.sp)
+                                        }
+                                    }
+                                }
+                            } else {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("+", fontSize = 24.sp)
+                                }
+                            }
+                        }
                     }
                 }
             }

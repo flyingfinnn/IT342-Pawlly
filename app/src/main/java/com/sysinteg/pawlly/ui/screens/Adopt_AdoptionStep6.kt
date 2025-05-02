@@ -11,6 +11,7 @@ import com.sysinteg.pawlly.ui.theme.Purple
 import com.sysinteg.pawlly.ui.theme.White
 import com.sysinteg.pawlly.ui.theme.Inter
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +34,8 @@ fun AdoptAdoptionStep6Screen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 24.dp, start = 8.dp, end = 8.dp, bottom = 8.dp)
+                    .systemBarsPadding()
+                    .padding(top = 8.dp, start = 8.dp, end = 8.dp, bottom = 8.dp)
             ) {
                 Text(
                     "Step 6 of 7",
@@ -75,50 +77,72 @@ fun AdoptAdoptionStep6Screen(
             verticalArrangement = Arrangement.Center
         ) {
             Text("Other Animals & Experience", fontSize = 22.sp, color = Purple, fontFamily = Inter, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Any allergies in household?", fontSize = 16.sp, fontFamily = Inter, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(24.dp))
+            Text("Any allergies in household?", fontSize = 16.sp, fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.padding(vertical = 8.dp)
             ) {
                 RadioButton(
                     selected = hasAllergies == true,
-                    onClick = { hasAllergies = true }
+                    onClick = { hasAllergies = true },
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = Purple,
+                        unselectedColor = Color.Gray
+                    )
                 )
-                Text("Yes", fontFamily = Inter, fontWeight = FontWeight.Bold)
+                Text("Yes", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
                 RadioButton(
                     selected = hasAllergies == false,
-                    onClick = { hasAllergies = false }
+                    onClick = { hasAllergies = false },
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = Purple,
+                        unselectedColor = Color.Gray
+                    )
                 )
-                Text("No", fontFamily = Inter, fontWeight = FontWeight.Bold)
+                Text("No", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Other pets?", fontSize = 16.sp, fontFamily = Inter, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Other pets?", fontSize = 16.sp, fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.padding(vertical = 8.dp)
             ) {
                 RadioButton(
                     selected = hasOtherPets == true,
-                    onClick = { hasOtherPets = true }
+                    onClick = { hasOtherPets = true },
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = Purple,
+                        unselectedColor = Color.Gray
+                    )
                 )
-                Text("Yes", fontFamily = Inter, fontWeight = FontWeight.Bold)
+                Text("Yes", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
                 RadioButton(
                     selected = hasOtherPets == false,
-                    onClick = { hasOtherPets = false }
+                    onClick = { hasOtherPets = false },
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = Purple,
+                        unselectedColor = Color.Gray
+                    )
                 )
-                Text("No", fontFamily = Inter, fontWeight = FontWeight.Bold)
+                Text("No", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
             }
             if (hasOtherPets == true) {
+                Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = otherPetsDetails,
                     onValueChange = { otherPetsDetails = it },
-                    label = { Text("Species, age, gender", fontFamily = Inter, fontWeight = FontWeight.Bold) },
-                    modifier = Modifier.fillMaxWidth()
+                    label = { Text("Species, age, gender", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black) },
+                    modifier = Modifier.fillMaxWidth(),
+                    textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black, fontFamily = Inter),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Purple,
+                        unfocusedBorderColor = Color.Gray
+                    )
                 )
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Neutered?", fontSize = 16.sp, fontFamily = Inter, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Neutered?", fontSize = 16.sp, fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
             var neuteredExpanded by remember { mutableStateOf(false) }
             ExposedDropdownMenuBox(
                 expanded = neuteredExpanded,
@@ -128,8 +152,13 @@ fun AdoptAdoptionStep6Screen(
                     value = neutered,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Neutered?", fontFamily = Inter, fontWeight = FontWeight.Bold) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                    label = { Text("Neutered?", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black, fontFamily = Inter),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Purple,
+                        unfocusedBorderColor = Color.Gray
+                    )
                 )
                 ExposedDropdownMenu(
                     expanded = neuteredExpanded,
@@ -146,8 +175,8 @@ fun AdoptAdoptionStep6Screen(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Vaccinated?", fontSize = 16.sp, fontFamily = Inter, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Vaccinated?", fontSize = 16.sp, fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
             var vaccinatedExpanded by remember { mutableStateOf(false) }
             ExposedDropdownMenuBox(
                 expanded = vaccinatedExpanded,
@@ -157,8 +186,13 @@ fun AdoptAdoptionStep6Screen(
                     value = vaccinated,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Vaccinated?", fontFamily = Inter, fontWeight = FontWeight.Bold) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                    label = { Text("Vaccinated?", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black, fontFamily = Inter),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Purple,
+                        unfocusedBorderColor = Color.Gray
+                    )
                 )
                 ExposedDropdownMenu(
                     expanded = vaccinatedExpanded,
@@ -175,12 +209,17 @@ fun AdoptAdoptionStep6Screen(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
                 value = experience,
                 onValueChange = { experience = it },
-                label = { Text("Describe your experience with animals", fontFamily = Inter, fontWeight = FontWeight.Bold) },
-                modifier = Modifier.fillMaxWidth().height(100.dp)
+                label = { Text("Describe your experience with animals", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black) },
+                modifier = Modifier.fillMaxWidth().height(100.dp),
+                textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black, fontFamily = Inter),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Purple,
+                    unfocusedBorderColor = Color.Gray
+                )
             )
             Spacer(modifier = Modifier.height(24.dp))
         }

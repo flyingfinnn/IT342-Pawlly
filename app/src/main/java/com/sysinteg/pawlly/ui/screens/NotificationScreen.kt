@@ -1,87 +1,156 @@
 package com.sysinteg.pawlly.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.sysinteg.pawlly.ui.theme.Inter
-import com.sysinteg.pawlly.ui.theme.Purple
+import com.sysinteg.pawlly.model.Notification
+import com.sysinteg.pawlly.model.NotificationType
 import com.sysinteg.pawlly.ui.theme.BoneWhite
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import androidx.compose.runtime.SideEffect
-import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.layout.Spacer
+import com.sysinteg.pawlly.ui.theme.Purple
+import com.sysinteg.pawlly.ui.theme.Inter
+import androidx.navigation.NavController
+import java.util.*
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 
 @Composable
 fun NotificationScreen(
+    navController: NavController,
     onNavHome: () -> Unit = {},
     onNavNotifications: () -> Unit = {},
     onNavProfile: () -> Unit = {},
     selectedScreen: String = "Notifications"
 ) {
-    val systemUiController = rememberSystemUiController()
-    val useDarkIcons = true
-    SideEffect {
-        systemUiController.setSystemBarsColor(
-            color = Color.Transparent,
-            darkIcons = useDarkIcons
+    // Sample notifications - in a real app, these would come from a ViewModel
+    val notifications = remember {
+        listOf(
+            Notification(
+                id = "1",
+                title = "Pet Listing Successful",
+                body = "Your pet listing for Bella has been approved and is now visible to potential adopters.",
+                type = NotificationType.PET_LISTING_SUCCESS,
+                timestamp = Date(),
+                petId = 1
+            ),
+            Notification(
+                id = "2",
+                title = "Adoption Application Denied",
+                body = "Your adoption application for Max has been denied by the audit team. Please review the requirements and try again.",
+                type = NotificationType.ADOPTION_DENIED_AUDIT,
+                timestamp = Date(System.currentTimeMillis() - 3600000),
+                petId = 2
+            ),
+            Notification(
+                id = "3",
+                title = "Adoption Application Denied",
+                body = "Your adoption application for Luna has been denied by the pet owner. They have chosen another applicant.",
+                type = NotificationType.ADOPTION_DENIED_OWNER,
+                timestamp = Date(System.currentTimeMillis() - 7200000),
+                petId = 3
+            ),
+            Notification(
+                id = "4",
+                title = "Adoption Application in Audit",
+                body = "Your adoption application for Charlie is currently being reviewed by our audit team. We'll notify you once a decision is made.",
+                type = NotificationType.ADOPTION_IN_AUDIT,
+                timestamp = Date(System.currentTimeMillis() - 86400000),
+                petId = 4
+            ),
+            Notification(
+                id = "5",
+                title = "Adoption Application Audited",
+                body = "Your adoption application for Max has been reviewed and approved.",
+                type = NotificationType.ADOPTION_AUDITED,
+                timestamp = Date(System.currentTimeMillis() - 108000000),
+                petId = 2
+            ),
+            Notification(
+                id = "6",
+                title = "Pet Ready for Adoption!",
+                body = "Bella is now ready for adoption. Click to view details and start the process.",
+                type = NotificationType.PET_READY_FOR_ADOPTION,
+                timestamp = Date(System.currentTimeMillis() - 144000000),
+                petId = 1
+            ),
+            Notification(
+                id = "7",
+                title = "Adoption Application Sent for Audit",
+                body = "Your adoption application has been submitted and is pending review.",
+                type = NotificationType.ADOPTION_SENT_FOR_AUDIT,
+                timestamp = Date(System.currentTimeMillis() - 172800000),
+                petId = 3
+            )
         )
     }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .systemBarsPadding()
-            .background(BoneWhite),
-        contentAlignment = Alignment.TopCenter
+            .background(BoneWhite)
     ) {
-        // Blurred/semi-transparent status bar overlay
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
-                .background(BoneWhite.copy(alpha = 0.7f))
-        )
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding()
+                .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(top = 32.dp, bottom = 100.dp, start = 24.dp, end = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(bottom = 120.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Text(
-                text = "Notifications",
-                fontFamily = Inter,
-                fontSize = 28.sp,
-                color = Purple,
-                modifier = Modifier.padding(bottom = 24.dp)
-            )
-            NotificationItem(title = "Adoption Request", body = "You have a new adoption request for Bella.", time = "2 min ago")
-            Spacer(modifier = Modifier.height(8.dp))
-            NotificationItem(title = "Profile Updated", body = "Your profile information was updated successfully.", time = "10 min ago")
-            Spacer(modifier = Modifier.height(8.dp))
-            NotificationItem(title = "Rehome Success", body = "Max has found a new home!", time = "1 hour ago")
-            Spacer(modifier = Modifier.height(8.dp))
-            NotificationItem(title = "Lost Pet Alert", body = "A pet matching your search was found nearby.", time = "Yesterday")
+            // Notifications title
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 8.dp)
+                    .statusBarsPadding(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Notifications",
+                    fontFamily = Inter,
+                    fontSize = 28.sp,
+                    color = Purple,
+                    fontWeight = FontWeight.Bold
+                )
+                TextButton(
+                    onClick = { /* TODO: Implement clear notifications logic */ },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Purple
+                    )
+                ) {
+                    Text(
+                        text = "Clear All",
+                        fontFamily = Inter,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+            notifications.forEach { notification ->
+                NotificationItem(
+                    notification = notification,
+                    onClick = {
+                        // If notification has a petId, navigate to Adopt_PetDetail
+                        if (notification.petId != null) {
+                            navController.navigate("adopt/pet/${notification.petId}")
+                        } else {
+                            navController.navigate("notification_detail/${notification.id}")
+                        }
+                    }
+                )
+            }
+            Spacer(modifier = Modifier.height(32.dp))
         }
+
         // Navigation Bar (bottom)
         Box(
             modifier = Modifier.align(Alignment.BottomCenter)
@@ -97,16 +166,42 @@ fun NotificationScreen(
 }
 
 @Composable
-fun NotificationItem(title: String, body: String, time: String) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color.White)
-            .padding(horizontal = 16.dp, vertical = 10.dp)
+fun NotificationItem(
+    notification: Notification,
+    onClick: () -> Unit
+) {
+    val dateFormat = remember { java.text.SimpleDateFormat("MMM dd, yyyy 'at' hh:mm a", Locale.getDefault()) }
+    
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Text(title, fontFamily = Inter, fontSize = 18.sp, color = Purple)
-        Text(body, fontFamily = Inter, fontSize = 14.sp, color = Color(0xFF444444), modifier = Modifier.padding(top = 4.dp))
-        Text(time, fontFamily = Inter, fontSize = 12.sp, color = Color(0xFF888888), modifier = Modifier.padding(top = 8.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = notification.title,
+                fontFamily = Inter,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Purple
+            )
+            Text(
+                text = notification.body,
+                fontFamily = Inter,
+                fontSize = 14.sp,
+                color = Color(0xFF444444)
+            )
+            Text(
+                text = dateFormat.format(notification.timestamp),
+                fontFamily = Inter,
+                fontSize = 12.sp,
+                color = Color(0xFF888888)
+            )
+        }
     }
 } 

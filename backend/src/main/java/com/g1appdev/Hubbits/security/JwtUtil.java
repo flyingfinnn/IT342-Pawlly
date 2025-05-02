@@ -7,6 +7,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.security.Key;
 import java.util.Date;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.Base64;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,9 +25,16 @@ import org.slf4j.LoggerFactory;
 public class JwtUtil {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
 
-    private final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private final Key SECRET_KEY;
 
-    private final long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 15; // 15 minutes
+    public JwtUtil(@Value("${JWT_SECRET:}") String secretFromProps) {
+        if (secretFromProps == null || secretFromProps.isEmpty()) {
+            throw new IllegalStateException("JWT_SECRET must be set in application.properties or as an environment variable");
+        }
+        this.SECRET_KEY = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secretFromProps));
+    }   
+
+    private final long ACCESS_TOKEN_VALIDITY = 1000L * 60 * 60 * 24 * 10; // 10 days
     private final long REFRESH_TOKEN_VALIDITY = 1000 * 60 * 60 * 24 * 7; // 7 days
 
     public String extractUsername(String token) {

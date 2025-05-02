@@ -11,6 +11,7 @@ import com.sysinteg.pawlly.ui.theme.Purple
 import com.sysinteg.pawlly.ui.theme.White
 import com.sysinteg.pawlly.ui.theme.Inter
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,24 +82,32 @@ fun AdoptAdoptionStep3Screen(
             verticalArrangement = Arrangement.Center
         ) {
             Text("Home Details", fontSize = 22.sp, color = Purple, fontFamily = Inter, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Do you have a garden?", fontSize = 16.sp, fontFamily = Inter, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(24.dp))
+            Text("Do you have a garden?", fontSize = 16.sp, fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.padding(vertical = 8.dp)
             ) {
                 RadioButton(
                     selected = hasGarden == true,
-                    onClick = { hasGarden = true }
+                    onClick = { hasGarden = true },
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = Purple,
+                        unselectedColor = Color.Gray
+                    )
                 )
-                Text("Yes", fontFamily = Inter, fontWeight = FontWeight.Bold)
+                Text("Yes", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
                 RadioButton(
                     selected = hasGarden == false,
-                    onClick = { hasGarden = false }
+                    onClick = { hasGarden = false },
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = Purple,
+                        unselectedColor = Color.Gray
+                    )
                 )
-                Text("No", fontFamily = Inter, fontWeight = FontWeight.Bold)
+                Text("No", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             // Home type dropdown
             var homeTypeExpanded by remember { mutableStateOf(false) }
             ExposedDropdownMenuBox(
@@ -109,8 +118,13 @@ fun AdoptAdoptionStep3Screen(
                     value = homeType,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Home Type", fontFamily = Inter, fontWeight = FontWeight.Bold) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                    label = { Text("Home Type", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black, fontFamily = Inter),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Purple,
+                        unfocusedBorderColor = Color.Gray
+                    )
                 )
                 ExposedDropdownMenu(
                     expanded = homeTypeExpanded,
@@ -127,7 +141,7 @@ fun AdoptAdoptionStep3Screen(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             // Household setting dropdown
             var householdSettingExpanded by remember { mutableStateOf(false) }
             ExposedDropdownMenuBox(
@@ -138,8 +152,13 @@ fun AdoptAdoptionStep3Screen(
                     value = householdSetting,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Household Setting", fontFamily = Inter, fontWeight = FontWeight.Bold) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                    label = { Text("Household Setting", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black, fontFamily = Inter),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Purple,
+                        unfocusedBorderColor = Color.Gray
+                    )
                 )
                 ExposedDropdownMenu(
                     expanded = householdSettingExpanded,
@@ -156,7 +175,7 @@ fun AdoptAdoptionStep3Screen(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             // Activity level dropdown
             var activityLevelExpanded by remember { mutableStateOf(false) }
             ExposedDropdownMenuBox(
@@ -167,8 +186,13 @@ fun AdoptAdoptionStep3Screen(
                     value = activityLevel,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Activity Level", fontFamily = Inter, fontWeight = FontWeight.Bold) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                    label = { Text("Activity Level", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black, fontFamily = Inter),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Purple,
+                        unfocusedBorderColor = Color.Gray
+                    )
                 )
                 ExposedDropdownMenu(
                     expanded = activityLevelExpanded,

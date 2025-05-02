@@ -13,8 +13,8 @@ import org.springframework.context.annotation.Configuration;
 public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("api/**")
-                .allowedOrigins("http://localhost:3000") // Allow React frontend
+        registry.addMapping("/api/**")
+                .allowedOriginPatterns("*") // Use allowedOriginPatterns for wildcard with credentials
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
@@ -25,7 +25,7 @@ public class WebConfig implements WebMvcConfigurer {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("http://localhost:3000"); // Frontend origin
+        config.addAllowedOriginPattern("*"); // Use allowedOriginPattern for wildcard with credentials
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/**", config);

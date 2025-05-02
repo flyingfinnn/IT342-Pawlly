@@ -14,6 +14,7 @@ import com.sysinteg.pawlly.ui.theme.Purple
 import com.sysinteg.pawlly.ui.theme.White
 import com.sysinteg.pawlly.ui.theme.Inter
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,73 +85,109 @@ fun AdoptAdoptionStep2Screen(
             verticalArrangement = Arrangement.Center
         ) {
             Text("Address Details", fontSize = 22.sp, color = Purple, fontFamily = Inter, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             OutlinedTextField(
                 value = address1,
                 onValueChange = { address1 = it },
-                label = { Text("Address Line 1", fontFamily = Inter, fontWeight = FontWeight.Bold) },
+                label = { Text("Address Line 1", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black, fontFamily = Inter),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Purple,
+                    unfocusedBorderColor = Color.Gray
+                )
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             OutlinedTextField(
                 value = address2,
                 onValueChange = { address2 = it },
-                label = { Text("Address Line 2", fontFamily = Inter, fontWeight = FontWeight.Bold) },
+                label = { Text("Address Line 2", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black, fontFamily = Inter),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Purple,
+                    unfocusedBorderColor = Color.Gray
+                )
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             OutlinedTextField(
                 value = postcode,
                 onValueChange = { postcode = it },
-                label = { Text("Postcode", fontFamily = Inter, fontWeight = FontWeight.Bold) },
+                label = { Text("Postcode", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black, fontFamily = Inter),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Purple,
+                    unfocusedBorderColor = Color.Gray
+                )
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             OutlinedTextField(
                 value = town,
                 onValueChange = { town = it },
-                label = { Text("Town", fontFamily = Inter, fontWeight = FontWeight.Bold) },
+                label = { Text("Town", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black, fontFamily = Inter),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Purple,
+                    unfocusedBorderColor = Color.Gray
+                )
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             OutlinedTextField(
                 value = landline,
                 onValueChange = { landline = it },
-                label = { Text("Landline", fontFamily = Inter, fontWeight = FontWeight.Bold) },
+                label = { Text("Landline", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
+                textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black, fontFamily = Inter),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Purple,
+                    unfocusedBorderColor = Color.Gray
+                )
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             OutlinedTextField(
                 value = mobile,
                 onValueChange = { mobile = it },
-                label = { Text("Mobile", fontFamily = Inter, fontWeight = FontWeight.Bold) },
+                label = { Text("Mobile", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
+                textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black, fontFamily = Inter),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Purple,
+                    unfocusedBorderColor = Color.Gray
+                )
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Button(
                     onClick = { codeSent = true },
                     enabled = mobile.isNotBlank(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Purple)
+                    colors = ButtonDefaults.buttonColors(containerColor = Purple),
+                    modifier = Modifier.weight(1f)
                 ) {
                     Text("Send Code", color = White, fontFamily = Inter, fontWeight = FontWeight.Bold)
                 }
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(16.dp))
                 if (codeSent) {
                     OutlinedTextField(
                         value = verificationCode,
                         onValueChange = { verificationCode = it },
-                        label = { Text("Verification Code", fontFamily = Inter, fontWeight = FontWeight.Bold) },
-                        modifier = Modifier.width(160.dp),
-                        singleLine = true
+                        label = { Text("Verification Code", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black) },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black, fontFamily = Inter),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Purple,
+                            unfocusedBorderColor = Color.Gray
+                        )
                     )
                 }
             }

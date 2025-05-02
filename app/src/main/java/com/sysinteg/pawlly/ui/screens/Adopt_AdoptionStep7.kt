@@ -13,8 +13,7 @@ import com.sysinteg.pawlly.ui.theme.White
 
 @Composable
 fun AdoptAdoptionStep7Screen(
-    onReturnToProfile: () -> Unit = {},
-    onAdoptMore: () -> Unit = {}
+    onReturnToHome: () -> Unit = {}
 ) {
     Scaffold(
         containerColor = White,
@@ -22,7 +21,7 @@ fun AdoptAdoptionStep7Screen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 24.dp, start = 8.dp, end = 8.dp, bottom = 8.dp)
+                    .padding(top = 48.dp, start = 8.dp, end = 8.dp, bottom = 8.dp)
             ) {
                 Text(
                     "Step 7 of 7",
@@ -37,21 +36,14 @@ fun AdoptAdoptionStep7Screen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 32.dp)
             ) {
                 Button(
-                    onClick = onReturnToProfile,
+                    onClick = onReturnToHome,
                     modifier = Modifier.fillMaxWidth().height(48.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Purple)
                 ) {
-                    Text("Return to Profile", color = White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                }
-                OutlinedButton(
-                    onClick = onAdoptMore,
-                    modifier = Modifier.fillMaxWidth().height(48.dp)
-                ) {
-                    Text("Adopt More", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("Return to Home", color = White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 }
             }
         }

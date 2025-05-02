@@ -56,15 +56,20 @@ public class SecurityConfig {
                 .and()
                 .csrf().disable()
                 .authorizeHttpRequests()
-                .requestMatchers("/api/auth/login", "/api/auth/signup", "/api/users", "/api/lostandfound",
-                        "/api/users/me", "api/admin")
-                .permitAll()
+                .requestMatchers(
+                    "/api/auth/login",
+                    "/api/auth/signup",
+                    "/api/auth/oauth/google",
+                    "/api/users",
+                    "/api/lostandfound",
+                    "/api/users/me",
+                    "/api/admin"
+                ).permitAll()
                 .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasAuthority("ROLE_ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/users/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/users/**").permitAll()
                 .requestMatchers("/api/users/**").authenticated()
-                .anyRequest().permitAll() // .authenticated() when applying admin
+                .anyRequest().permitAll()
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()

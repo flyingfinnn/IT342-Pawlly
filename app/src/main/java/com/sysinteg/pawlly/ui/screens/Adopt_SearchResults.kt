@@ -35,6 +35,10 @@ import androidx.compose.ui.text.style.TextAlign
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.SideEffect
+import com.sysinteg.pawlly.ui.components.PetCard
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 
 private val samplePets = listOf(
     Pet(1, "Milo", "Golden Retriever", "2 yrs", "Lagos", R.drawable.logoiconpurple),
@@ -135,6 +139,7 @@ fun AdoptSearchResultsScreen(
                             focusedBorderColor = Purple,
                             unfocusedBorderColor = Color(0xFFCCCCCC)
                         ),
+                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black),
                         keyboardOptions = KeyboardOptions.Default
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -165,19 +170,18 @@ fun AdoptSearchResultsScreen(
                         )
                     }
                 } else {
-                    LazyColumn(
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
                         modifier = Modifier
                             .fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         contentPadding = PaddingValues(16.dp)
                     ) {
                         items(filteredPets) { pet ->
                             PetCard(
                                 pet = pet,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .aspectRatio(1.6f)
-                                    .clickable { onPetClick(pet.id) }
+                                onClick = { onPetClick(pet.id) }
                             )
                         }
                     }

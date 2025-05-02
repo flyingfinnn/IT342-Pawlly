@@ -25,6 +25,7 @@ import kotlinx.coroutines.delay
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun LandingScreen(navController: NavController) {
@@ -37,10 +38,20 @@ fun LandingScreen(navController: NavController) {
         )
     }
 
-    // Auto-navigate to login after 3 seconds
+    val context = LocalContext.current
     LaunchedEffect(Unit) {
-        delay(3000)
-        navController.navigate(Screen.Login.route)
+        delay(1500) // Shorter splash for better UX
+        val prefs = context.getSharedPreferences("pawlly_prefs", android.content.Context.MODE_PRIVATE)
+        val token = prefs.getString("jwt_token", null)
+        if (!token.isNullOrEmpty()) {
+            navController.navigate(Screen.Home.route) {
+                popUpTo(Screen.Landing.route) { inclusive = true }
+            }
+        } else {
+            navController.navigate(Screen.Login.route) {
+                popUpTo(Screen.Landing.route) { inclusive = true }
+            }
+        }
     }
 
     Box(

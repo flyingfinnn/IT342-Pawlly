@@ -3,6 +3,8 @@ package com.g1appdev.Hubbits.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.g1appdev.Hubbits.entity.UserEntity;
 import com.g1appdev.Hubbits.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +14,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -20,17 +21,29 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:8080")
 public class UserController {
+
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @Autowired
     private UserService userService;
 
     // Create a new user
     @PostMapping
-    public ResponseEntity<UserEntity> createUser(@RequestBody UserEntity user) {
-        UserEntity createdUser = userService.createUser(user);
-        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+    public ResponseEntity<UserEntity> createUser(
+            @RequestPart("user") String userJson,
+            @RequestPart(value = "profilePicture", required = false) MultipartFile profilePicture) {
+        try {
+            logger.info("Received signup request: userJson={} | profilePicture present: {} | profilePicture size: {}", userJson, (profilePicture != null), (profilePicture != null ? profilePicture.getSize() : 0));
+            UserEntity user = new ObjectMapper().readValue(userJson, UserEntity.class);
+            UserEntity createdUser = userService.createUser(user, profilePicture); // Adjusted service call
+            logger.info("User created: {}", createdUser);
+            return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+        } catch (Exception e) {
+            logger.error("Error in createUser: ", e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     // Get all users
@@ -39,16 +52,6 @@ public class UserController {
         List<UserEntity> users = userService.getAllUsers();
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
-
-    // Get a user by ID
-//    @GetMapping("/{id}")
-//    public ResponseEntity<UserEntity> getUserById(@PathVariable Long id) {
-//        Optional<UserEntity> user = userService.findUserById(id);
-//        if (user.isPresent()) {
-//            return new ResponseEntity<>(user.get(), HttpStatus.OK);
-//        }
-//        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-//    }
 
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> getUserById(@PathVariable Long id) {
@@ -64,7 +67,7 @@ public class UserController {
                     "address", foundUser.getAddress(),
                     "phoneNumber", foundUser.getPhoneNumber(),
                     "role", foundUser.getRole(),
-                    "profilePicture", foundUser.getProfilePictureBase64() // Send Base64 encoded profile picture
+                    "profilePicture", foundUser.getProfilePictureBase64()
             );
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
@@ -73,26 +76,24 @@ public class UserController {
 
     // Update a user by ID with profile picture support
     @PutMapping("/{id}")
-//    @PreAuthorize("hasRole('ADMIN')") or  @com.g1appdev.Hubbits.service.UserService.isOwner(#id)")
     public ResponseEntity<UserEntity> updateUser(
             @PathVariable Long id,
-            @RequestParam("user") String userJson,
-            @RequestParam(value = "profilePicture", required = false) MultipartFile profilePicture) {
+            @RequestPart("user") String userJson,
+            @RequestPart(value = "profilePicture", required = false) MultipartFile profilePicture) {
 
         if (userService.isOwnerOrAdmin(id)) {
-            // Proceed with update logic
+            try {
+                UserEntity updatedUser = new ObjectMapper().readValue(userJson, UserEntity.class);
+                UserEntity user = userService.updateUser(id, updatedUser, profilePicture); // Adjusted service call
+                if (user != null) {
+                    return new ResponseEntity<>(user, HttpStatus.OK);
+                }
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            } catch (Exception e) {
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
         } else {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
-        try {
-            UserEntity updatedUser = new ObjectMapper().readValue(userJson, UserEntity.class);
-            UserEntity user = userService.updateUser(id, updatedUser, profilePicture);
-            if (user != null) {
-                return new ResponseEntity<>(user, HttpStatus.OK);
-            }
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -111,23 +112,21 @@ public class UserController {
         }
     }
 
-
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUsername = authentication != null ? authentication.getName() : null;
+        String currentEmail = authentication != null ? authentication.getName() : null;
 
-        if (currentUsername == null) {
+        if (currentEmail == null) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
 
-        Optional<UserEntity> user = userService.findByUsername(currentUsername);
+        Optional<UserEntity> user = userService.findByEmail(currentEmail);
         if (user.isPresent()) {
             UserEntity foundUser = user.get();
             String profilePictureBase64 = foundUser.getProfilePicture() != null
                     ? Base64.getEncoder().encodeToString(foundUser.getProfilePicture())
-                    : ""; // Default to empty string if profile picture is null
-
+                    : "";
             Map<String, Object> response = Map.of(
                     "userId", foundUser.getUserId(),
                     "username", foundUser.getUsername(),
@@ -137,14 +136,13 @@ public class UserController {
                     "address", foundUser.getAddress(),
                     "phoneNumber", foundUser.getPhoneNumber(),
                     "role", foundUser.getRole(),
-                    "profilePicture", profilePictureBase64 // Send Base64 encoded or default empty string
+                    "profilePicture", profilePictureBase64
             );
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-
 
     @PostMapping("/change-password")
     public ResponseEntity<String> changePassword(@RequestBody Map<String, String> passwordData) {
@@ -171,10 +169,4 @@ public class UserController {
 
         return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
     }
-
-
-
-
-
-
 }

@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Height
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +39,7 @@ import androidx.compose.foundation.verticalScroll
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.SideEffect
+import androidx.compose.foundation.BorderStroke
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPagerApi::class)
 @Composable
@@ -64,13 +66,21 @@ fun AdoptPetDetailScreen(
     val petColor = "Red"
     val petHeight = "91 cm"
     val petLocation = "California (12 km away)"
+    val petDescription = "Magie is a playful and loving Shiba Inu who enjoys long walks and cuddles. She is looking for a forever home where she can share her affection and energy. Magie is house-trained, vaccinated, and gets along well with other pets."
+    val petStatus = "Available"
+    val petType = "Dog"
+    val petAddress = "123 Main St, City"
+    val petContactNumber = "555-1234"
+    val petSubmissionDate = "2024-06-01"
+    val petUserName = "John Doe"
+    val petUserProfilePic = R.drawable.logoiconpurple // Placeholder
     val petAttributes = listOf(
-        Triple(Icons.Default.Pets, petBreed, "Breed"),
-        Triple(Icons.Default.Female, petGender, "Gender"),
-        Triple(Icons.Default.Scale, petWeight, "Weight"),
-        Triple(Icons.Default.Palette, petColor, "Color"),
-        Triple(Icons.Default.Height, petHeight, "Height"),
-        Triple(Icons.Default.Pets, petAge, "Age")
+        Triple(Icons.Default.Pets, petAge, "Age"),
+        Triple(Icons.Default.Pets, petType, "Type"),
+        Triple(Icons.Default.Pets, petStatus, "Status"),
+        Triple(Icons.Default.LocationOn, petAddress, "Address"),
+        Triple(Icons.Default.Person, petContactNumber, "Contact Number"),
+        Triple(Icons.Default.Person, petSubmissionDate, "Submission Date")
     )
     val petTraits = listOf(
         "Good with children",
@@ -141,7 +151,7 @@ fun AdoptPetDetailScreen(
                     }
                 }
                 Spacer(Modifier.height(24.dp))
-                // Pet Name & Location
+                // Pet Name
                 Text(
                     petName,
                     fontWeight = FontWeight.Bold,
@@ -150,102 +160,90 @@ fun AdoptPetDetailScreen(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
                 )
                 Spacer(Modifier.height(8.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn,
-                        contentDescription = "Location",
-                        tint = Purple,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        petLocation,
-                        color = Color(0xFF444444),
-                        fontSize = 15.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-                Spacer(Modifier.height(24.dp))
-                // Attribute Chips Row
+                // Attribute Bullets Row
+                val attributeBullets = listOf(
+                    Triple(Icons.Default.Pets, petBreed, "Breed"),
+                    Triple(Icons.Default.Female, petGender, "Gender"),
+                    Triple(Icons.Default.Scale, petWeight, "Weight"),
+                    Triple(Icons.Default.Palette, petColor, "Color"),
+                    Triple(Icons.Default.Height, petHeight, "Height")
+                )
                 Row(
                     modifier = Modifier
+                        .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
                         .padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    petAttributes.forEach { (icon, label, _) ->
-                        AssistChip(
-                            onClick = {},
-                            label = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(icon, contentDescription = null, tint = Purple, modifier = Modifier.size(18.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text(label, color = Color(0xFF444444), fontWeight = FontWeight.Medium)
-                                }
-                            },
+                    attributeBullets.forEach { (icon, value, label) ->
+                        Surface(
                             shape = RoundedCornerShape(50),
-                            colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFFF5F5F5)),
-                            elevation = AssistChipDefaults.assistChipElevation(4.dp)
-                        )
+                            color = Color.Transparent,
+                            border = BorderStroke(1.dp, Purple),
+                            modifier = Modifier.height(36.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                            ) {
+                                Icon(icon, contentDescription = label, tint = Purple, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text(value, color = Purple, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                            }
+                        }
                     }
                 }
-                Spacer(Modifier.height(24.dp))
-                // Traits List
+                Spacer(Modifier.height(16.dp))
+                // Pet Details List
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    petTraits.forEach { trait ->
+                    petAttributes.forEach { (icon, value, label) ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Purple, modifier = Modifier.size(20.dp))
+                            Icon(icon, contentDescription = label, tint = Purple, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text(trait, color = Color(0xFF444444), fontSize = 16.sp)
+                            Text("$label: $value", color = Color(0xFF444444), fontSize = 15.sp)
                         }
                     }
                 }
-                Spacer(Modifier.height(24.dp))
-                // Pet Story (Expandable)
+                Spacer(Modifier.height(16.dp))
+                // Description
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
                 ) {
-                    Text("About $petName", fontWeight = FontWeight.Bold, color = Purple, fontSize = 18.sp)
+                    Text("Description", fontWeight = FontWeight.Bold, color = Purple, fontSize = 18.sp)
                     Spacer(Modifier.height(4.dp))
-                    if (expanded) {
-                        Text(petStory, color = Color(0xFF444444), fontSize = 15.sp)
-                        Text(
-                            "Read less",
-                            color = Purple,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
-                            modifier = Modifier.clickable { expanded = false }
+                    Text(petDescription, color = Color(0xFF444444), fontSize = 15.sp)
+                }
+                Spacer(Modifier.height(32.dp))
+                // Pet Owner Section
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    Text("Pet Owner", fontWeight = FontWeight.Bold, color = Purple, fontSize = 18.sp)
+                    Spacer(Modifier.height(12.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(id = petUserProfilePic),
+                            contentDescription = "Owner Profile Picture",
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(Purple.copy(alpha = 0.1f))
                         )
-                    } else {
-                        Text(
-                            petStory,
-                            color = Color(0xFF444444),
-                            fontSize = 15.sp,
-                            maxLines = 3,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            "Read more",
-                            color = Purple,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
-                            modifier = Modifier.clickable { expanded = true }
-                        )
+                        Spacer(Modifier.width(16.dp))
+                        Text(petUserName, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color(0xFF222222))
                     }
                 }
-                Spacer(Modifier.height(24.dp))
-                Spacer(Modifier.height(48.dp)) // For bottom bar spacing
+                Spacer(Modifier.height(48.dp)) // Gap before Adopt Now button
             }
         }
     }

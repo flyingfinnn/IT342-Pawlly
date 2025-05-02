@@ -43,19 +43,19 @@ fun PawllyNavBar(
             modifier = Modifier.fillMaxWidth()
         ) {
             NavBarItem(
-                icon = Icons.Default.Home,
-                label = "Home",
-                selected = selectedScreen == "Home",
-                onClick = onNavHome,
+                icon = Icons.Default.Notifications,
+                label = "Notifications",
+                selected = selectedScreen == "Notifications",
+                onClick = onNavNotifications,
                 modifier = Modifier.weight(1f),
                 selectedColor = Color.White,
                 unselectedColor = Color.White.copy(alpha = 0.6f)
             )
             NavBarItem(
-                icon = Icons.Default.Notifications,
-                label = "Notifications",
-                selected = selectedScreen == "Notifications",
-                onClick = onNavNotifications,
+                icon = Icons.Default.Home,
+                label = "Home",
+                selected = selectedScreen == "Home",
+                onClick = onNavHome,
                 modifier = Modifier.weight(1f),
                 selectedColor = Color.White,
                 unselectedColor = Color.White.copy(alpha = 0.6f)

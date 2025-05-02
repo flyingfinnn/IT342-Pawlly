@@ -6,8 +6,9 @@ The Adopt feature allows users to:
 - Filter by preferences (species, breed, etc.)
 - View full pet profiles
 - Start a 7-step adoption process
+- Upload and view pet images using the ImageCarousel component
 
-All UI is static for now, built in Jetpack Compose.
+All UI is built in Jetpack Compose with Material3 design system.
 
 ---
 
@@ -16,7 +17,7 @@ All UI is static for now, built in Jetpack Compose.
 1. **AdoptScreen** (Landing)
 2. **Filter UI** (optional chips or modal)
 3. **SearchResultsScreen** (list/grid of pet cards)
-4. **PetDetailScreen** (expanded pet profile)
+4. **PetDetailScreen** (expanded pet profile with ImageCarousel)
 5. **AdoptionConfirmationDialog**
 6. **AdoptionStepScreens** (1–7)
 7. **AdoptionFinishScreen**
@@ -30,7 +31,7 @@ All UI is static for now, built in Jetpack Compose.
 - Greeting text ("Looking to adopt?")
 - Hero banner image (static)
 - Filter chips (Dog, Cat, Small, Nearby)
-- Featured pet carousel (scrollable)
+- Featured pet carousel (using ImageCarousel component)
 - "Browse All" CTA button
 
 ### Navigation
@@ -44,8 +45,9 @@ All UI is static for now, built in Jetpack Compose.
 
 ### Layout
 - Top bar with search and filter
-- Pet cards:
-  - Pet photo, name, breed, age, location
+- Pet cards using PetCard component:
+  - Pet photo (using ImageCarousel for multiple images)
+  - Name, breed, age, location
 - Empty state view if no matches
 
 ### Navigation
@@ -57,7 +59,7 @@ All UI is static for now, built in Jetpack Compose.
 **Purpose:** Full profile of selected pet
 
 ### Layout
-- Carousel of images
+- ImageCarousel for multiple pet photos
 - Bio section: name, breed, age, gender
 - Tags (vaccinated, neutered, friendly)
 - Owner/shelter info (if static)
@@ -84,6 +86,7 @@ Each screen:
 - Step title (e.g., "Step 1 of 7")
 - Inputs as specified
 - Back + Continue buttons
+- Uses Material3 components for consistent styling
 
 ### Step 1: Start
 - Display user info (email, name)
@@ -102,7 +105,8 @@ Each screen:
 - Activity level (Dropdown)
 
 ### Step 4: Images of Home
-- Upload 2–4 images
+- Upload 2–4 images using ImagePicker
+- ImageCarousel to preview uploaded images
 - Fixed 600x600px format instructions
 
 ### Step 5: People in Home
@@ -141,12 +145,18 @@ Each screen:
 
 ---
 
-## 💡 Notes for Cursor
-- All UI is static for now
-- Use Material3
-- Use Scaffold/Column layouts with paddings
-- For step flow, use minimal top step indicator (e.g. "Step 4 of 7")
-- Don't include web-style footers in mobile
-- Forms should be scrollable when needed
-- Each screen must be in its own Composable
+## 💡 Implementation Notes
+- All UI components use Material3 design system
+- Image handling:
+  - ImageCarousel component for displaying multiple images
+  - ImagePicker for photo selection
+  - Coil for image loading and caching
+- Forms are scrollable when needed
+- Each screen is a separate Composable function
+- Navigation uses Navigation Compose
+- State management follows MVVM pattern
+- All text uses Inter font family
+- Consistent padding and spacing throughout
+- Error states and loading indicators implemented
+- Accessibility support included
 

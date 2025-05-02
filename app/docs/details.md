@@ -22,6 +22,7 @@
 - **Networking:** Retrofit (2.9.0), OkHttp (4.12.0), Moshi
 - **Persistence:** Room (2.6.1), DataStore
 - **Async:** Coroutines, Flow, WorkManager
+- **Image Processing:** ImagePicker (2.1)
 
 ---
 
@@ -39,21 +40,25 @@ app/
 │   │   │       │   └── FirebaseModule.kt
 │   │   │       ├── navigation/
 │   │   │       │   └── NavGraph.kt
-│   │   │       └── ui/
-│   │   │           ├── screens/
-│   │   │           │   ├── HomeScreen.kt
-│   │   │           │   ├── LandingScreen.kt
-│   │   │           │   ├── ProfileScreen.kt
-│   │   │           │   ├── SettingsScreen.kt
-│   │   │           │   ├── LoginScreen.kt
-│   │   │           │   ├── SignUpScreen.kt
-│   │   │           │   ├── NotificationScreen.kt
-│   │   │           │   ├── NavBarItem.kt
-│   │   │           │   └── PawllyNavBar.kt
-│   │   │           └── theme/
-│   │   │               ├── Color.kt
-│   │   │               ├── Theme.kt
-│   │   │               └── Type.kt
+│   │   │       ├── screens/
+│   │   │       │   ├── AddPetScreen.kt
+│   │   │       │   ├── HomeScreen.kt
+│   │   │       │   ├── LandingScreen.kt
+│   │   │       │   ├── ProfileScreen.kt
+│   │   │       │   ├── SettingsScreen.kt
+│   │   │       │   ├── LoginScreen.kt
+│   │   │       │   ├── SignUpScreen.kt
+│   │   │       │   ├── NotificationScreen.kt
+│   │   │       │   ├── NavBarItem.kt
+│   │   │       │   └── PawllyNavBar.kt
+│   │   │       ├── components/
+│   │   │       │   ├── ImageCarousel.kt
+│   │   │       │   ├── PetCard.kt
+│   │   │       │   └── ResourceImage.kt
+│   │   │       └── theme/
+│   │   │           ├── Color.kt
+│   │   │           ├── Theme.kt
+│   │   │           └── Type.kt
 │   │   └── res/
 │   │       ├── drawable/
 │   │       ├── mipmap-xxxhdpi/ (ic_launcher.png, ic_launcher_round.webp)
@@ -82,6 +87,12 @@ app/
   - All mode option buttons are white, 120dp tall, with a left-aligned icon, bold title, description, and a chevron (arrow) on the right.
   - Buttons are centered vertically on the page.
   - No selection highlight; all buttons remain white.
+
+- **Image Carousel:**
+  - Reusable `ImageCarousel` component for displaying multiple images
+  - Supports both local and remote images
+  - Includes dot indicators for image count
+  - Smooth transitions between images
 
 - **General UI:**
   - All UI is built with Jetpack Compose and Material3.
@@ -124,6 +135,7 @@ app/
   - **OkHttp:** 4.12.0
   - **Room:** 2.6.1
   - **Coil:** 2.5.0
+  - **ImagePicker:** 2.1
   - **JUnit:** 4.13.2
   - **MockK:** 1.13.9
   - **Espresso:** 3.5.1
@@ -172,6 +184,10 @@ app/
 - **Compose Migration:**
   - All major screens have been migrated to Jetpack Compose.
   - Experimental Material3 APIs are used with `@OptIn(ExperimentalMaterial3Api::class)` where required.
+- **Image Handling:**
+  - ImagePicker library is used for photo selection
+  - Coil is used for image loading and caching
+  - ImageCarousel component is available for displaying multiple images
 - **Troubleshooting:**  
   - If launcher icon does not update, uninstall the app and clear launcher cache.
   - All resources should be referenced by name using `ResourceImage` in Compose, except for Google sign-in which uses a Material icon.

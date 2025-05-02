@@ -11,7 +11,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/newsfeed")
-@CrossOrigin(origins = "http://localhost:3000") // Allow requests from your frontend URL
+@CrossOrigin(origins = "http://localhost:8080") // Allow requests from your frontend URL
 public class NewsFeedController {
 
     @Autowired

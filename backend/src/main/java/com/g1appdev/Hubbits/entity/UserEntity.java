@@ -27,11 +27,11 @@ public class UserEntity {
     @Size(min = 8, message = "Password must be at least 8 characters long.")
     private String password;
     private String address;
-    private String phoneNumber;
+    private String phone_number;
     private String role;
 
-    @Column(name = "profile_picture", columnDefinition = "LONGBLOB")
-    private byte[] profilePicture;
+    @Column(name = "profile_picture", columnDefinition = "BYTEA")
+    private byte[] profile_picture;
 
     private LocalDateTime createdAt;
 
@@ -98,11 +98,11 @@ public class UserEntity {
     }
 
     public String getPhoneNumber() {
-        return phoneNumber;
+        return phone_number;
     }
 
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
+    public void setPhoneNumber(String phone_number) {
+        this.phone_number = phone_number;
     }
 
     public String getRole() {
@@ -122,18 +122,18 @@ public class UserEntity {
     }
 
     public byte[] getProfilePicture() {
-        return profilePicture;
+        return profile_picture;
     }
 
     public String getProfilePictureBase64() {
-        if (profilePicture != null && profilePicture.length > 0) {
-            return "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(profilePicture);
+        if (profile_picture != null && profile_picture.length > 0) {
+            return "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(profile_picture);
         }
         return null;
     }
 
-    public void setProfilePicture(byte[] profilePicture) {
-        this.profilePicture = profilePicture;
+    public void setProfilePicture(byte[] profile_picture) {
+        this.profile_picture = profile_picture;
     }
 
     @Override

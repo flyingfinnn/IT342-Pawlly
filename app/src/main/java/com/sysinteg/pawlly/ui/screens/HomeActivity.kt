@@ -46,7 +46,15 @@ class HomeActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    HomeScreen()
+                    AdoptScreen(
+                        onBrowseAll = {},
+                        onPetClick = {},
+                        onFilterClick = {},
+                        onLostFoundClick = {},
+                        onNavHome = {},
+                        onNavNotifications = {},
+                        onNavProfile = {}
+                    )
                 }
             }
         }

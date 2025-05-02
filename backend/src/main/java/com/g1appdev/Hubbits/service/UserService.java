@@ -57,7 +57,8 @@ public class UserService {
         return user;
     }
 
-    public UserEntity createUser(UserEntity user) {
+    // Modified createUser method to accept MultipartFile
+    public UserEntity createUser(UserEntity user, MultipartFile profilePicture) {
         logger.info("Creating user with username: {} and email: {}", user.getUsername(), user.getEmail());
 
         if (userRepository.existsByUsername(user.getUsername())) {
@@ -73,8 +74,18 @@ public class UserService {
         }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        UserEntity savedUser = userRepository.save(user);
 
+        // Handle the profile picture if provided
+        if (profilePicture != null && !profilePicture.isEmpty()) {
+            try {
+                user.setProfilePicture(profilePicture.getBytes());
+            } catch (IOException e) {
+                logger.error("Error setting profile picture during creation.", e);
+                throw new RuntimeException("Error setting profile picture", e);
+            }
+        }
+
+        UserEntity savedUser = userRepository.save(user);
         logger.info("User created successfully: {}", savedUser.getUsername());
         return savedUser;
     }
@@ -208,5 +219,16 @@ public class UserService {
         boolean exists = userRepository.existsByEmail(email);
         logger.info("Email {} exists: {}", email, exists);
         return exists;
+    }
+
+    public Optional<UserEntity> findByEmail(String email) {
+        logger.info("Fetching user by email: {}", email);
+        Optional<UserEntity> user = userRepository.findByEmail(email);
+        if (user.isPresent()) {
+            logger.info("User found: {}", email);
+        } else {
+            logger.warn("User not found: {}", email);
+        }
+        return user;
     }
 }

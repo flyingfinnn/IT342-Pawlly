@@ -11,6 +11,7 @@ import com.sysinteg.pawlly.ui.theme.Purple
 import com.sysinteg.pawlly.ui.theme.White
 import com.sysinteg.pawlly.ui.theme.Inter
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +34,8 @@ fun AdoptAdoptionStep5Screen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 24.dp, start = 8.dp, end = 8.dp, bottom = 8.dp)
+                    .systemBarsPadding()
+                    .padding(top = 8.dp, start = 8.dp, end = 8.dp, bottom = 8.dp)
             ) {
                 Text(
                     "Step 5 of 7",
@@ -75,20 +77,41 @@ fun AdoptAdoptionStep5Screen(
             verticalArrangement = Arrangement.Center
         ) {
             Text("People in Home", fontSize = 22.sp, color = Purple, fontFamily = Inter, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(24.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("# of Adults:", modifier = Modifier.weight(1f), fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
+                IconButton(
+                    onClick = { if (numAdults > 0) numAdults-- },
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = Purple
+                    )
+                ) { Text("-", fontFamily = Inter, fontWeight = FontWeight.Bold) }
+                Text(numAdults.toString(), fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
+                IconButton(
+                    onClick = { numAdults++ },
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = Purple
+                    )
+                ) { Text("+", fontFamily = Inter, fontWeight = FontWeight.Bold) }
+            }
             Spacer(modifier = Modifier.height(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("# of Adults:", modifier = Modifier.weight(1f), fontFamily = Inter, fontWeight = FontWeight.Bold)
-                IconButton(onClick = { if (numAdults > 0) numAdults-- }) { Text("-", fontFamily = Inter, fontWeight = FontWeight.Bold) }
-                Text(numAdults.toString(), fontFamily = Inter, fontWeight = FontWeight.Bold)
-                IconButton(onClick = { numAdults++ }) { Text("+", fontFamily = Inter, fontWeight = FontWeight.Bold) }
+                Text("# of Children:", modifier = Modifier.weight(1f), fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
+                IconButton(
+                    onClick = { if (numChildren > 0) numChildren-- },
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = Purple
+                    )
+                ) { Text("-", fontFamily = Inter, fontWeight = FontWeight.Bold) }
+                Text(numChildren.toString(), fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
+                IconButton(
+                    onClick = { numChildren++ },
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = Purple
+                    )
+                ) { Text("+", fontFamily = Inter, fontWeight = FontWeight.Bold) }
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("# of Children:", modifier = Modifier.weight(1f), fontFamily = Inter, fontWeight = FontWeight.Bold)
-                IconButton(onClick = { if (numChildren > 0) numChildren-- }) { Text("-", fontFamily = Inter, fontWeight = FontWeight.Bold) }
-                Text(numChildren.toString(), fontFamily = Inter, fontWeight = FontWeight.Bold)
-                IconButton(onClick = { numChildren++ }) { Text("+", fontFamily = Inter, fontWeight = FontWeight.Bold) }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             if (numChildren > 0) {
                 var ageDropdownExpanded by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(
@@ -99,8 +122,13 @@ fun AdoptAdoptionStep5Screen(
                         value = youngestChildAge,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Age of Youngest Child", fontFamily = Inter, fontWeight = FontWeight.Bold) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                        label = { Text("Age of Youngest Child", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black, fontFamily = Inter),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Purple,
+                            unfocusedBorderColor = Color.Gray
+                        )
                     )
                     ExposedDropdownMenu(
                         expanded = ageDropdownExpanded,
@@ -118,24 +146,33 @@ fun AdoptAdoptionStep5Screen(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Visiting children?", fontSize = 16.sp, fontFamily = Inter, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Visiting children?", fontSize = 16.sp, fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.padding(vertical = 8.dp)
             ) {
                 RadioButton(
                     selected = visitingChildren == true,
-                    onClick = { visitingChildren = true }
+                    onClick = { visitingChildren = true },
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = Purple,
+                        unselectedColor = Color.Gray
+                    )
                 )
-                Text("Yes", fontFamily = Inter, fontWeight = FontWeight.Bold)
+                Text("Yes", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
                 RadioButton(
                     selected = visitingChildren == false,
-                    onClick = { visitingChildren = false }
+                    onClick = { visitingChildren = false },
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = Purple,
+                        unselectedColor = Color.Gray
+                    )
                 )
-                Text("No", fontFamily = Inter, fontWeight = FontWeight.Bold)
+                Text("No", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
             }
             if (visitingChildren == true) {
+                Spacer(modifier = Modifier.height(16.dp))
                 var visitingAgeDropdownExpanded by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(
                     expanded = visitingAgeDropdownExpanded,
@@ -145,8 +182,13 @@ fun AdoptAdoptionStep5Screen(
                         value = visitingChildAge,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Age of Visiting Child", fontFamily = Inter, fontWeight = FontWeight.Bold) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                        label = { Text("Age of Visiting Child", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black, fontFamily = Inter),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Purple,
+                            unfocusedBorderColor = Color.Gray
+                        )
                     )
                     ExposedDropdownMenu(
                         expanded = visitingAgeDropdownExpanded,
@@ -164,22 +206,30 @@ fun AdoptAdoptionStep5Screen(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Any flatmates/lodgers?", fontSize = 16.sp, fontFamily = Inter, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Any flatmates/lodgers?", fontSize = 16.sp, fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.padding(vertical = 8.dp)
             ) {
                 RadioButton(
                     selected = hasFlatmates == true,
-                    onClick = { hasFlatmates = true }
+                    onClick = { hasFlatmates = true },
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = Purple,
+                        unselectedColor = Color.Gray
+                    )
                 )
-                Text("Yes", fontFamily = Inter, fontWeight = FontWeight.Bold)
+                Text("Yes", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
                 RadioButton(
                     selected = hasFlatmates == false,
-                    onClick = { hasFlatmates = false }
+                    onClick = { hasFlatmates = false },
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = Purple,
+                        unselectedColor = Color.Gray
+                    )
                 )
-                Text("No", fontFamily = Inter, fontWeight = FontWeight.Bold)
+                Text("No", fontFamily = Inter, fontWeight = FontWeight.Bold, color = Color.Black)
             }
             Spacer(modifier = Modifier.height(24.dp))
         }

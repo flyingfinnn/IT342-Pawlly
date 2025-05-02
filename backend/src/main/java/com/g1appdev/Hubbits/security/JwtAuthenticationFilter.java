@@ -35,18 +35,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String authorizationHeader = request.getHeader("Authorization");
         String refreshTokenHeader = request.getHeader("Refresh-Token");
-        String username = null;
+        String email = null;
         String token = null;
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             token = authorizationHeader.substring(7);
-            username = jwtUtil.extractUsername(token);
+            email = jwtUtil.extractUsername(token);
             logger.info("JWT Token: " + token); // Debug log for token
-            logger.info("Extracted username: " + username);
+            logger.info("Extracted email: " + email);
         }
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
             if (jwtUtil.validateToken(token, userDetails.getUsername())) {
                 // Retrieve authorities directly from the token
                 List<GrantedAuthority> authorities = jwtUtil.getAuthoritiesFromToken(token);
@@ -62,12 +62,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             } else if (refreshTokenHeader != null) {
                 String refreshToken = refreshTokenHeader;
                 if (jwtUtil.validateRefreshToken(refreshToken)) {
-                    username = jwtUtil.extractUsername(refreshToken);
-                    String newAccessToken = jwtUtil.generateToken(username, null);
+                    email = jwtUtil.extractUsername(refreshToken);
+                    String newAccessToken = jwtUtil.generateToken(email, null);
                     response.setHeader("New-Access-Token", newAccessToken);
                 }
             } else {
-                logger.warn("Invalid token for user: {}", username);
+                logger.warn("Invalid token for user: {}", email);
             }
         }
 
