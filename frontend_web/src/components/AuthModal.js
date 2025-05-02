@@ -48,22 +48,15 @@ const AuthModal = ({ open, handleClose }) => {
                 scopes: ["User.Read"], // Adjust scopes as needed
             });
     
-            console.log("Login Response:", loginResponse);
-    
             const tokenResponse = await msalInstance.acquireTokenSilent({
                 scopes: ["User.Read"],
                 account: loginResponse.account,
             });
     
-            console.log("Access Token:", tokenResponse.accessToken);
-    
             // Send the token to the backend
             const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/auth/microsoft-login`, {
                 token: tokenResponse.accessToken, // Ensure this is the correct access token
             });
-            
-    
-            console.log("Backend Response:", response.data);
     
             // Save the JWT in local storage
             localStorage.setItem("token", response.data.token);
@@ -72,8 +65,6 @@ const AuthModal = ({ open, handleClose }) => {
             const userResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users/me`, {
                 headers: { Authorization: `Bearer ${response.data.token}` },
             });
-    
-            console.log("User Details:", userResponse.data);
     
             // Update the user context
             updateUser(userResponse.data);

@@ -145,7 +145,7 @@ const VolunteerDashboard = () => {
                                 image={
                                     opportunity.volunteerImageUrl
                                         ? `${process.env.REACT_APP_BACKEND_URL}${opportunity.volunteerImageUrl}`  // Use the volunteerImageUrl if available
-                                        : 'http://localhost:3000/images/default.png'  // Fallback to default image if not available
+                                        : `${process.env.REACT_APP_FRONTEND_URL}/images/default.png`  // Fallback to default image if not available
                                 }
                                 alt={opportunity.title}
                             />
