@@ -5,7 +5,7 @@ const msalConfig = {
     auth: {
         clientId: "f8b9184f-ed50-4b6c-87aa-381c5d7a947b", // Replace with your Microsoft App Client ID
         authority: "https://login.microsoftonline.com/823cde44-4433-456d-b801-bdf0ab3d41fc",
-        redirectUri: `${process.env.REACT_APP_FRONTEND_URL}/auth/microsoft/callback`, // Replace with your redirect URI
+        redirectUri: "https://it-342-pawlly.vercel.app/auth/microsoft/callback", // Replace with your redirect URI
     },
 };
 
