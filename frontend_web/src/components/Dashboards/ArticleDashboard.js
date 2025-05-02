@@ -34,10 +34,10 @@ const ArticleDashboard = () => {
 
   const fetchArticles = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/newsfeed');
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions`);
       const updatedArticles = response.data.map((article) => ({
         ...article,
-        image: article.imageUrl ? `http://localhost:8080${article.imageUrl}` : petPlaceholder,
+        image: article.imageUrl ? `${process.env.REACT_APP_BACKEND_URL}${article.imageUrl}` : petPlaceholder,
       }));
       setArticles(updatedArticles);
     } catch (error) {
@@ -76,10 +76,10 @@ const ArticleDashboard = () => {
     try {
       const config = { headers: { 'Content-Type': 'multipart/form-data' } };
       if (isEditing && currentId) {
-        await axios.put(`http://localhost:8080/api/newsfeed/${currentId}`, data, config);
+        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/newsfeed/${currentId}`, data, config);
         setSuccessMessage('Article updated successfully!');
       } else {
-        await axios.post('http://localhost:8080/api/newsfeed', data, config);
+        await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/newsfeed`, data, config);
         setSuccessMessage('Article posted successfully!');
       }
       fetchArticles();
@@ -119,7 +119,7 @@ const ArticleDashboard = () => {
   const confirmDelete = async () => {
     try {
       // Ensure that the deleteId is being passed correctly
-      await axios.delete(`http://localhost:8080/api/newsfeed/${deleteId}`);
+      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/newsfeed/${deleteId}`);
       // Remove the deleted article from the state
       setArticles(articles.filter((article) => article.articleID !== deleteId));
       setDeleteDialogOpen(false); // Close the delete dialog
