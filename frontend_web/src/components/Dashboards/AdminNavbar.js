@@ -7,7 +7,6 @@ const sections = [
     { label: 'Adoptions', icon: <Favorite /> },
     { label: 'Rehome', icon: <Favorite /> },
     { label: 'Sponsorships', icon: <Pets /> },
-    { label: 'Lost and Found', icon: <Event /> },
     { label: 'Volunteers', icon: <People /> },
     { label: 'Events', icon: <Event /> },
     { label: 'Articles', icon: <Article /> },

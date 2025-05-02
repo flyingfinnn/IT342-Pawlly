@@ -33,7 +33,7 @@ const AdoptionDashboard = () => {
         const fetchRecords = async () => {
             setError('');
             try {
-                const adoptionResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions`);
+                const adoptionResponse = await axios.get('http://localhost:8080/api/adoptions');
                 setAdoptions(adoptionResponse.data);
             } catch (error) {
                 setError('Failed to load records.');
@@ -55,7 +55,7 @@ const AdoptionDashboard = () => {
 
     const handleDeleteConfirm = async () => {
         try {
-            await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions/${deleteId}`);
+            await axios.delete(`http://localhost:8080/api/adoptions/${deleteId}`);
             setAdoptions(adoptions.filter((adoption) => adoption.adoptionID !== deleteId));
             setSuccessMessage('Adoption record deleted successfully!');
         } catch (error) {
@@ -85,7 +85,7 @@ const AdoptionDashboard = () => {
                     status: newStatus, // Only update status
                 };
 
-                await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions/${editAdoption.adoptionID}`, updatedAdoption);
+                await axios.put(`http://localhost:8080/api/adoptions/${editAdoption.adoptionID}`, updatedAdoption);
 
                 // Update the local state with the new information
                 setAdoptions((prev) =>

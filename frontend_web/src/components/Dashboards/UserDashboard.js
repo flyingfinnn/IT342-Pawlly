@@ -32,7 +32,7 @@ const UserDashboard = () => {
 
     const fetchUsers = async () => {
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users`);
+            const response = await axios.get("http://localhost:8080/api/users");
             setUsers(response.data);
         } catch (error) {
             console.error("Error fetching users:", error);
@@ -76,7 +76,7 @@ const UserDashboard = () => {
 
         try {
             const response = await axios.put(
-                `${process.env.REACT_APP_BACKEND_URL}/api/users/${id}`,
+                `http://localhost:8080/api/users/${id}`,
                 formData,
                 {
                     headers: {
@@ -110,7 +110,7 @@ const UserDashboard = () => {
 
         try {
             const response = await axios.delete(
-                `${process.env.REACT_APP_BACKEND_URL}/api/users/${id}`,
+                `http://localhost:8080/api/users/${id}`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
