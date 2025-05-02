@@ -40,14 +40,9 @@ const AuthModal = ({ open, handleClose }) => {
 
     // Microsoft login function
     const handleMicrosoftLogin = async () => {
-        if (msalInstance.getAllAccounts().length > 0 || msalInstance.inProgress()) {
-            console.log("Login process is already in progress. Please wait.");
-            return;
-        }
-    
         try {
-            // Set the loading state to true
-            setIsLoginInProgress(true);
+            // Ensure MSAL is initialized
+            await msalInstance.initialize();
     
             const loginResponse = await msalInstance.loginPopup({
                 scopes: ["User.Read"], // Adjust scopes as needed
@@ -64,8 +59,9 @@ const AuthModal = ({ open, handleClose }) => {
     
             // Send the token to the backend
             const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/auth/microsoft-login`, {
-                token: tokenResponse.accessToken,
+                token: tokenResponse.accessToken, // Ensure this is the correct access token
             });
+            
     
             console.log("Backend Response:", response.data);
     
@@ -93,26 +89,13 @@ const AuthModal = ({ open, handleClose }) => {
             handleClose();
         } catch (error) {
             console.error("Microsoft login error:", error);
-            
-            // Handle cancellation error gracefully
-            if (error instanceof msalBrowser.BrowserAuthError && error.errorCode === 'user_cancelled') {
-                setSnackbar({
-                    open: true,
-                    message: "Login process was cancelled. Please try again.",
-                    severity: "info",
-                });
-            } else {
-                setSnackbar({
-                    open: true,
-                    message: "Error logging in with Microsoft. Please try again.",
-                    severity: "error",
-                });
-            }
-        } finally {
-            // Set loading state to false
-            setIsLoginInProgress(false);
+            setSnackbar({
+                open: true,
+                message: "Error logging in with Microsoft. Please try again.",
+                severity: "error",
+            });
         }
-    };    
+    };
 
     // Login state and handlers
     const [loginCredentials, setLoginCredentials] = useState({
