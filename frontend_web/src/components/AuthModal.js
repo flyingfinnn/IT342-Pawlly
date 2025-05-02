@@ -26,7 +26,7 @@ const AuthModal = ({ open, handleClose }) => {
     const [isLogin, setIsLogin] = useState(true);
     const navigate = useNavigate();
     const { updateUser } = useUser();
-    const [loginInProgress, setLoginInProgress] = useState(false);
+
     const [usernameExists, setUsernameExists] = useState(false);
     const [emailExists, setEmailExists] = useState(false);
 
@@ -40,41 +40,52 @@ const AuthModal = ({ open, handleClose }) => {
 
     // Microsoft login function
     const handleMicrosoftLogin = async () => {
-        if (loginInProgress) return; // prevent re-entry
-        setLoginInProgress(true);
-    
         try {
-            if (!msalInstance.getAllAccounts().length) {
-                await msalInstance.initialize();
-            }
+            // Ensure MSAL is initialized
+            await msalInstance.initialize();
     
             const loginResponse = await msalInstance.loginPopup({
-                scopes: ["User.Read"],
+                scopes: ["User.Read"], // Adjust scopes as needed
             });
+    
+            console.log("Login Response:", loginResponse);
     
             const tokenResponse = await msalInstance.acquireTokenSilent({
                 scopes: ["User.Read"],
                 account: loginResponse.account,
             });
     
-            const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/auth/microsoft-login`, {
-                token: tokenResponse.accessToken,
-            });
+            console.log("Access Token:", tokenResponse.accessToken);
     
+            // Send the token to the backend
+            const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/auth/microsoft-login`, {
+                token: tokenResponse.accessToken, // Ensure this is the correct access token
+            });
+            
+    
+            console.log("Backend Response:", response.data);
+    
+            // Save the JWT in local storage
             localStorage.setItem("token", response.data.token);
     
+            // Fetch user details from the backend
             const userResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users/me`, {
                 headers: { Authorization: `Bearer ${response.data.token}` },
             });
     
+            console.log("User Details:", userResponse.data);
+    
+            // Update the user context
             updateUser(userResponse.data);
     
+            // Show success message
             setSnackbar({
                 open: true,
                 message: `Welcome, ${userResponse.data.firstName}!`,
                 severity: "success",
             });
     
+            // Close the modal
             handleClose();
         } catch (error) {
             console.error("Microsoft login error:", error);
@@ -83,11 +94,8 @@ const AuthModal = ({ open, handleClose }) => {
                 message: "Error logging in with Microsoft. Please try again.",
                 severity: "error",
             });
-        } finally {
-            setLoginInProgress(false);
         }
     };
-    
 
     // Login state and handlers
     const [loginCredentials, setLoginCredentials] = useState({
