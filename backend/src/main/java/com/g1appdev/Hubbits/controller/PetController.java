@@ -39,45 +39,44 @@ public PetEntity postPetRecord(@RequestParam("name") String name,
                                @RequestParam("address") String address,
                                @RequestParam("contactNumber") String contactNumber,
                                @RequestParam("submissionDate") String submissionDate) {
-                            try {
-                                if (photo == null || photo.isEmpty()) {
-                                    throw new IllegalArgumentException("Photo is required for pet rehome records.");
-                                }
-                                
-                                // Save photo to a directory
-                                String fileName = StringUtils.cleanPath(photo.getOriginalFilename());
-                                Path uploadDir = Paths.get("uploads/pets");
-                                if (!Files.exists(uploadDir)) {
-                                    Files.createDirectories(uploadDir);
-                                }
-                                
-                                Path filePath = uploadDir.resolve(fileName);
-                                photo.transferTo(filePath);
-                                
-                                // Determine the base URL with fallbacks
-                                List<String> fallbackUrls = List.of(
-                                    System.getenv("BACKEND_URL"),
-                                    "https://pawlly-y4wm.onrender.com",           // Render backend
-                                    "https://it-342-pawlly.vercel.app",           // Vercel frontend
-                                    "http://localhost:8080"                       // Local dev
-                                );
-                                
-                                String baseUrl = fallbackUrls.stream()
-                                    .filter(url -> url != null && !url.isEmpty())
-                                    .findFirst()
-                                    .orElseThrow(() -> new IllegalStateException("No valid BACKEND_URL or fallback URL found."));
-                                
-                                String fileUrl = baseUrl + "/uploads/pets/" + fileName;
-                                
-                                // Create and save PetEntity
-                                PetEntity pet = new PetEntity(0, name, type, breed, age, gender, description, fileUrl, status, userName, address, contactNumber, submissionDate);
-                                return pserv.postPetRecord(pet);
-                                
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                return null; // Log or handle more gracefully in production
-                            }
-                    }                                
+    try {
+        if (photo == null || photo.isEmpty()) {
+            throw new IllegalArgumentException("Photo is required for pet rehome records.");
+        }
+
+        // Save photo to a directory
+        String fileName = StringUtils.cleanPath(photo.getOriginalFilename());
+        Path uploadDir = Paths.get("uploads/pets");
+        if (!Files.exists(uploadDir)) {
+            Files.createDirectories(uploadDir);
+        }
+
+        Path filePath = uploadDir.resolve(fileName);
+        photo.transferTo(filePath);
+
+        // Determine base URL
+        String envUrl = System.getenv("BACKEND_URL");
+        String baseUrl = (envUrl != null && !envUrl.isBlank())
+            ? envUrl
+            : "https://pawlly-y4wm.onrender.com"; // Use your deployed backend URL as default
+
+        if (baseUrl.contains("localhost")) {
+            // Fail-safe: don't allow localhost URLs in production
+            throw new IllegalStateException("Invalid BACKEND_URL: localhost is not allowed in production.");
+        }
+
+        String fileUrl = baseUrl + "/uploads/pets/" + fileName;
+
+        // Create and save PetEntity
+        PetEntity pet = new PetEntity(0, name, type, breed, age, gender, description, fileUrl, status, userName, address, contactNumber, submissionDate);
+        return pserv.postPetRecord(pet);
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        return null; // Consider returning a proper error response or message
+    }
+}
+                          
 
     @GetMapping("/getAllPets")
     public List<PetEntity> getAllPets(){

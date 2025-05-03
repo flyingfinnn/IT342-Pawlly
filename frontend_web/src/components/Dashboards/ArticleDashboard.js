@@ -236,93 +236,100 @@ const ArticleDashboard = () => {
 
       <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose} message={successMessage} />
 
-      {/* News Feed Cards */}
-      <Typography variant="h4" sx={{ my: 3 }}>
-        Pet News
-      </Typography>
-      <Grid container spacing={3}>
-        {articles.map((article) => (
-          <Grid item xs={12} sm={6} md={4} key={article.articleID}>
-            <Card sx={{ display: 'flex', flexDirection: 'column', position: 'relative', padding: 2, height: '100%' }}>
-              <Box
-                sx={{
-                  width: '100%',
-                  height: 180,
-                  backgroundImage: `url(${article.image})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  borderRadius: 1,
-                }}
-              />
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Typography variant="h6">{article.title || 'Untitled'}</Typography>
-                <Typography variant="body2" sx={{ my: 1 }}>
-                  {article.content.length > 100 ? `${article.content.substring(0, 100)}...` : article.content || 'No content available.'}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {`By ${article.author || 'Unknown'} | Published: ${article.publishedDate ? formatDate(article.publishedDate) : 'N/A'}`}
-                </Typography>
-              </CardContent>
+                  {/* News Feed Cards */}
+            <Typography variant="h4" sx={{ my: 3 }}>
+              Pet News
+            </Typography>
 
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  paddingTop: 1,
-                  marginTop: 'auto',
-                }}
-              >
-                {/* Learn More Button */}
-                <Button
-                    variant="outlined"
-                    color="primary"
-                    onClick={() => window.open(article.link, '_blank')} // Opens link in a new tab
-                    disabled={!article.link} // Disable if no link is provided
+            <Grid container spacing={3}>
+              {articles.map((article) => (
+                <Grid item xs={12} sm={6} md={4} key={article.articleID}>
+                  <Card
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      height: '100%',
+                      p: 2,
+                    }}
+                  >
+                    {/* Image Banner */}
+                    <Box
+                      sx={{
+                        width: '100%',
+                        height: 180,
+                        backgroundImage: `url(${article.image})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        borderRadius: 1,
+                      }}
+                    />
+
+                    {/* Article Content */}
+                    <CardContent sx={{ flexGrow: 1 }}>
+                      <Typography variant="h6" gutterBottom>
+                        {article.title || 'Untitled'}
+                      </Typography>
+                      <Typography variant="body2" sx={{ mb: 1 }}>
+                        {article.content?.length > 100
+                          ? `${article.content.substring(0, 100)}...`
+                          : article.content || 'No content available.'}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {`By ${article.author || 'Unknown'} | Published: ${
+                          article.publishedDate ? formatDate(article.publishedDate) : 'N/A'
+                        }`}
+                      </Typography>
+                    </CardContent>
+
+                    {/* Action Buttons */}
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        mt: 2,
+                      }}
                     >
-                    Learn More
-                    </Button>
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        onClick={() => window.open(article.link, '_blank')}
+                        disabled={!article.link}
+                      >
+                        Learn More
+                      </Button>
 
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <IconButton color="primary" onClick={() => handleEdit(article)}>
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton color="error" onClick={() => handleDeleteClick(article.articleID)}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </Box>
+                    </Box>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
 
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  {/* Update Button */}
-                  <IconButton color="primary" onClick={() => handleEdit(article)}>
-                    <EditIcon />
-                  </IconButton>
-                  {/* Delete Button */}
-                  <IconButton color="primary" onClick={() => handleDeleteClick(article.articleID)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              </Box>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)} // Close dialog if the user clicks outside
-      >
-        <DialogTitle>Confirm Deletion</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this article?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)} color="primary">
-            Cancel
-          </Button>
-          <Button
-            onClick={confirmDelete} // Call the confirmDelete function when Confirm is clicked
-            color="secondary"
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+              <DialogTitle>Confirm Deletion</DialogTitle>
+              <DialogContent>
+                <DialogContentText>
+                  Are you sure you want to delete this article?
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setDeleteDialogOpen(false)} color="primary">
+                  Cancel
+                </Button>
+                <Button onClick={confirmDelete} color="secondary">
+                  Delete
+                </Button>
+              </DialogActions>
+            </Dialog>
     </Box>
   );
 };
