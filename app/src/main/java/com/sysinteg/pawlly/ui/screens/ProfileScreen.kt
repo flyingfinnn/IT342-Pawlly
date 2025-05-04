@@ -33,6 +33,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -70,12 +71,24 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import com.sysinteg.pawlly.userApi
 import com.sysinteg.pawlly.UserResponse
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import com.sysinteg.pawlly.utils.Constants.PAWLLY_PREFS
 import com.sysinteg.pawlly.utils.Constants.KEY_JWT_TOKEN
 import android.util.Log
+import android.util.Base64
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import java.io.File
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 val LightRed = Color(0xFFFF6B6B)
 
@@ -98,7 +111,8 @@ fun ProfileScreen(
     onNavNotifications: () -> Unit = {},
     onNavProfile: () -> Unit = {},
     onAddPet: () -> Unit = {},
-    onPetDetail: (Int) -> Unit = {}
+    onPetDetail: (Int) -> Unit = {},
+    editMode: Boolean = false
 ) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences(PAWLLY_PREFS, Context.MODE_PRIVATE) }
@@ -129,7 +143,7 @@ fun ProfileScreen(
     var editAddress by remember { mutableStateOf("") }
 
     // Load initial values from SharedPreferences or Firebase
-    var isEditing by remember { mutableStateOf(false) }
+    var isEditing by remember { mutableStateOf(editMode) }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
@@ -146,6 +160,40 @@ fun ProfileScreen(
     var originalEmail by remember { mutableStateOf(email) }
     var originalPhone by remember { mutableStateOf(phone) }
     var originalAddress by remember { mutableStateOf(address) }
+
+    // Decode profile picture bitmap safely for Compose
+    val decodedProfileBitmap = remember(profilePictureBase64) {
+        try {
+            if (profilePictureBase64.isNotEmpty()) {
+                val imageBytes = Base64.decode(profilePictureBase64, Base64.DEFAULT)
+                BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+            } else null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    // State for profile picture update
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var newProfileBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+    var isImageChanged by remember { mutableStateOf(false) }
+
+    // Image picker launcher
+    val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let {
+            selectedImageUri = it
+            isImageChanged = true
+            val inputStream = context.contentResolver.openInputStream(it)
+            newProfileBitmap = BitmapFactory.decodeStream(inputStream)
+            inputStream?.close()
+        }
+    }
+
+    // Helper for password validation
+    fun isValidPassword(password: String): Boolean {
+        val passwordPattern = Regex("^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#${'$'}%^&*()_+={};':\"|,.<>/?-]).{8,}")
+        return passwordPattern.containsMatchIn(password)
+    }
 
     // Fetch user details on load
     LaunchedEffect(Unit) {
@@ -240,266 +288,502 @@ fun ProfileScreen(
         return
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .background(BoneWhite)
-    ) {
-        // Status bar background
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
-                .background(Color(0xFFFAF9F6))
-        )
-        // Status chip in top right
+    Scaffold(
+        containerColor = BoneWhite,
+        bottomBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                PawllyNavBar(
+                    selectedScreen = "Profile",
+                    onNavHome = onNavHome,
+                    onNavNotifications = onNavNotifications,
+                    onNavProfile = onNavProfile
+                )
+            }
+        }
+    ) { innerPadding ->
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp, end = 16.dp),
-            contentAlignment = Alignment.TopEnd
+                .fillMaxSize()
+                .statusBarsPadding()
+                .background(BoneWhite)
+                .padding(innerPadding)
         ) {
-            AnimatedStatusChip(visible = showStatusChip, status = statusType)
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp, bottom = 8.dp)
-                .statusBarsPadding(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-        }
-
-        if (isEditing) {
+            // Status bar background
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
+                    .background(Color(0xFFFAF9F6))
+            )
+            // Status chip in top right
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 80.dp) // Add padding for the navigation bar
+                    .fillMaxWidth()
+                    .padding(top = 16.dp, end = 16.dp),
+                contentAlignment = Alignment.TopEnd
             ) {
-                Column(
+                AnimatedStatusChip(visible = showStatusChip, status = statusType)
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 8.dp)
+                    .statusBarsPadding(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Spacer(modifier = Modifier.width(48.dp)) // To balance the row visually (like NotificationScreen)
+            }
+
+            if (isEditing) {
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 24.dp, vertical = 32.dp)
-                        .verticalScroll(rememberScrollState()),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .padding(bottom = 80.dp) // Add padding for the navigation bar
                 ) {
-                    // Profile Picture
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 24.dp, vertical = 32.dp)
+                            .verticalScroll(rememberScrollState()),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Profile Picture
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(120.dp)
+                                    .clip(CircleShape)
+                                    .background(Purple)
+                                    .clickable(enabled = isEditing) { 
+                                        if (isEditing) {
+                                            imagePickerLauncher.launch("image/*") 
+                                        }
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                val showBitmap = if (isImageChanged && newProfileBitmap != null) newProfileBitmap else decodedProfileBitmap
+                                if (showBitmap != null) {
+                                    androidx.compose.foundation.Image(
+                                        bitmap = showBitmap.asImageBitmap(),
+                                        contentDescription = "Profile Picture",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = "Profile Picture",
+                                        tint = Color.Black,
+                                        modifier = Modifier.size(80.dp)
+                                    )
+                                }
+                            }
+                            if (isEditing) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    "Tap to change profile picture",
+                                    color = Color.Gray,
+                                    fontSize = 12.sp,
+                                    fontFamily = Inter
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(32.dp))
+                        // Edit Form
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.Start
+                        ) {
+                            Text(
+                                "First Name",
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = Inter,
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            OutlinedTextField(
+                                value = editFirstName,
+                                onValueChange = { editFirstName = it },
+                                placeholder = { Text("Enter first name", color = Color.Black) },
+                                enabled = isEditing,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedPlaceholderColor = Color.Black,
+                                    focusedPlaceholderColor = Color.Black,
+                                    disabledPlaceholderColor = Color.Black,
+                                    unfocusedBorderColor = Color.LightGray,
+                                    focusedBorderColor = Purple,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedTextColor = Color.Black
+                                )
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Text(
+                                "Last Name",
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = Inter,
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            OutlinedTextField(
+                                value = editLastName,
+                                onValueChange = { editLastName = it },
+                                placeholder = { Text("Enter last name", color = Color.Black) },
+                                enabled = isEditing,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedPlaceholderColor = Color.Black,
+                                    focusedPlaceholderColor = Color.Black,
+                                    disabledPlaceholderColor = Color.Black,
+                                    unfocusedBorderColor = Color.LightGray,
+                                    focusedBorderColor = Purple,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedTextColor = Color.Black
+                                )
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Text(
+                                "Username",
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = Inter,
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            OutlinedTextField(
+                                value = editUsername,
+                                onValueChange = { editUsername = it },
+                                placeholder = { Text("Enter username", color = Color.Black) },
+                                enabled = isEditing,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedPlaceholderColor = Color.Black,
+                                    focusedPlaceholderColor = Color.Black,
+                                    disabledPlaceholderColor = Color.Black,
+                                    unfocusedBorderColor = Color.LightGray,
+                                    focusedBorderColor = Purple,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedTextColor = Color.Black
+                                )
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Text(
+                                "Email",
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = Inter,
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            OutlinedTextField(
+                                value = editEmail,
+                                onValueChange = { editEmail = it },
+                                placeholder = { Text("Enter email", color = Color.Black) },
+                                enabled = isEditing,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedPlaceholderColor = Color.Black,
+                                    focusedPlaceholderColor = Color.Black,
+                                    disabledPlaceholderColor = Color.Black,
+                                    unfocusedBorderColor = Color.LightGray,
+                                    focusedBorderColor = Purple,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedTextColor = Color.Black
+                                )
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Text(
+                                "Phone",
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = Inter,
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            OutlinedTextField(
+                                value = editPhone,
+                                onValueChange = { editPhone = it },
+                                placeholder = { Text("Enter phone number", color = Color.Black) },
+                                enabled = isEditing,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedPlaceholderColor = Color.Black,
+                                    focusedPlaceholderColor = Color.Black,
+                                    disabledPlaceholderColor = Color.Black,
+                                    unfocusedBorderColor = Color.LightGray,
+                                    focusedBorderColor = Purple,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedTextColor = Color.Black
+                                )
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Text(
+                                "Address",
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = Inter,
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            OutlinedTextField(
+                                value = editAddress,
+                                onValueChange = { editAddress = it },
+                                placeholder = { Text("Enter address", color = Color.Black) },
+                                enabled = isEditing,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedPlaceholderColor = Color.Black,
+                                    focusedPlaceholderColor = Color.Black,
+                                    disabledPlaceholderColor = Color.Black,
+                                    unfocusedBorderColor = Color.LightGray,
+                                    focusedBorderColor = Purple,
+                                    unfocusedTextColor = Color.Black,
+                                    focusedTextColor = Color.Black
+                                )
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Text("Password", fontWeight = FontWeight.Bold, fontFamily = Inter, fontSize = 14.sp, color = Color.Gray)
+                            OutlinedTextField(
+                                value = password,
+                                onValueChange = { password = it },
+                                placeholder = { Text("Enter your password", color = Color.Black) },
+                                modifier = Modifier.fillMaxWidth(),
+                                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                colors = OutlinedTextFieldDefaults.colors(),
+                                textStyle = TextStyle(color = Color.Black)
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Text("Confirm Password", fontWeight = FontWeight.Bold, fontFamily = Inter, fontSize = 14.sp, color = Color.Gray)
+                            OutlinedTextField(
+                                value = confirmPassword,
+                                onValueChange = { confirmPassword = it },
+                                placeholder = { Text("Confirm your password", color = Color.Black) },
+                                modifier = Modifier.fillMaxWidth(),
+                                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                colors = OutlinedTextFieldDefaults.colors(),
+                                textStyle = TextStyle(color = Color.Black)
+                            )
+                            if (errorMessage.isNotEmpty()) {
+                                Text(errorMessage, color = LightRed, fontSize = 14.sp, modifier = Modifier.padding(top = 8.dp))
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(32.dp))
+                        // Edit Profile and Logout Buttons in the same row
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Button(
+                                onClick = {
+                                    coroutineScope.launch {
+                                        errorMessage = ""
+                                        // Password logic
+                                        val newPassword = password.trim()
+                                        val confirmNewPassword = confirmPassword.trim()
+                                        var passwordToSend: String? = null
+                                        if (newPassword.isNotEmpty() || confirmNewPassword.isNotEmpty()) {
+                                            if (newPassword != confirmNewPassword) {
+                                                errorMessage = "Passwords do not match."
+                                                return@launch
+                                            }
+                                            if (!isValidPassword(newPassword)) {
+                                                errorMessage = "Password must be at least 8 characters, include 1 uppercase letter, 1 number, and 1 special character."
+                                                return@launch
+                                            }
+                                            passwordToSend = newPassword
+                                        }
+                                        // Prepare the user JSON
+                                        val userJson = JSONObject().apply {
+                                            if (editFirstName.isNotEmpty()) put("firstName", editFirstName)
+                                            if (editLastName.isNotEmpty()) put("lastName", editLastName)
+                                            if (editUsername.isNotEmpty()) put("username", editUsername)
+                                            if (editEmail.isNotEmpty()) put("email", editEmail)
+                                            if (editPhone.isNotEmpty()) put("phoneNumber", editPhone)
+                                            if (editAddress.isNotEmpty()) put("address", editAddress)
+                                            if (passwordToSend != null) put("password", passwordToSend)
+                                        }.toString()
+
+                                        // Create RequestBody for user JSON
+                                        val userPart = userJson.toRequestBody("application/json".toMediaType())
+
+                                        // Create MultipartBody.Part for profile picture if changed
+                                        val profilePicturePart = if (selectedImageUri != null) {
+                                            // Copy the content from the Uri to a temp file
+                                            val inputStream = context.contentResolver.openInputStream(selectedImageUri!!)
+                                            val tempFile = File.createTempFile("profile_picture", null, context.cacheDir)
+                                            inputStream?.use { input ->
+                                                tempFile.outputStream().use { output ->
+                                                    input.copyTo(output)
+                                                }
+                                            }
+                                            val mimeType = context.contentResolver.getType(selectedImageUri!!) ?: "image/*"
+                                            val requestFile = tempFile.asRequestBody(mimeType.toMediaType())
+                                            MultipartBody.Part.createFormData("profilePicture", tempFile.name, requestFile)
+                                        } else {
+                                            null
+                                        }
+
+                                        // Make the API call
+                                        val response = userApi.updateUser(userId ?: 0L, userPart, profilePicturePart)
+                                        // Update UI with new values
+                                        if (editFirstName.isNotEmpty()) firstName = editFirstName
+                                        if (editLastName.isNotEmpty()) lastName = editLastName
+                                        if (editUsername.isNotEmpty()) username = editUsername
+                                        if (editEmail.isNotEmpty()) email = editEmail
+                                        if (editPhone.isNotEmpty()) phone = editPhone
+                                        if (editAddress.isNotEmpty()) address = editAddress
+                                        if (selectedImageUri != null) {
+                                            isImageChanged = false
+                                        }
+                                        isEditing = false
+                                        errorMessage = ""
+                                        statusType = StatusType.Success
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Purple),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp)
+                            ) {
+                                Text("Save Changes", color = Color.White, fontFamily = Inter, fontWeight = FontWeight.Bold)
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Button(
+                                onClick = {
+                                    // Discard changes
+                                    editFirstName = originalFirstName
+                                    editLastName = originalLastName
+                                    editUsername = originalUsername
+                                    editEmail = originalEmail
+                                    editPhone = originalPhone
+                                    editAddress = originalAddress
+                                    isEditing = false
+                                    errorMessage = ""
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = LightRed),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp)
+                            ) {
+                                Text("Discard", color = Color.White, fontFamily = Inter, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter)
+                        .statusBarsPadding()
+                        .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp)
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    // Profile Picture Row (left-aligned)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp, bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
                             modifier = Modifier
                                 .size(120.dp)
                                 .clip(CircleShape)
                                 .background(Purple)
-                                .clickable { /* TODO: Add profile picture picker */ },
+                                .clickable(enabled = isEditing) {
+                                    if (isEditing) {
+                                        imagePickerLauncher.launch("image/*")
+                                    }
+                                },
                             contentAlignment = Alignment.Center
                         ) {
-                            if (profilePictureBase64.isNotEmpty()) {
-                                // TODO: Add profile picture display
+                            val showBitmap = if (isImageChanged && newProfileBitmap != null) newProfileBitmap else decodedProfileBitmap
+                            if (showBitmap != null) {
+                                androidx.compose.foundation.Image(
+                                    bitmap = showBitmap.asImageBitmap(),
+                                    contentDescription = "Profile Picture",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                                )
                             } else {
                                 Icon(
                                     imageVector = Icons.Default.Person,
                                     contentDescription = "Profile Picture",
-                                    tint = Color.White,
+                                    tint = Color.Black,
                                     modifier = Modifier.size(80.dp)
                                 )
                             }
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            "Tap to change profile picture",
-                            color = Color.Gray,
-                            fontSize = 12.sp,
-                            fontFamily = Inter
-                        )
                     }
                     Spacer(modifier = Modifier.height(32.dp))
-                    // Edit Form
+                    // User Info
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.Start
                     ) {
-                        Text(
-                            "First Name",
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = Inter,
-                            fontSize = 14.sp,
-                            color = Color.Gray,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                        OutlinedTextField(
-                            value = editFirstName,
-                            onValueChange = { editFirstName = it },
-                            placeholder = { Text("Enter first name", color = Color.Gray) },
-                            enabled = isEditing,
+                        Text("Name", fontWeight = FontWeight.Bold, fontFamily = Inter, fontSize = 14.sp, color = Color.Gray)
+                        Row(
                             modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedPlaceholderColor = Color.Gray,
-                                unfocusedBorderColor = Color.LightGray,
-                                focusedBorderColor = Purple
-                            )
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            "Last Name",
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = Inter,
-                            fontSize = 14.sp,
-                            color = Color.Gray,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                        OutlinedTextField(
-                            value = editLastName,
-                            onValueChange = { editLastName = it },
-                            placeholder = { Text("Enter last name", color = Color.Gray) },
-                            enabled = isEditing,
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedPlaceholderColor = Color.Gray,
-                                unfocusedBorderColor = Color.LightGray,
-                                focusedBorderColor = Purple
-                            )
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            "Username",
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = Inter,
-                            fontSize = 14.sp,
-                            color = Color.Gray,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                        OutlinedTextField(
-                            value = editUsername,
-                            onValueChange = { editUsername = it },
-                            placeholder = { Text("Enter username", color = Color.Gray) },
-                            enabled = isEditing,
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedPlaceholderColor = Color.Gray,
-                                unfocusedBorderColor = Color.LightGray,
-                                focusedBorderColor = Purple
-                            )
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            "Email",
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = Inter,
-                            fontSize = 14.sp,
-                            color = Color.Gray,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                        OutlinedTextField(
-                            value = editEmail,
-                            onValueChange = { editEmail = it },
-                            placeholder = { Text("Enter email", color = Color.Gray) },
-                            enabled = isEditing,
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedPlaceholderColor = Color.Gray,
-                                unfocusedBorderColor = Color.LightGray,
-                                focusedBorderColor = Purple
-                            )
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            "Phone",
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = Inter,
-                            fontSize = 14.sp,
-                            color = Color.Gray,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                        OutlinedTextField(
-                            value = editPhone,
-                            onValueChange = { editPhone = it },
-                            placeholder = { Text("Enter phone number", color = Color.Gray) },
-                            enabled = isEditing,
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedPlaceholderColor = Color.Gray,
-                                unfocusedBorderColor = Color.LightGray,
-                                focusedBorderColor = Purple
-                            )
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            "Address",
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = Inter,
-                            fontSize = 14.sp,
-                            color = Color.Gray,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                        OutlinedTextField(
-                            value = editAddress,
-                            onValueChange = { editAddress = it },
-                            placeholder = { Text("Enter address", color = Color.Gray) },
-                            enabled = isEditing,
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                unfocusedPlaceholderColor = Color.Gray,
-                                unfocusedBorderColor = Color.LightGray,
-                                focusedBorderColor = Purple
-                            )
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Text("Password", fontWeight = FontWeight.Bold, fontFamily = Inter, fontSize = 14.sp, color = Color.Gray)
-                        OutlinedTextField(
-                            value = password,
-                            onValueChange = { password = it },
-                            placeholder = { Text("Enter your password") },
-                            modifier = Modifier.fillMaxWidth(),
-                            visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                            colors = OutlinedTextFieldDefaults.colors(),
-                            textStyle = TextStyle(color = Color.Black)
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Text("Confirm Password", fontWeight = FontWeight.Bold, fontFamily = Inter, fontSize = 14.sp, color = Color.Gray)
-                        OutlinedTextField(
-                            value = confirmPassword,
-                            onValueChange = { confirmPassword = it },
-                            placeholder = { Text("Confirm your password") },
-                            modifier = Modifier.fillMaxWidth(),
-                            visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                            colors = OutlinedTextFieldDefaults.colors(),
-                            textStyle = TextStyle(color = Color.Black)
-                        )
-                        if (errorMessage.isNotEmpty()) {
-                            Text(errorMessage, color = LightRed, fontSize = 14.sp, modifier = Modifier.padding(top = 8.dp))
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("$firstName $lastName", fontSize = 16.sp, color = Color.Black)
                         }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Username", fontWeight = FontWeight.Bold, fontFamily = Inter, fontSize = 14.sp, color = Color.Gray)
+                        Text(username, fontSize = 16.sp, color = Color.Black, modifier = Modifier.padding(bottom = 16.dp))
+                        Text("Email Address", fontWeight = FontWeight.Bold, fontFamily = Inter, fontSize = 14.sp, color = Color.Gray)
+                        Text(email, fontSize = 16.sp, color = Color.Black, modifier = Modifier.padding(bottom = 16.dp))
+                        Text("Phone Number", fontWeight = FontWeight.Bold, fontFamily = Inter, fontSize = 14.sp, color = Color.Gray)
+                        Text(phone, fontSize = 16.sp, color = Color.Black, modifier = Modifier.padding(bottom = 16.dp))
+                        Text("Address", fontWeight = FontWeight.Bold, fontFamily = Inter, fontSize = 14.sp, color = Color.Gray)
+                        Text(address, fontSize = 16.sp, color = Color.Black, modifier = Modifier.padding(bottom = 16.dp))
                     }
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+                    // Edit Profile and Logout Buttons in the same row
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 50.dp),
-                        horizontalArrangement = Arrangement.Center
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Button(
                             onClick = {
-                                // Save changes
+                                // Enter edit mode, backup current values
                                 originalFirstName = firstName
                                 originalLastName = lastName
                                 originalUsername = username
                                 originalEmail = email
                                 originalPhone = phone
                                 originalAddress = address
-                                isEditing = false
-                                errorMessage = ""
-                                // TODO: Add backend update call here if needed
+                                isEditing = true
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = Purple),
                             shape = RoundedCornerShape(8.dp),
@@ -507,87 +791,9 @@ fun ProfileScreen(
                                 .weight(1f)
                                 .height(48.dp)
                         ) {
-                            Text("Save Changes", color = Color.White, fontFamily = Inter, fontWeight = FontWeight.Bold)
+                            Text("Edit Profile", color = Color.White, fontFamily = Inter, fontWeight = FontWeight.Bold)
                         }
                         Spacer(modifier = Modifier.width(16.dp))
-                        Button(
-                            onClick = {
-                                // Discard changes
-                                editFirstName = originalFirstName
-                                editLastName = originalLastName
-                                editUsername = originalUsername
-                                editEmail = originalEmail
-                                editPhone = originalPhone
-                                editAddress = originalAddress
-                                isEditing = false
-                                errorMessage = ""
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = LightRed),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp)
-                        ) {
-                            Text("Discard", color = Color.White, fontFamily = Inter, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-            }
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.TopCenter)
-                    .statusBarsPadding()
-                    .padding(horizontal = 24.dp, vertical = 32.dp)
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Profile Picture
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape)
-                            .background(Purple)
-                            .clickable { /* TODO: Add profile picture picker */ },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (profilePictureBase64.isNotEmpty()) {
-                            // TODO: Add profile picture display
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Profile Picture",
-                                tint = Color.White,
-                                modifier = Modifier.size(80.dp)
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        "Tap to change profile picture",
-                        color = Color.Gray,
-                        fontSize = 12.sp,
-                        fontFamily = Inter
-                    )
-                }
-                Spacer(modifier = Modifier.height(32.dp))
-                // User Info
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.Start
-                ) {
-                    Text("Name", fontWeight = FontWeight.Bold, fontFamily = Inter, fontSize = 14.sp, color = Color.Gray)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("$firstName $lastName", fontSize = 16.sp, color = Color.Black)
                         Button(
                             onClick = { showLogoutDialog = true },
                             colors = ButtonDefaults.buttonColors(
@@ -596,8 +802,8 @@ fun ProfileScreen(
                             ),
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier
-                                .padding(8.dp)
-                                .height(36.dp)
+                                .weight(1f)
+                                .height(48.dp)
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -617,231 +823,179 @@ fun ProfileScreen(
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("Username", fontWeight = FontWeight.Bold, fontFamily = Inter, fontSize = 14.sp, color = Color.Gray)
-                    Text(username, fontSize = 16.sp, color = Color.Black, modifier = Modifier.padding(bottom = 16.dp))
-                    Text("Email Address", fontWeight = FontWeight.Bold, fontFamily = Inter, fontSize = 14.sp, color = Color.Gray)
-                    Text(email, fontSize = 16.sp, color = Color.Black, modifier = Modifier.padding(bottom = 16.dp))
-                    Text("Phone Number", fontWeight = FontWeight.Bold, fontFamily = Inter, fontSize = 14.sp, color = Color.Gray)
-                    Text(phone, fontSize = 16.sp, color = Color.Black, modifier = Modifier.padding(bottom = 16.dp))
-                    Text("Address", fontWeight = FontWeight.Bold, fontFamily = Inter, fontSize = 14.sp, color = Color.Gray)
-                    Text(address, fontSize = 16.sp, color = Color.Black, modifier = Modifier.padding(bottom = 16.dp))
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                // Edit Profile Button (wide)
-                Button(
-                    onClick = {
-                        // Enter edit mode, backup current values
-                        originalFirstName = firstName
-                        originalLastName = lastName
-                        originalUsername = username
-                        originalEmail = email
-                        originalPhone = phone
-                        originalAddress = address
-                        isEditing = true
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Purple),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                ) {
-                    Text("Edit Profile", color = Color.White, fontFamily = Inter, fontWeight = FontWeight.Bold)
-                }
-                Spacer(modifier = Modifier.height(32.dp))
-                // My Pets Section
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.White, RoundedCornerShape(16.dp))
-                        .padding(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    Spacer(modifier = Modifier.height(32.dp))
+                    // My Pets Section
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White, RoundedCornerShape(16.dp))
+                            .padding(16.dp)
                     ) {
-                        Text(
-                            "My Pets",
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = Inter,
-                            fontSize = 20.sp,
-                            color = Purple
-                        )
-                        Button(
-                            onClick = onAddPet,
-                            colors = ButtonDefaults.buttonColors(containerColor = Purple),
-                            shape = RoundedCornerShape(8.dp)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Add Pet", color = Color.White, fontFamily = Inter)
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    if (myPets.isEmpty()) {
-                        Text(
-                            "No pets added yet. Add your first pet!",
-                            color = Color.Gray,
-                            fontFamily = Inter,
-                            fontSize = 16.sp
-                        )
-                    } else {
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(2),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            items(myPets) { pet ->
-                                PetCard(
-                                    pet = pet,
-                                    onClick = { onPetDetail(pet.id) }
-                                )
+                            Text(
+                                "My Pets",
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = Inter,
+                                fontSize = 20.sp,
+                                color = Purple
+                            )
+                            Button(
+                                onClick = onAddPet,
+                                colors = ButtonDefaults.buttonColors(containerColor = Purple),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text("Add Pet", color = Color.White, fontFamily = Inter)
                             }
                         }
-                    }
-                }
-                Spacer(modifier = Modifier.height(32.dp))
-                // My Applications Section
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.White, RoundedCornerShape(16.dp))
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        "My Applications",
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = Inter,
-                        fontSize = 20.sp,
-                        color = Purple,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-
-                    if (myApplications.isEmpty()) {
-                        Text(
-                            "Ready to bring your new friend home?",
-                            color = Color.Gray,
-                            fontFamily = Inter,
-                            fontSize = 16.sp,
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        )
-                        Button(
-                            onClick = onNavHome,
-                            colors = ButtonDefaults.buttonColors(containerColor = Purple),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Browse Pets", color = Color.White, fontFamily = Inter)
-                        }
-                    } else {
-                        myApplications.forEach { application ->
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = when (application.status) {
-                                        ApplicationStatus.PENDING -> Color(0xFFFFF3E0)
-                                        ApplicationStatus.ACCEPTED -> Color(0xFFE8F5E9)
-                                    }
-                                )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        if (myPets.isEmpty()) {
+                            Text(
+                                "No pets added yet. Add your first pet!",
+                                color = Color.Gray,
+                                fontFamily = Inter,
+                                fontSize = 16.sp
+                            )
+                        } else {
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp)
-                                ) {
-                                    Text(
-                                        application.petName,
-                                        fontWeight = FontWeight.Bold,
-                                        fontFamily = Inter,
-                                        fontSize = 16.sp
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        "Status: ${application.status.name}",
-                                        color = when (application.status) {
-                                            ApplicationStatus.PENDING -> Color(0xFFFF9800)
-                                            ApplicationStatus.ACCEPTED -> Color(0xFF4CAF50)
-                                        },
-                                        fontFamily = Inter,
-                                        fontSize = 14.sp
+                                items(myPets) { pet ->
+                                    PetCard(
+                                        pet = pet,
+                                        onClick = { onPetDetail(pet.id) }
                                     )
                                 }
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(32.dp))
+                    // My Applications Section
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White, RoundedCornerShape(16.dp))
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            "My Applications",
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = Inter,
+                            fontSize = 20.sp,
+                            color = Purple,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        if (myApplications.isEmpty()) {
+                            Text(
+                                "Ready to bring your new friend home?",
+                                color = Color.Gray,
+                                fontFamily = Inter,
+                                fontSize = 16.sp,
+                                modifier = Modifier.padding(bottom = 12.dp)
+                            )
+                            Button(
+                                onClick = onNavHome,
+                                colors = ButtonDefaults.buttonColors(containerColor = Purple),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Browse Pets", color = Color.White, fontFamily = Inter)
+                            }
+                        } else {
+                            myApplications.forEach { application ->
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = when (application.status) {
+                                            ApplicationStatus.PENDING -> Color(0xFFFFF3E0)
+                                            ApplicationStatus.ACCEPTED -> Color(0xFFE8F5E9)
+                                        }
+                                    )
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(16.dp)
+                                    ) {
+                                        Text(
+                                            application.petName,
+                                            fontWeight = FontWeight.Bold,
+                                            fontFamily = Inter,
+                                            fontSize = 16.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            "Status: ${application.status.name}",
+                                            color = when (application.status) {
+                                                ApplicationStatus.PENDING -> Color(0xFFFF9800)
+                                                ApplicationStatus.ACCEPTED -> Color(0xFF4CAF50)
+                                            },
+                                            fontFamily = Inter,
+                                            fontSize = 14.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(120.dp)) // Add extra padding at the bottom for better scrolling
                 }
-                Spacer(modifier = Modifier.height(120.dp)) // Add extra padding at the bottom for better scrolling
             }
         }
-    }
-    // Navigation Bar (bottom)
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight(Alignment.Bottom)
-            .background(Color.White)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            PawllyNavBar(
-                selectedScreen = "Profile",
-                onNavHome = onNavHome,
-                onNavNotifications = onNavNotifications,
-                onNavProfile = onNavProfile
-            )
-        }
-    }
-
-    // Logout Confirmation Dialog
-    if (showLogoutDialog) {
-        AlertDialog(
-            onDismissRequest = { showLogoutDialog = false },
-            title = {
-                Text(
-                    "Logout",
-                    fontFamily = Inter,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Text(
-                    "Are you sure you want to logout?",
-                    fontFamily = Inter
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showLogoutDialog = false
-                        // Clear Firebase auth state
-                        auth.signOut()
-                        // Clear shared preferences
-                        prefs.edit().clear().apply()
-                        // Navigate to login screen
-                        onLogout()
-                    }
-                ) {
+        // Logout Confirmation Dialog
+        if (showLogoutDialog) {
+            AlertDialog(
+                onDismissRequest = { showLogoutDialog = false },
+                title = {
                     Text(
-                        "Yes, Logout",
-                        color = LightRed,
+                        "Logout",
                         fontFamily = Inter,
                         fontWeight = FontWeight.Bold
                     )
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showLogoutDialog = false }
-                ) {
+                },
+                text = {
                     Text(
-                        "Cancel",
+                        "Are you sure you want to logout?",
                         fontFamily = Inter
                     )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showLogoutDialog = false
+                            // Clear Firebase auth state
+                            auth.signOut()
+                            // Clear shared preferences
+                            prefs.edit().clear().apply()
+                            // Navigate to login screen
+                            onLogout()
+                        }
+                    ) {
+                        Text(
+                            "Yes, Logout",
+                            color = LightRed,
+                            fontFamily = Inter,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showLogoutDialog = false }
+                    ) {
+                        Text(
+                            "Cancel",
+                            fontFamily = Inter
+                        )
+                    }
                 }
-            }
-        )
+            )
+        }
     }
 }

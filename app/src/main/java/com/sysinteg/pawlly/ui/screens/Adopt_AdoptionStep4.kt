@@ -98,7 +98,7 @@ fun AdoptAdoptionStep4Screen(
             Text("Upload Images of Your Home", fontSize = 22.sp, color = Purple)
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                "Please upload 2–4 images. Each image should be 600x600px.",
+                "Please upload 2–4 images.",
                 color = Color.Gray,
                 fontSize = 14.sp
             )

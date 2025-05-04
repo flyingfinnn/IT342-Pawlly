@@ -16,6 +16,3 @@ tasks.register("clean", Delete::class) {
     delete(rootProject.buildDir)
 }
 
-springBoot {
-    mainClass.set("com.sysinteg.pawlly.PawllyApplicationKt")
-}

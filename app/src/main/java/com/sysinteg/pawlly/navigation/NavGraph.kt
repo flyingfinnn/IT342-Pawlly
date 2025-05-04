@@ -194,7 +194,18 @@ fun NavGraph(navController: NavHostController) {
                                 put("password", password)
                                 put("address", address)
                                 put("phoneNumber", phoneNumber)
+                                put("role", "ROLE_USER") // Always assign ROLE_USER
                             }.toString()
+
+                            // Log the profilePictureUri
+                            Log.d("SignUpActivity", "profilePictureUri: $profilePictureUri")
+
+                            // (Optional) Warn if no profile picture is selected
+                            if (profilePictureUri == null) {
+                                withContext(Dispatchers.Main) {
+                                    Toast.makeText(context, "No profile picture selected. Proceeding without one.", Toast.LENGTH_SHORT).show()
+                                }
+                            }
 
                             // Create the user part of the multipart request
                             val userPart = userJson.toRequestBody("application/json".toMediaTypeOrNull())
@@ -202,15 +213,17 @@ fun NavGraph(navController: NavHostController) {
                             // Handle profile picture if provided
                             var profilePicturePart: MultipartBody.Part? = null
                             profilePictureUri?.let { uri ->
+                                val mimeType = context.contentResolver.getType(uri) ?: "image/*"
                                 context.contentResolver.openInputStream(uri)?.use { inputStream ->
                                     val file = File(context.cacheDir, "profile_picture")
                                     file.outputStream().use { outputStream ->
                                         inputStream.copyTo(outputStream)
                                     }
-                                    val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+                                    Log.d("SignUpActivity", "Profile picture MIME type: $mimeType, file size: ${file.length()} bytes")
+                                    val requestFile = file.asRequestBody(mimeType.toMediaTypeOrNull())
                                     profilePicturePart = MultipartBody.Part.createFormData(
                                         "profilePicture",
-                                        "profile_picture.jpg",
+                                        "profile_picture.${mimeType.substringAfterLast('/')}",
                                         requestFile
                                     )
                                 }
@@ -264,14 +277,22 @@ fun NavGraph(navController: NavHostController) {
                 onLostFoundClick = { /* TODO: navigate to Lost and Found */ },
                 onNavHome = { navController.navigate(Screen.Home.route) },
                 onNavNotifications = { navController.navigate(Screen.Notifications.route) },
-                onNavProfile = { navController.navigate(Screen.Profile.route) }
+                onNavProfile = { navController.navigate(Screen.Profile.route + "?editMode=false") }
             )
         }
-        composable(Screen.Profile.route) {
+        composable(
+            route = Screen.Profile.route + "?editMode={editMode}",
+            arguments = listOf(
+                navArgument("editMode") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
+            )
+        ) { backStackEntry ->
             val context = LocalContext.current
             val prefs = remember { context.getSharedPreferences(PAWLLY_PREFS, Context.MODE_PRIVATE) }
             val token = remember { prefs.getString(KEY_JWT_TOKEN, null) }
-            
+            val editMode = backStackEntry.arguments?.getBoolean("editMode") ?: false
             if (token == null) {
                 // If no token, redirect to login
                 LaunchedEffect(Unit) {
@@ -281,16 +302,14 @@ fun NavGraph(navController: NavHostController) {
                 }
                 return@composable
             }
-
             ProfileScreen(
-                onLogout = { 
+                onLogout = {
                     // Clear all authentication data
                     prefs.edit()
                         .remove(KEY_JWT_TOKEN)
                         .remove(KEY_REMEMBER_ME)
                         .remove(KEY_SAVED_EMAIL)
                         .apply()
-                    
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Profile.route) { inclusive = true }
                     }
@@ -299,7 +318,8 @@ fun NavGraph(navController: NavHostController) {
                 onNavProfile = { navController.navigate(Screen.Profile.route) },
                 onNavNotifications = { navController.navigate(Screen.Notifications.route) },
                 onAddPet = { navController.navigate("add_pet") },
-                onPetDetail = { petId -> navController.navigate("pet_detail/$petId") }
+                onPetDetail = { petId -> navController.navigate("pet_detail/$petId") },
+                editMode = editMode
             )
         }
         composable(Screen.Notifications.route) {
@@ -342,7 +362,7 @@ fun NavGraph(navController: NavHostController) {
                 onLostFoundClick = { /* TODO: navigate to Lost and Found */ },
                 onNavHome = { navController.navigate(Screen.Home.route) },
                 onNavNotifications = { navController.navigate(Screen.Notifications.route) },
-                onNavProfile = { navController.navigate(Screen.Profile.route) }
+                onNavProfile = { navController.navigate(Screen.Profile.route + "?editMode=false") }
             )
         }
         composable(Screen.AdoptResults.route) {
@@ -352,7 +372,7 @@ fun NavGraph(navController: NavHostController) {
                 onFilter = { /* TODO: filter logic */ },
                 onNavHome = { navController.navigate(Screen.Home.route) },
                 onNavNotifications = { navController.navigate(Screen.Notifications.route) },
-                onNavProfile = { navController.navigate(Screen.Profile.route) }
+                onNavProfile = { navController.navigate(Screen.Profile.route + "?editMode=false") }
             )
         }
         composable("adopt/pet/{id}") { backStackEntry ->
@@ -405,7 +425,7 @@ fun NavGraph(navController: NavHostController) {
         }
         composable(Screen.AdoptFinish.route) {
             AdoptAdoptionFinishScreen(
-                onReturnToProfile = { navController.navigate(Screen.Profile.route) },
+                onReturnToProfile = { navController.navigate(Screen.Profile.route + "?editMode=true") },
                 onAdoptMore = { navController.navigate(Screen.AdoptHome.route) }
             )
         }

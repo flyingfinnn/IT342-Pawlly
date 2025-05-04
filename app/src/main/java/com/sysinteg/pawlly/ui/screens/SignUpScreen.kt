@@ -262,11 +262,26 @@ fun SignUpScreen(
         }
     }
 
+    // Helper function to check if a Uri is JPG or PNG
+    fun isJpgOrPng(context: Context, uri: Uri): Boolean {
+        val contentResolver = context.contentResolver
+        val type = contentResolver.getType(uri)
+        if (type == "image/jpeg" || type == "image/png") return true
+        // Fallback: check file extension
+        val name = uri.lastPathSegment?.lowercase() ?: ""
+        return name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png")
+    }
+
     // Image Picker
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
+            if (!isJpgOrPng(context, it)) {
+                errorMessage.value = "Only JPG and PNG images are allowed as profile pictures."
+                signUpStatus.value = SignUpStatus.Failed
+                return@let
+            }
             selectedImageUri = it
             // Save to local storage
             saveImageToLocalStorage(context, it)
@@ -281,14 +296,6 @@ fun SignUpScreen(
             showStatusChip = false
             signUpStatus.value = SignUpStatus.None
             errorMessage.value = ""
-        }
-    }
-
-    // Show Toast for password requirements if info icon is tapped
-    if (showPasswordInfo) {
-        LaunchedEffect(Unit) {
-            Toast.makeText(context, "Password must be at least 8 characters, include 1 uppercase letter, 1 number, and 1 special character.", Toast.LENGTH_LONG).show()
-            showPasswordInfo = false
         }
     }
 
@@ -517,44 +524,35 @@ fun SignUpScreen(
 
             // Password
             TextField(
-                value = password,
-                onValueChange = { password = it },
-                label = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Password")
-                        IconButton(onClick = {
-                            showPasswordInfo = true
-                        }) {
-                            Icon(Icons.Default.Info, contentDescription = "Password requirements")
-                        }
-                    }
-                },
-                visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Next
-                ),
-                colors = TextFieldDefaults.textFieldColors(
-                    containerColor = White,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                ),
-                textStyle = TextStyle(color = Color.Black),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                trailingIcon = {
-                    if (password.isNotEmpty()) {
-                        IconButton(onClick = { showPassword = !showPassword }) {
-                            Icon(
-                                imageVector = if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                                contentDescription = if (showPassword) "Hide password" else "Show password"
-                            )
-                        }
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") },
+            visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Next
+            ),
+            colors = TextFieldDefaults.textFieldColors(
+                containerColor = White,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent
+            ),
+            textStyle = TextStyle(color = Color.Black),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp)
+                .clip(RoundedCornerShape(8.dp)),
+            trailingIcon = {
+                if (password.isNotEmpty()) {
+                    IconButton(onClick = { showPassword = !showPassword }) {
+                        Icon(
+                            imageVector = if (showPassword) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                            contentDescription = if (showPassword) "Hide password" else "Show password"
+                        )
                     }
                 }
-            )
+            }
+        )
 
             // Confirm Password
             TextField(

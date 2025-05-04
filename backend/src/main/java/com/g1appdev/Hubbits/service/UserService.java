@@ -18,6 +18,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.net.URL;
+import org.apache.commons.io.IOUtils;
+
+import com.g1appdev.Hubbits.model.UserOAuthResponse;
+
+import java.io.InputStream;
 
 @Service
 public class UserService {
@@ -57,6 +63,23 @@ public class UserService {
         return user;
     }
 
+    // Helper method to log image type and bytes (temporarily allow all formats)
+    private void logImageFormat(MultipartFile file) {
+        if (file == null || file.isEmpty()) return;
+        String contentType = file.getContentType();
+        System.out.println("[DEBUG] Received file content type: " + contentType);
+        try {
+            byte[] bytes = file.getBytes();
+            System.out.print("[DEBUG] First 8 bytes: ");
+            for (int i = 0; i < Math.min(8, bytes.length); i++) {
+                System.out.print(String.format("%02X ", bytes[i]));
+            }
+            System.out.println();
+        } catch (Exception e) {
+            System.out.println("[DEBUG] Error reading file bytes: " + e.getMessage());
+        }
+    }
+
     // Modified createUser method to accept MultipartFile
     public UserEntity createUser(UserEntity user, MultipartFile profilePicture) {
         logger.info("Creating user with username: {} and email: {}", user.getUsername(), user.getEmail());
@@ -77,6 +100,7 @@ public class UserService {
 
         // Handle the profile picture if provided
         if (profilePicture != null && !profilePicture.isEmpty()) {
+            logImageFormat(profilePicture);
             try {
                 user.setProfilePicture(profilePicture.getBytes());
             } catch (IOException e) {
@@ -146,6 +170,7 @@ public class UserService {
                         existingUser.setRole(updatedUser.getRole());
                     }
                     if (profilePicture != null && !profilePicture.isEmpty()) {
+                        logImageFormat(profilePicture);
                         try {
                             logger.info("Updating profile picture.");
                             existingUser.setProfilePicture(profilePicture.getBytes());
@@ -198,13 +223,15 @@ public class UserService {
 
     public boolean isOwnerOrAdmin(Long userId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUsername = authentication.getName();
-        Optional<UserEntity> currentUser = userRepository.findByUsername(currentUsername);
-
+        String currentPrincipal = authentication.getName();
+        // Try by email first, then by username
+        Optional<UserEntity> currentUser = userRepository.findByEmail(currentPrincipal);
+        if (currentUser.isEmpty()) {
+            currentUser = userRepository.findByUsername(currentPrincipal);
+        }
         boolean isOwner = currentUser.isPresent() && currentUser.get().getUserId().equals(userId);
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
         logger.info("Checking ownership/admin rights. IsOwner: {}, IsAdmin: {}", isOwner, isAdmin);
         return isOwner || isAdmin;
     }
@@ -230,5 +257,56 @@ public class UserService {
             logger.warn("User not found: {}", email);
         }
         return user;
+    }
+
+    public UserOAuthResponse loginOrCreateGoogleUser(String googleId, String email, String name, String pictureUrl) {
+        logger.info("Google OAuth: googleId={}, email={}, name={}, pictureUrl={}", googleId, email, name, pictureUrl);
+        Optional<UserEntity> userOpt = userRepository.findByGoogleId(googleId);
+        UserEntity user;
+        if (userOpt.isPresent()) {
+            user = userOpt.get();
+            logger.info("Existing Google user found: userId={}, googleId={}", user.getUserId(), user.getGoogleId());
+        } else {
+            user = new UserEntity();
+            user.setGoogleId(googleId);
+            logger.info("Set googleId: {}", googleId);
+            user.setEmail(email);
+            // Set username to the part before '@' in the email, robustly
+            String username = "";
+            if (email != null && email.contains("@")) {
+                username = email.substring(0, email.indexOf('@'));
+            }
+            user.setUsername(username);
+            String[] nameParts = name != null ? name.split(" ", 2) : new String[]{"", ""};
+            user.setFirstName(nameParts[0]);
+            user.setLastName(nameParts.length > 1 ? nameParts[1] : "");
+            // Download and store profile picture as bytea (robust version)
+            try {
+                if (pictureUrl != null && !pictureUrl.isEmpty()) {
+                    logger.info("Attempting to download Google profile picture from: {}", pictureUrl);
+                    URL url = new URL(pictureUrl);
+                    try (InputStream in = url.openStream()) {
+                        byte[] imageBytes = org.apache.commons.io.IOUtils.toByteArray(in);
+                        user.setProfilePicture(imageBytes);
+                        logger.info("Downloaded profile picture, size: {} bytes", imageBytes.length);
+                    }
+                } else {
+                    logger.warn("No pictureUrl provided from Google account.");
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to download Google profile picture: {}", e.getMessage());
+            }
+            user.setPassword(null); // No password for OAuth users
+            user = userRepository.save(user);
+            logger.info("Saved new Google OAuth user: userId={}, googleId={}", user.getUserId(), user.getGoogleId());
+        }
+        UserOAuthResponse resp = new UserOAuthResponse();
+        resp.setUserId(user.getUserId());
+        resp.setGoogleId(user.getGoogleId());
+        resp.setEmail(user.getEmail());
+        resp.setName(user.getFirstName() + (user.getLastName() != null ? (" " + user.getLastName()) : ""));
+        resp.setProfilePicture(user.getProfilePictureBase64());
+        logger.info("Returning OAuth response: userId={}, googleId={}, profilePictureNull={}", resp.getUserId(), resp.getGoogleId(), resp.getProfilePicture() == null);
+        return resp;
     }
 }

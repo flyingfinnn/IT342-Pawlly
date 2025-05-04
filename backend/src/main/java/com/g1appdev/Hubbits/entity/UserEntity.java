@@ -33,6 +33,9 @@ public class UserEntity {
     @Column(name = "profile_picture", columnDefinition = "BYTEA")
     private byte[] profile_picture;
 
+    @Column(unique = true)
+    private String googleId;
+
     private LocalDateTime createdAt;
 
     public UserEntity() {
@@ -134,6 +137,14 @@ public class UserEntity {
 
     public void setProfilePicture(byte[] profile_picture) {
         this.profile_picture = profile_picture;
+    }
+
+    public String getGoogleId() {
+        return googleId;
+    }
+
+    public void setGoogleId(String googleId) {
+        this.googleId = googleId;
     }
 
     @Override

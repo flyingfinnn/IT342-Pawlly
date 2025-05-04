@@ -40,6 +40,7 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.SideEffect
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPagerApi::class)
 @Composable
@@ -57,7 +58,7 @@ fun AdoptPetDetailScreen(
         )
     }
     // Placeholder pet data
-    val petImages = listOf(R.drawable.logoiconpurple, R.drawable.logoiconwhite)
+    val petImages = listOf(R.drawable.logoiconpurple, R.drawable.logoiconwhite).take(4)
     val petName = "Magie"
     val petBreed = "Shiba Inu"
     val petAge = "14 months"
@@ -92,6 +93,8 @@ fun AdoptPetDetailScreen(
 
     var expanded by remember { mutableStateOf(false) }
     val pagerState = rememberPagerState()
+    // State for full screen image view
+    var fullScreenImageIndex by remember { mutableStateOf<Int?>(null) }
 
     Scaffold(
         containerColor = White,
@@ -143,11 +146,17 @@ fun AdoptPetDetailScreen(
                         state = pagerState,
                         modifier = Modifier.fillMaxSize()
                     ) { page ->
-                        Image(
-                            painter = painterResource(id = petImages[page]),
-                            contentDescription = "Pet Image",
-                            modifier = Modifier.fillMaxSize()
-                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clickable { fullScreenImageIndex = page }
+                        ) {
+                            Image(
+                                painter = painterResource(id = petImages[page]),
+                                contentDescription = "Pet Image",
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                     }
                 }
                 Spacer(Modifier.height(24.dp))
@@ -244,6 +253,35 @@ fun AdoptPetDetailScreen(
                     }
                 }
                 Spacer(Modifier.height(48.dp)) // Gap before Adopt Now button
+            }
+        }
+    }
+
+    // Full screen image overlay OUTSIDE Scaffold
+    if (fullScreenImageIndex != null) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.7f))
+                .clickable { fullScreenImageIndex = null },
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { /* prevent close when clicking image */ },
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = petImages[fullScreenImageIndex!!]),
+                    contentDescription = "Full Image",
+                    modifier = Modifier
+                        .fillMaxWidth(0.9f)
+                        .aspectRatio(1f)
+                )
             }
         }
     }

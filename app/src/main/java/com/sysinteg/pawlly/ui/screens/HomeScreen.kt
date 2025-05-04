@@ -40,6 +40,12 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.ui.draw.blur
 import com.sysinteg.pawlly.ui.components.PetCard
+import androidx.compose.ui.platform.LocalContext
+import com.sysinteg.pawlly.userApi
+import com.sysinteg.pawlly.UserResponse
+import com.sysinteg.pawlly.utils.Constants.PAWLLY_PREFS
+import com.sysinteg.pawlly.utils.Constants.KEY_JWT_TOKEN
+import kotlinx.coroutines.launch
 
 // Sample pet data
 private val samplePets = listOf(
@@ -69,6 +75,33 @@ fun AdoptScreen(
     val cardSpacing = 16.dp
     val cardWidth = (LocalConfiguration.current.screenWidthDp.dp - 16.dp * 2 - cardSpacing) / 2
     val cardHeight = cardWidth * 1.15f
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences(PAWLLY_PREFS, android.content.Context.MODE_PRIVATE) }
+    val coroutineScope = rememberCoroutineScope()
+    var showCompleteProfileDialog by remember { mutableStateOf(false) }
+    var user by remember { mutableStateOf<UserResponse?>(null) }
+
+    // Fetch user data and check for missing attributes
+    LaunchedEffect(Unit) {
+        val token = prefs.getString(KEY_JWT_TOKEN, null)
+        if (token != null) {
+            try {
+                val me = userApi.getMe("Bearer $token")
+                user = me
+                if (me != null && (
+                        me.firstName.isNullOrBlank() ||
+                        me.lastName.isNullOrBlank() ||
+                        me.phoneNumber.isNullOrBlank() ||
+                        me.address.isNullOrBlank()
+                    )
+                ) {
+                    showCompleteProfileDialog = true
+                }
+            } catch (_: Exception) {
+                // ignore
+            }
+        }
+    }
 
     Scaffold(
         containerColor = Color.White,
@@ -171,24 +204,23 @@ fun AdoptScreen(
             )
             Spacer(modifier = Modifier.height(24.dp))
             // Pet Cards Grid
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(cardHeight * 3 + cardSpacing * 2)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                userScrollEnabled = false
-            ) {
-                items(samplePets) { pet ->
-                    PetCard(
-                        pet = pet,
-                        onClick = { onPetClick(pet.id) }
-                    )
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(cardHeight * 3 + cardSpacing * 2)
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    userScrollEnabled = false
+                ) {
+                    items(samplePets) { pet ->
+                        PetCard(
+                            pet = pet,
+                            onClick = { onPetClick(pet.id) }
+                        )
+                    }
                 }
-            }
-            // Browse All CTA
             Button(
                 onClick = onBrowseAll,
                 modifier = Modifier
@@ -200,8 +232,7 @@ fun AdoptScreen(
             ) {
                 Text("Browse All", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
             }
-            Spacer(modifier = Modifier.height(2.dp))
-            // Go to Lost and Found button
+            Spacer(modifier = Modifier.height(8.dp))
             Button(
                 onClick = onLostFoundClick,
                 modifier = Modifier
@@ -213,7 +244,27 @@ fun AdoptScreen(
             ) {
                 Text("Go to Lost and Found", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
             }
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp)) // slightly less space here
         }
+    }
+
+    // Show dialog if profile is incomplete
+    if (showCompleteProfileDialog) {
+        AlertDialog(
+            onDismissRequest = { /* Prevent dismiss by outside click */ },
+            title = { Text("You're almost finished!", fontWeight = FontWeight.Bold) },
+            text = { Text("Click here to continue your account set up") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showCompleteProfileDialog = false
+                        onNavProfile() // This will now navigate with editMode=true
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Purple)
+                ) {
+                    Text("Go to Profile", color = Color.White)
+                }
+            }
+        )
     }
 }

@@ -79,6 +79,11 @@ fun AddPetScreen(
     var gender by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
     var type by remember { mutableStateOf("") }
+    var weight by remember { mutableStateOf("") }
+    var color by remember { mutableStateOf("") }
+    var height by remember { mutableStateOf("") }
+    var address by remember { mutableStateOf("") }
+    var contactNumber by remember { mutableStateOf("") }
     var photoUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var genderExpanded by remember { mutableStateOf(false) }
     var statusExpanded by remember { mutableStateOf(false) }
@@ -89,12 +94,10 @@ fun AddPetScreen(
     val statusOptions = listOf("Available", "Not Available")
     val typeOptions = listOf("Dog", "Cat")
     // Simulate user info (should be fetched from user profile)
-    val address = "123 Main St, City"
-    val contactNumber = "555-1234"
     val submissionData = "2024-06-01"
     val userName = "John Doe"
     val photoPickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        if (uri != null && photoUris.size < 3) {
+        if (uri != null && photoUris.size < 4) {
             photoUris = photoUris + uri
         }
     }
@@ -110,35 +113,7 @@ fun AddPetScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.Start
-                    ) {
-                        Text(
-                            text = "Add Pet",
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = Inter,
-                            color = Purple,
-                            fontSize = 28.sp,
-                            modifier = Modifier.padding(bottom = 2.dp)
-                        )
-                        Text(
-                            text = "Fill out the details below to add a new pet for adoption.",
-                            fontFamily = Inter,
-                            color = Color.Gray,
-                            fontSize = 15.sp,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    titleContentColor = Purple
-                ),
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
+            // No TopAppBar, title, or subtitle
         },
         containerColor = Color(0xFFFAF9F6)
     ) { innerPadding ->
@@ -159,19 +134,30 @@ fun AddPetScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(horizontal = 16.dp)
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 0.dp)
                     .verticalScroll(rememberScrollState())
                     .statusBarsPadding(),
                 verticalArrangement = Arrangement.spacedBy(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Add Pet Title
+                Text(
+                    text = "Add Pet",
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = Inter,
+                    color = Purple,
+                    fontSize = 28.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 0.dp, bottom = 8.dp)
+                )
                 // Photo Upload Carousel
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        "Upload Photos (Max 3)",
+                        "Upload Photos (Max 4)",
                         fontWeight = FontWeight.Bold,
                         fontFamily = Inter,
                         fontSize = 16.sp,
@@ -186,14 +172,14 @@ fun AddPetScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Photo slots
-                        repeat(3) { index ->
+                        repeat(4) { index ->
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
                                     .aspectRatio(1f)
                                     .background(Color.White, RoundedCornerShape(12.dp))
                                     .border(1.dp, Color.LightGray, RoundedCornerShape(12.dp))
-                                    .clickable { if (photoUris.size < 3) photoPickerLauncher.launch("image/*") }
+                                    .clickable { if (photoUris.size < 4) photoPickerLauncher.launch("image/*") }
                             ) {
                                 if (index < photoUris.size) {
                                     AsyncImage(
@@ -238,7 +224,7 @@ fun AddPetScreen(
                     }
                     if (photoUris.isNotEmpty()) {
                         Text(
-                            "${photoUris.size}/3 photos uploaded",
+                            "${photoUris.size}/4 photos uploaded",
                             color = Color.Gray,
                             fontFamily = Inter,
                             fontSize = 14.sp,
@@ -260,25 +246,11 @@ fun AddPetScreen(
                         color = Purple,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
-                    
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
                         label = { Text("Name") },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black,
-                            focusedBorderColor = Purple,
-                            unfocusedBorderColor = Color.Gray
-                        )
-                    )
-                    OutlinedTextField(
-                        value = age,
-                        onValueChange = { age = it },
-                        label = { Text("Age") },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = Color.Black,
                             unfocusedTextColor = Color.Black,
@@ -298,34 +270,6 @@ fun AddPetScreen(
                             unfocusedBorderColor = Color.Gray
                         )
                     )
-                    OutlinedTextField(
-                        value = description,
-                        onValueChange = { description = it },
-                        label = { Text("Description") },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.Black,
-                            unfocusedTextColor = Color.Black,
-                            focusedBorderColor = Purple,
-                            unfocusedBorderColor = Color.Gray
-                        )
-                    )
-                }
-
-                // Pet Characteristics Section
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Text(
-                        "Characteristics",
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = Inter,
-                        fontSize = 16.sp,
-                        color = Purple,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
-                    
                     // Gender Dropdown
                     ExposedDropdownMenuBox(
                         expanded = genderExpanded,
@@ -362,44 +306,55 @@ fun AddPetScreen(
                             }
                         }
                     }
-
-                    // Status Dropdown
-                    ExposedDropdownMenuBox(
-                        expanded = statusExpanded,
-                        onExpandedChange = { statusExpanded = !statusExpanded }
-                    ) {
-                        OutlinedTextField(
-                            value = status,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Status") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(),
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = statusExpanded) },
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = Color.Black,
-                                unfocusedTextColor = Color.Black,
-                                focusedBorderColor = Purple,
-                                unfocusedBorderColor = Color.Gray
-                            )
+                    OutlinedTextField(
+                        value = weight,
+                        onValueChange = { weight = it },
+                        label = { Text("Weight") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            focusedBorderColor = Purple,
+                            unfocusedBorderColor = Color.Gray
                         )
-                        ExposedDropdownMenu(
-                            expanded = statusExpanded,
-                            onDismissRequest = { statusExpanded = false }
-                        ) {
-                            statusOptions.forEach { option ->
-                                DropdownMenuItem(
-                                    text = { Text(option) },
-                                    onClick = {
-                                        status = option
-                                        statusExpanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-
+                    )
+                    OutlinedTextField(
+                        value = color,
+                        onValueChange = { color = it },
+                        label = { Text("Color") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            focusedBorderColor = Purple,
+                            unfocusedBorderColor = Color.Gray
+                        )
+                    )
+                    OutlinedTextField(
+                        value = height,
+                        onValueChange = { height = it },
+                        label = { Text("Height") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            focusedBorderColor = Purple,
+                            unfocusedBorderColor = Color.Gray
+                        )
+                    )
+                    OutlinedTextField(
+                        value = age,
+                        onValueChange = { age = it },
+                        label = { Text("Age") },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            focusedBorderColor = Purple,
+                            unfocusedBorderColor = Color.Gray
+                        )
+                    )
                     // Type Dropdown
                     ExposedDropdownMenuBox(
                         expanded = typeExpanded,
@@ -436,6 +391,78 @@ fun AddPetScreen(
                             }
                         }
                     }
+                    // Status Dropdown
+                    ExposedDropdownMenuBox(
+                        expanded = statusExpanded,
+                        onExpandedChange = { statusExpanded = !statusExpanded }
+                    ) {
+                        OutlinedTextField(
+                            value = status,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Status") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(),
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = statusExpanded) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black,
+                                focusedBorderColor = Purple,
+                                unfocusedBorderColor = Color.Gray
+                            )
+                        )
+                        ExposedDropdownMenu(
+                            expanded = statusExpanded,
+                            onDismissRequest = { statusExpanded = false }
+                        ) {
+                            statusOptions.forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(option) },
+                                    onClick = {
+                                        status = option
+                                        statusExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    OutlinedTextField(
+                        value = address,
+                        onValueChange = { address = it },
+                        label = { Text("Address") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            focusedBorderColor = Purple,
+                            unfocusedBorderColor = Color.Gray
+                        )
+                    )
+                    OutlinedTextField(
+                        value = contactNumber,
+                        onValueChange = { contactNumber = it },
+                        label = { Text("Contact Number") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            focusedBorderColor = Purple,
+                            unfocusedBorderColor = Color.Gray
+                        )
+                    )
+                    OutlinedTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        label = { Text("Description") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            focusedBorderColor = Purple,
+                            unfocusedBorderColor = Color.Gray
+                        )
+                    )
                 }
 
                 // Add Pet Button
@@ -456,66 +483,6 @@ fun AddPetScreen(
                         fontFamily = Inter,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
-                    )
-                }
-
-                // User Info Section
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Text(
-                        "Your Information",
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = Inter,
-                        fontSize = 16.sp,
-                        color = Purple,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
-                    
-                    OutlinedTextField(
-                        value = address,
-                        onValueChange = {},
-                        label = { Text("Address") },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = false,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            disabledTextColor = Color.Gray,
-                            disabledBorderColor = Color.LightGray
-                        )
-                    )
-                    OutlinedTextField(
-                        value = contactNumber,
-                        onValueChange = {},
-                        label = { Text("Contact Number") },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = false,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            disabledTextColor = Color.Gray,
-                            disabledBorderColor = Color.LightGray
-                        )
-                    )
-                    OutlinedTextField(
-                        value = submissionData,
-                        onValueChange = {},
-                        label = { Text("Submission Date") },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = false,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            disabledTextColor = Color.Gray,
-                            disabledBorderColor = Color.LightGray
-                        )
-                    )
-                    OutlinedTextField(
-                        value = userName,
-                        onValueChange = {},
-                        label = { Text("User Name") },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = false,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            disabledTextColor = Color.Gray,
-                            disabledBorderColor = Color.LightGray
-                        )
                     )
                 }
                 Spacer(modifier = Modifier.height(32.dp))

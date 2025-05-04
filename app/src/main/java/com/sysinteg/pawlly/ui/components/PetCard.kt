@@ -69,8 +69,8 @@ fun PetCard(
                         Brush.verticalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                Color.White.copy(alpha = 0.7f),
-                                Color.White
+                                Color.White.copy(alpha = 0.4f),
+                                Color.White.copy(alpha = 0.7f)
                             ),
                             startY = 0f,
                             endY = Float.POSITIVE_INFINITY

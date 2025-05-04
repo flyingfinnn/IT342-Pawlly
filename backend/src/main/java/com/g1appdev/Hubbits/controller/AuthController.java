@@ -5,6 +5,10 @@ import com.g1appdev.Hubbits.repository.UserRepository;
 import com.g1appdev.Hubbits.service.UserService;
 import com.g1appdev.Hubbits.security.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper; // Add this import
+import com.g1appdev.Hubbits.model.GoogleOAuthRequest;
+import com.g1appdev.Hubbits.model.UserOAuthResponse;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +46,9 @@ public class AuthController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private GoogleIdTokenVerifier googleIdTokenVerifier;
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
@@ -193,6 +200,25 @@ public class AuthController {
         } catch (Exception e) {
             logger.error("Error during Google sign-in: ", e);
             return ResponseEntity.status(500).body("Server error during Google sign-in: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/google/callback")
+    public ResponseEntity<UserOAuthResponse> googleCallback(@RequestBody GoogleOAuthRequest request) {
+        try {
+            GoogleIdToken idToken = googleIdTokenVerifier.verify(request.getIdToken());
+            if (idToken == null) {
+                return ResponseEntity.badRequest().build();
+            }
+            GoogleIdToken.Payload payload = idToken.getPayload();
+            String googleId = payload.getSubject();
+            String email = payload.getEmail();
+            String name = (String) payload.get("name");
+            String picture = (String) payload.get("picture");
+            UserOAuthResponse resp = userService.loginOrCreateGoogleUser(googleId, email, name, picture);
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
         }
     }
 }

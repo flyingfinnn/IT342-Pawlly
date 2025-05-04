@@ -82,10 +82,12 @@ interface UserApi {
     @GET("users/me")
     suspend fun getMe(@Header("Authorization") token: String): UserResponse
 
+    @Multipart
     @PUT("users/{id}")
     suspend fun updateUser(
         @Path("id") userId: Long,
-        @Body user: RequestBody
+        @Part("user") user: RequestBody,
+        @Part profilePicture: MultipartBody.Part?
     ): UserResponse
 }
 
@@ -108,14 +110,19 @@ val retrofit: Retrofit = Retrofit.Builder()
             val url = request.url.toString()
             
             // Skip adding token for login and signup endpoints
-            if (!url.contains("/auth/login") && !url.contains("/users")) {
+            if (!url.contains("/auth/login") && !url.contains("/auth/signup") && !url.contains("/auth/oauth/google")) {
                 val context = PawllyApplication.getAppContext()
-                val token = getAuthToken(context)
-                if (token.isNotEmpty()) {
+                val prefs = context.getSharedPreferences(PAWLLY_PREFS, Context.MODE_PRIVATE)
+                val token = prefs.getString(KEY_JWT_TOKEN, null)
+                
+                if (token != null) {
                     val newRequest = request.newBuilder()
-                        .header("Authorization", token)
+                        .header("Authorization", "Bearer $token")
                         .build()
+                    Log.d("UserApi", "Adding Authorization header for URL: $url")
                     return@addInterceptor chain.proceed(newRequest)
+                } else {
+                    Log.e("UserApi", "No JWT token found for authenticated request")
                 }
             }
             
@@ -123,11 +130,11 @@ val retrofit: Retrofit = Retrofit.Builder()
             Log.d("UserApi", "Request Headers: ${request.headers}")
             Log.d("UserApi", "Request Method: ${request.method}")
             try {
-            val response = chain.proceed(request)
-            Log.d("UserApi", "Response Code: ${response.code}")
-            Log.d("UserApi", "Response Headers: ${response.headers}")
+                val response = chain.proceed(request)
+                Log.d("UserApi", "Response Code: ${response.code}")
+                Log.d("UserApi", "Response Headers: ${response.headers}")
                 Log.d("UserApi", "Response Message: ${response.message}")
-            response
+                response
             } catch (e: Exception) {
                 Log.e("UserApi", "Network Error: ${e.message}", e)
                 throw e

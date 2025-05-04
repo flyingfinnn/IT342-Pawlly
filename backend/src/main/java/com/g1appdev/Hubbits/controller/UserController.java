@@ -129,14 +129,15 @@ public class UserController {
                     : "";
             Map<String, Object> response = Map.of(
                     "userId", foundUser.getUserId(),
-                    "username", foundUser.getUsername(),
-                    "firstName", foundUser.getFirstName(),
-                    "lastName", foundUser.getLastName(),
-                    "email", foundUser.getEmail(),
-                    "address", foundUser.getAddress(),
-                    "phoneNumber", foundUser.getPhoneNumber(),
-                    "role", foundUser.getRole(),
-                    "profilePicture", profilePictureBase64
+                    "username", foundUser.getUsername() != null ? foundUser.getUsername() : "",
+                    "firstName", foundUser.getFirstName() != null ? foundUser.getFirstName() : "",
+                    "lastName", foundUser.getLastName() != null ? foundUser.getLastName() : "",
+                    "email", foundUser.getEmail() != null ? foundUser.getEmail() : "",
+                    "address", foundUser.getAddress() != null ? foundUser.getAddress() : "",
+                    "phoneNumber", foundUser.getPhoneNumber() != null ? foundUser.getPhoneNumber() : "",
+                    "role", foundUser.getRole() != null ? foundUser.getRole() : "",
+                    "profilePicture", profilePictureBase64 != null ? profilePictureBase64 : "",
+                    "googleId", foundUser.getGoogleId() != null ? foundUser.getGoogleId() : ""
             );
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
