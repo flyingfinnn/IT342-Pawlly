@@ -77,7 +77,7 @@ const PetList = ({ onPetAdded }) => {
   };
 
   const handleAuthClose = () => {
-    setOpenAuthModal(false); // Close AuthModal
+    setOpenAuthModal(false); 
   };
 
   const handleCardClick = (pet) => {

@@ -163,29 +163,6 @@ const Volunteer = () => {
             <Typography variant="body1" paragraph>
               Volunteering with pets is a rewarding way to give back and improve the lives of animals in need. From walking dogs at shelters to fostering pets, every moment you spend with them helps build a stronger bond between humans and animals. Whether you're offering companionship, care, or helping them find their forever home, your involvement makes a real difference. Join us in supporting pets who need love, care, and a second chance at life.
             </Typography>
-            <Button
-              variant="outlined"
-              color="secondary"
-              size="small"
-              sx={{
-                padding: '6px 16px',
-                fontSize: '0.875rem',
-                borderRadius: '18px',
-                boxShadow: 'none',
-                '&:hover': {
-                  color: 'white',
-                  backgroundColor: '#675bc8',
-                  borderColor: '#675bc8',
-                },
-                width: 'fit-content',
-                display: 'inline-flex',
-                alignItems: 'center',
-                marginTop: '1rem',
-              }}
-              onClick={handleBookButtonClick} // Call the updated function
-            >
-              Book
-            </Button>
             {/* Auth Modal */}
             <AuthModal
               open={authModalOpen}

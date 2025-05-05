@@ -123,7 +123,11 @@ const AuthModal = ({ open, handleClose }) => {
                 severity: "success",
             });
 
-            navigate("/");
+            if (userResponse.data && userResponse.data.role && userResponse.data.role.includes('ROLE_ADMIN')) {
+                navigate("/admin"); // Redirect admin users to /admin
+            } else {
+                navigate("/"); // Redirect other users to the home page
+            }
             handleClose();
             setLoginCredentials({ username: "", password: "" }); // Reset form data
         } catch (error) {
