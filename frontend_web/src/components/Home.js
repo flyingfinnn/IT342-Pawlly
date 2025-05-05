@@ -8,11 +8,8 @@ import petPlaceholder from '../assets/petplaceholder.png';
 
 //ABOUT US IMAGES
 import AU_Lou from '../assets/AU_Lou.jpg';
-import AU_Jai from '../assets/AU_Jai.jpg';
-import AU_Stela from '../assets/AU_Stela.jpg';
-import AU_Nek from '../assets/AU_Nek.jpg';
-import AU_Kiyo from '../assets/AU_Kiyo.jpg';
-import AU_Selma from '../assets/AU_Selma.jpg';
+import AU_Rig from '../assets/AU_Rig.jpg';
+import AU_Kit from '../assets/AU_Kit.jpg';
 
 const Home = () => {
     const [formData, setFormData] = useState({
@@ -172,11 +169,8 @@ const Home = () => {
         <Grid container spacing={3} justifyContent="center" sx={{ paddingTop: '50px' }}>
           {[
             { name: 'Louie James Carbungco', position: 'Founder', image: AU_Lou },
-            { name: 'Jierelle Jane Ravanes', position: 'Founder', image: AU_Jai },
-            { name: 'Stela Maris Asufra', position: 'Founder', image: AU_Stela },
-            { name: 'Nick Carter Lacanglacang', position: 'Founder', image: AU_Nek },
-            { name: 'Yoshinori Kyono Jr.', position: 'Founder', image: AU_Kiyo },
-            { name: 'John Edward Selma', position: 'Founder', image: AU_Selma },
+            { name: 'Rigel L. Baltazar', position: 'Founder', image: AU_Rig },
+            { name: 'Keith Ruezyl Tagarao', position: 'Founder', image: AU_Kit },
           ].map((person, index) => (
             <Grid
               item
