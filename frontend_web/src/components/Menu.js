@@ -16,10 +16,10 @@ const Menu = () => (
         <Box
           component="img"
           src={logoWhite}
-          alt="Purr"
+          alt="Pawlly"
           sx={{ height: 40, mr: 2 }}
         />
-        <Typography variant="h6">Purr</Typography>
+        <Typography variant="h6">Pawlly</Typography>
       </Box>
       <Box display="flex">
         <Button

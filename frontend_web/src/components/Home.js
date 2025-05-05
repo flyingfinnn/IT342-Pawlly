@@ -52,7 +52,7 @@ const Home = () => {
       <Grid container spacing={3} sx={{ padding: '50px' }}>
         <Grid item xs={5} container justifyContent="center" alignItems="center">
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', textAlign: 'center' }}>
-            <Typography variant="h3" style={{ fontWeight: 'bold' }}>Give a New Life to PURR</Typography>
+            <Typography variant="h3" style={{ fontWeight: 'bold' }}>Give a New Life to Pawlly</Typography>
             <Typography variant="h5">
               Pet adoption and rehoming are vital aspects of animal welfare, offering hope and a fresh start to pets in need.
               Open your heart and your home to a shelter pet.

@@ -31,10 +31,10 @@ const AppMenu = () => {
       <Toolbar sx={{ display: "flex", justifyContent: "space-between", height: 60 }}>
         <Box display="flex" alignItems="center">
           <NavLink to="/home"> {/* Wrap the image with NavLink */}
-            <Box component="img" src={logoWhite} alt="Purr" sx={{ height: 40, mr: 2 }} />
+            <Box component="img" src={logoWhite} alt="Pawlly" sx={{ height: 40, mr: 2 }} />
           </NavLink>
           <Typography variant="h6" sx={{ color: "white" }}>
-            Purr
+            Pawlly
           </Typography>
         </Box>
         <Box display="flex" alignItems="center">

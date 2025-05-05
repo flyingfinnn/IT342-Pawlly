@@ -91,7 +91,7 @@ const Login = () => {
             <Box textAlign="center">
               <img
                 src={logo} // Use the imported logo
-                alt="Purr Logo"
+                alt="Pawlly Logo"
                 style={{ maxWidth: "100%", height: "auto" }} // Ensure responsiveness
               />
             </Box>

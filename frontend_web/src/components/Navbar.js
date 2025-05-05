@@ -95,7 +95,6 @@ const Navbar = () => {
                         color="primary"
                         sx={{ fontWeight: "bold", fontFamily: "'Caramel', sans-serif" }}
                     >
-                        Purr
                     </Typography>
                 </Box>
 

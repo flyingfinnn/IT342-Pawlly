@@ -7,7 +7,7 @@ const Menu = () => (
     <Toolbar sx={{ display: "flex", justifyContent: "space-between", height: 60, padding: "0 20px" }}>
       <Box display="flex" alignItems="center">
         <Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: 1 }}>
-          Purr: Adoption System
+          Pawlly: Adoption System
         </Typography>
       </Box>
       <Box display="flex" alignItems="center">
