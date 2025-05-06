@@ -22,6 +22,10 @@ import android.util.Log
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import com.sysinteg.pawlly.PawllyApplication
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.http.Query
 
 // Data class for signup request
 data class UserSignupRequest(
@@ -62,6 +66,110 @@ data class GoogleSignInRequest(
     @field:Json(name = "googleId") val googleId: String
 )
 
+// Pet API models
+data class PetResponse(
+    val pid: Int,
+    val name: String?,
+    val breed: String?,
+    val age: String?,
+    val type: String?,
+    val gender: String?,
+    val description: String?,
+    val status: String?,
+    val userName: String?,
+    val address: String?,
+    val contactNumber: String?,
+    val submissionDate: String?,
+    val photo1: String?,
+    val photo1Thumb: String?,
+    val photo2: String?,
+    val photo3: String?,
+    val photo4: String?,
+    val weight: String?,
+    val color: String?,
+    val height: String?
+)
+
+typealias PetListResponse = List<PetResponse>
+
+data class AddPetRequest(
+    val name: String,
+    val type: String,
+    val breed: String,
+    val age: String,
+    val gender: String,
+    val description: String,
+    val photo: String, // base64 images joined by ||
+    val status: String,
+    val userName: String,
+    val address: String,
+    val contactNumber: String,
+    val weight: String?,
+    val color: String?,
+    val height: String?
+)
+
+data class UpdatePetRequest(
+    val name: String?,
+    val breed: String?,
+    val age: String?,
+    val type: String?,
+    val gender: String?,
+    val description: String?,
+    val status: String?,
+    val userName: String?,
+    val address: String?,
+    val contactNumber: String?,
+    val photo1: String?,
+    val photo1Thumb: String?,
+    val photo2: String?,
+    val photo3: String?,
+    val photo4: String?,
+    val weight: String?,
+    val color: String?,
+    val height: String?
+)
+
+data class AdoptionApplicationRequest(
+    @Json(name = "user_id")
+    val userId: Long,
+    @Json(name = "pet_id")
+    val petId: Int,
+    @Json(name = "pet_name")
+    val petName: String,
+    @Json(name = "household_type")
+    val householdType: String?,
+    @Json(name = "household_ownership")
+    val householdOwnership: String?,
+    @Json(name = "num_adults")
+    val numAdults: Int?,
+    @Json(name = "num_children")
+    val numChildren: Int?,
+    @Json(name = "other_pets")
+    val otherPets: Boolean,
+    @Json(name = "experience_with_pets")
+    val experienceWithPets: String?,
+    @Json(name = "daily_routine")
+    val dailyRoutine: String?,
+    @Json(name = "hours_alone_per_day")
+    val hoursAlonePerDay: Int?,
+    @Json(name = "reason_for_adoption")
+    val reasonForAdoption: String?
+)
+
+data class AdoptionApplicationResponse(
+    @Json(name = "id") val id: Long,
+    @Json(name = "user_id") val userId: Long,
+    @Json(name = "pet_id") val petId: Int,
+    @Json(name = "pet_name") val petName: String? = null,
+    @Json(name = "status") val status: String
+)
+
+// --- Logging interceptor must be top-level ---
+val logging = HttpLoggingInterceptor().apply {
+    level = HttpLoggingInterceptor.Level.BODY
+}
+
 interface UserApi {
     @Multipart
     @POST("users")
@@ -89,6 +197,58 @@ interface UserApi {
         @Part("user") user: RequestBody,
         @Part profilePicture: MultipartBody.Part?
     ): UserResponse
+
+    @Multipart
+    @POST("pet/postpetrecord")
+    suspend fun addPet(
+        @Part("name") name: RequestBody,
+        @Part("type") type: RequestBody,
+        @Part("breed") breed: RequestBody,
+        @Part("age") age: RequestBody,
+        @Part("gender") gender: RequestBody,
+        @Part("description") description: RequestBody,
+        @Part photo1: MultipartBody.Part?,
+        @Part photo2: MultipartBody.Part?,
+        @Part photo3: MultipartBody.Part?,
+        @Part photo4: MultipartBody.Part?,
+        @Part("status") status: RequestBody,
+        @Part("userName") userName: RequestBody,
+        @Part("address") address: RequestBody,
+        @Part("contactNumber") contactNumber: RequestBody,
+        @Part("weight") weight: RequestBody?,
+        @Part("color") color: RequestBody?,
+        @Part("height") height: RequestBody?
+    ): PetResponse
+
+    @GET("pet/getAllPets")
+    suspend fun getAllPets(): PetListResponse
+
+    @GET("pet/byUserName/{userName}")
+    suspend fun getPetsByUserName(@Path("userName") userName: String): PetListResponse
+
+    @GET("pet/getPet/{id}")
+    suspend fun getPetById(@Path("id") id: Int): PetResponse
+
+    @PUT("pet/putPetDetails")
+    suspend fun updatePetDetails(
+        @retrofit2.http.Query("pid") pid: Int,
+        @Body update: UpdatePetRequest
+    ): PetResponse
+
+    @GET("users/byUsername/{username}")
+    suspend fun getUserByUsername(@Path("username") username: String): UserResponse
+
+    @POST("adoptions")
+    suspend fun submitAdoptionApplication(@Body application: AdoptionApplicationRequest): retrofit2.Response<Unit>
+
+    @GET("adoptions")
+    suspend fun getAdoptionApplications(
+        @Query("userId") userId: Long,
+        @Query("petId") petId: Int
+    ): List<AdoptionApplicationResponse>
+
+    @GET("adoptions/user/{userId}")
+    suspend fun getAdoptionApplicationsByUserId(@Path("userId") userId: Long): List<AdoptionApplicationResponse>
 }
 
 fun getAuthToken(context: Context): String {
@@ -104,46 +264,46 @@ val moshi = Moshi.Builder()
 val retrofit: Retrofit = Retrofit.Builder()
     .baseUrl(ApiConfig.BASE_URL)
     .addConverterFactory(MoshiConverterFactory.create(moshi))
-    .client(OkHttpClient.Builder()
-        .addInterceptor { chain ->
-            val request = chain.request()
-            val url = request.url.toString()
-            
-            // Skip adding token for login and signup endpoints
-            if (!url.contains("/auth/login") && !url.contains("/auth/signup") && !url.contains("/auth/oauth/google")) {
-                val context = PawllyApplication.getAppContext()
-                val prefs = context.getSharedPreferences(PAWLLY_PREFS, Context.MODE_PRIVATE)
-                val token = prefs.getString(KEY_JWT_TOKEN, null)
-                
-                if (token != null) {
-                    val newRequest = request.newBuilder()
-                        .header("Authorization", "Bearer $token")
-                        .build()
-                    Log.d("UserApi", "Adding Authorization header for URL: $url")
-                    return@addInterceptor chain.proceed(newRequest)
-                } else {
-                    Log.e("UserApi", "No JWT token found for authenticated request")
+    .client(
+        OkHttpClient.Builder()
+            .addInterceptor(logging)
+            .addInterceptor { chain ->
+                val request = chain.request()
+                val url = request.url.toString()
+                // Skip adding token for login and signup endpoints
+                if (!url.contains("/auth/login") && !url.contains("/auth/signup") && !url.contains("/auth/oauth/google")) {
+                    val context = PawllyApplication.getAppContext()
+                    val prefs = context.getSharedPreferences(PAWLLY_PREFS, Context.MODE_PRIVATE)
+                    val token = prefs.getString(KEY_JWT_TOKEN, null)
+                    if (token != null) {
+                        val newRequest = request.newBuilder()
+                            .header("Authorization", "Bearer $token")
+                            .build()
+                        Log.d("UserApi", "Adding Authorization header for URL: $url")
+                        return@addInterceptor chain.proceed(newRequest)
+                    } else {
+                        Log.e("UserApi", "No JWT token found for authenticated request")
+                    }
+                }
+                Log.d("UserApi", "Request URL: ${request.url}")
+                Log.d("UserApi", "Request Headers: ${request.headers}")
+                Log.d("UserApi", "Request Method: ${request.method}")
+                try {
+                    val response = chain.proceed(request)
+                    Log.d("UserApi", "Response Code: ${response.code}")
+                    Log.d("UserApi", "Response Headers: ${response.headers}")
+                    Log.d("UserApi", "Response Message: ${response.message}")
+                    response
+                } catch (e: Exception) {
+                    Log.e("UserApi", "Network Error: ${e.message}", e)
+                    throw e
                 }
             }
-            
-            Log.d("UserApi", "Request URL: ${request.url}")
-            Log.d("UserApi", "Request Headers: ${request.headers}")
-            Log.d("UserApi", "Request Method: ${request.method}")
-            try {
-                val response = chain.proceed(request)
-                Log.d("UserApi", "Response Code: ${response.code}")
-                Log.d("UserApi", "Response Headers: ${response.headers}")
-                Log.d("UserApi", "Response Message: ${response.message}")
-                response
-            } catch (e: Exception) {
-                Log.e("UserApi", "Network Error: ${e.message}", e)
-                throw e
-            }
-        }
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .build())
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+            .build()
+    )
     .build()
 
 val userApi: UserApi = retrofit.create(UserApi::class.java) 

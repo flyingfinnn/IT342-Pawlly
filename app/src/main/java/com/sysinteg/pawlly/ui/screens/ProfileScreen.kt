@@ -89,11 +89,18 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.sysinteg.pawlly.PetResponse
+import com.sysinteg.pawlly.model.Pet
+import androidx.compose.foundation.layout.heightIn
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.sysinteg.pawlly.R
 
 val LightRed = Color(0xFFFF6B6B)
 
 data class Application(
     val id: Int,
+    val petId: Int,
     val petName: String,
     val status: ApplicationStatus
 )
@@ -112,7 +119,8 @@ fun ProfileScreen(
     onNavProfile: () -> Unit = {},
     onAddPet: () -> Unit = {},
     onPetDetail: (Int) -> Unit = {},
-    editMode: Boolean = false
+    editMode: Boolean = false,
+    onAdoptPetDetail: (Int, String) -> Unit = { _, _ -> }
 ) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences(PAWLLY_PREFS, Context.MODE_PRIVATE) }
@@ -147,7 +155,9 @@ fun ProfileScreen(
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
-    val myPets = remember { mutableStateListOf<com.sysinteg.pawlly.model.Pet>() }
+    val myPets = remember { mutableStateListOf<Pet>() }
+    var petsLoading by remember { mutableStateOf(true) }
+    var petsError by remember { mutableStateOf("") }
     var showLogoutDialog by remember { mutableStateOf(false) }
     val myApplications = remember { mutableStateListOf<Application>() }
     var statusType by remember { mutableStateOf(StatusType.None) }
@@ -178,6 +188,12 @@ fun ProfileScreen(
     var newProfileBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
     var isImageChanged by remember { mutableStateOf(false) }
 
+    // Detect if user signed in with Google
+    val isGoogleUser = remember {
+        val firebaseUser = auth.currentUser
+        firebaseUser?.providerData?.any { it.providerId == "google.com" } == true
+    }
+
     // Image picker launcher
     val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
@@ -188,6 +204,13 @@ fun ProfileScreen(
             inputStream?.close()
         }
     }
+
+    // Google sign out setup
+    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        .requestIdToken(context.getString(R.string.default_web_client_id))
+        .requestEmail()
+        .build()
+    val googleSignInClient = GoogleSignIn.getClient(context, gso)
 
     // Helper for password validation
     fun isValidPassword(password: String): Boolean {
@@ -257,6 +280,66 @@ fun ProfileScreen(
         isLoading = false
     }
 
+    // Fetch user's pets from backend
+    LaunchedEffect(username) {
+        if (username.isNotBlank()) {
+            petsLoading = true
+            petsError = ""
+            try {
+                val userPets = withContext(Dispatchers.IO) { userApi.getPetsByUserName(username) }
+                myPets.clear()
+                myPets.addAll(userPets.map {
+                    Pet(
+                        id = it.pid,
+                        name = it.name ?: "",
+                        breed = it.breed ?: "",
+                        age = it.age ?: "",
+                        location = it.address ?: "",
+                        photo1 = it.photo1,
+                        photo1Thumb = it.photo1Thumb,
+                        photo2 = it.photo2,
+                        photo3 = it.photo3,
+                        photo4 = it.photo4,
+                        weight = it.weight,
+                        color = it.color,
+                        height = it.height,
+                        user_name = it.userName
+                    )
+                })
+                petsLoading = false
+            } catch (e: Exception) {
+                petsError = e.message ?: "Failed to load pets."
+                petsLoading = false
+            }
+        }
+    }
+
+    // Fetch user's adoption applications from backend
+    LaunchedEffect(userId) {
+        if (userId != null && userId != 0L) {
+            try {
+                val applications = withContext(Dispatchers.IO) {
+                    userApi.getAdoptionApplicationsByUserId(userId!!)
+                }
+                myApplications.clear()
+                myApplications.addAll(applications.map {
+                    Application(
+                        id = it.id.toInt(),
+                        petId = it.petId.toInt(),
+                        petName = it.petName ?: "Pet Name",
+                        status = when (it.status.lowercase()) {
+                            "pending" -> ApplicationStatus.PENDING
+                            "accepted", "success" -> ApplicationStatus.ACCEPTED
+                            else -> ApplicationStatus.PENDING
+                        }
+                    )
+                })
+            } catch (e: Exception) {
+                Log.e("ProfileScreen", "Failed to fetch applications", e)
+            }
+        }
+    }
+
     LaunchedEffect(statusType) {
         if (statusType != StatusType.None) {
             showStatusChip = true
@@ -274,6 +357,9 @@ fun ProfileScreen(
             darkIcons = useDarkIcons
         )
     }
+
+    // Use the username from state as currentUsername
+    val currentUsernameValue = username
 
     if (isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -345,7 +431,8 @@ fun ProfileScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(bottom = 80.dp) // Add padding for the navigation bar
+                        .padding(bottom = 80.dp)
+                        .statusBarsPadding()
                 ) {
                     Column(
                         modifier = Modifier
@@ -560,28 +647,30 @@ fun ProfileScreen(
                             )
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            Text("Password", fontWeight = FontWeight.Bold, fontFamily = Inter, fontSize = 14.sp, color = Color.Gray)
-                            OutlinedTextField(
-                                value = password,
-                                onValueChange = { password = it },
-                                placeholder = { Text("Enter your password", color = Color.Black) },
-                                modifier = Modifier.fillMaxWidth(),
-                                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                                colors = OutlinedTextFieldDefaults.colors(),
-                                textStyle = TextStyle(color = Color.Black)
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
+                            if (!isGoogleUser) {
+                                Text("Password", fontWeight = FontWeight.Bold, fontFamily = Inter, fontSize = 14.sp, color = Color.Gray)
+                                OutlinedTextField(
+                                    value = password,
+                                    onValueChange = { password = it },
+                                    placeholder = { Text("Enter your password", color = Color.Black) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                    colors = OutlinedTextFieldDefaults.colors(),
+                                    textStyle = TextStyle(color = Color.Black)
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
 
-                            Text("Confirm Password", fontWeight = FontWeight.Bold, fontFamily = Inter, fontSize = 14.sp, color = Color.Gray)
-                            OutlinedTextField(
-                                value = confirmPassword,
-                                onValueChange = { confirmPassword = it },
-                                placeholder = { Text("Confirm your password", color = Color.Black) },
-                                modifier = Modifier.fillMaxWidth(),
-                                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                                colors = OutlinedTextFieldDefaults.colors(),
-                                textStyle = TextStyle(color = Color.Black)
-                            )
+                                Text("Confirm Password", fontWeight = FontWeight.Bold, fontFamily = Inter, fontSize = 14.sp, color = Color.Gray)
+                                OutlinedTextField(
+                                    value = confirmPassword,
+                                    onValueChange = { confirmPassword = it },
+                                    placeholder = { Text("Confirm your password", color = Color.Black) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                    colors = OutlinedTextFieldDefaults.colors(),
+                                    textStyle = TextStyle(color = Color.Black)
+                                )
+                            }
                             if (errorMessage.isNotEmpty()) {
                                 Text(errorMessage, color = LightRed, fontSize = 14.sp, modifier = Modifier.padding(top = 8.dp))
                             }
@@ -668,7 +757,7 @@ fun ProfileScreen(
                                     .weight(1f)
                                     .height(48.dp)
                             ) {
-                                Text("Save Changes", color = Color.White, fontFamily = Inter, fontWeight = FontWeight.Bold)
+                                Text("Save Changes", color = Color.White, fontFamily = Inter, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1)
                             }
                             Spacer(modifier = Modifier.width(16.dp))
                             Button(
@@ -689,7 +778,7 @@ fun ProfileScreen(
                                     .weight(1f)
                                     .height(48.dp)
                             ) {
-                                Text("Discard", color = Color.White, fontFamily = Inter, fontWeight = FontWeight.Bold)
+                                Text("Discard", color = Color.White, fontFamily = Inter, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1)
                             }
                         }
                     }
@@ -848,27 +937,33 @@ fun ProfileScreen(
                                 colors = ButtonDefaults.buttonColors(containerColor = Purple),
                                 shape = RoundedCornerShape(8.dp)
                             ) {
-                                Text("Add Pet", color = Color.White, fontFamily = Inter)
+                                Text("+ Add Pet", color = Color.White, fontFamily = Inter)
                             }
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
                         if (myPets.isEmpty()) {
                             Text(
-                                "No pets added yet. Add your first pet!",
+                                "Have a pet you want to rehome? Click Add Pet to get started",
                                 color = Color.Gray,
                                 fontFamily = Inter,
-                                fontSize = 16.sp
+                                fontSize = 16.sp,
+                                modifier = Modifier.padding(bottom = 12.dp)
                             )
                         } else {
                             LazyVerticalGrid(
                                 columns = GridCells.Fixed(2),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 200.dp, max = 500.dp),
                                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                items(myPets) { pet ->
+                                items(myPets.take(4)) { pet ->
                                     PetCard(
                                         pet = pet,
-                                        onClick = { onPetDetail(pet.id) }
+                                        currentUsername = currentUsernameValue,
+                                        onOwnerClick = { onPetDetail(pet.id) },
+                                        onPublicClick = { onAdoptPetDetail(pet.id, pet.name) }
                                     )
                                 }
                             }
@@ -909,36 +1004,67 @@ fun ProfileScreen(
                             }
                         } else {
                             myApplications.forEach { application ->
-                                Card(
+                                Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(vertical = 8.dp),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = when (application.status) {
-                                            ApplicationStatus.PENDING -> Color(0xFFFFF3E0)
-                                            ApplicationStatus.ACCEPTED -> Color(0xFFE8F5E9)
-                                        }
-                                    )
+                                        .padding(vertical = 8.dp)
+                                        .align(Alignment.CenterHorizontally)
                                 ) {
-                                    Column(
-                                        modifier = Modifier.padding(16.dp)
+                                    Card(
+                                        shape = RoundedCornerShape(16.dp),
+                                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA)),
+                                        elevation = CardDefaults.cardElevation(2.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .align(Alignment.Center)
                                     ) {
-                                        Text(
-                                            application.petName,
-                                            fontWeight = FontWeight.Bold,
-                                            fontFamily = Inter,
-                                            fontSize = 16.sp
-                                        )
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text(
-                                            "Status: ${application.status.name}",
-                                            color = when (application.status) {
-                                                ApplicationStatus.PENDING -> Color(0xFFFF9800)
-                                                ApplicationStatus.ACCEPTED -> Color(0xFF4CAF50)
-                                            },
-                                            fontFamily = Inter,
-                                            fontSize = 14.sp
-                                        )
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(20.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column(
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                Text(
+                                                    text = "Adopt Application for ${application.petName}",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 18.sp,
+                                                    color = Color.Black
+                                                )
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Text(
+                                                        text = "ID #${application.id}",
+                                                        fontSize = 14.sp,
+                                                        color = Color.Gray,
+                                                        fontWeight = FontWeight.Medium
+                                                    )
+                                                    Spacer(modifier = Modifier.width(12.dp))
+                                                    Text(
+                                                        text = "STATUS: ${application.status.name.replaceFirstChar { it.uppercase() }}",
+                                                        fontSize = 14.sp,
+                                                        color = Color.Gray,
+                                                        fontWeight = FontWeight.Medium
+                                                    )
+                                                }
+                                            }
+                                            // Status dot
+                                            val statusColor = when (application.status.name.lowercase()) {
+                                                "pending" -> Color(0xFFFFC107)
+                                                "success" -> Color(0xFF4CAF50)
+                                                "accepted" -> Color(0xFF4CAF50)
+                                                "rejected" -> Color(0xFFE53935)
+                                                else -> Color.LightGray
+                                            }
+                                            Spacer(modifier = Modifier.width(10.dp))
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(14.dp)
+                                                    .background(statusColor, shape = CircleShape)
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -971,6 +1097,7 @@ fun ProfileScreen(
                             showLogoutDialog = false
                             // Clear Firebase auth state
                             auth.signOut()
+                            googleSignInClient.signOut()
                             // Clear shared preferences
                             prefs.edit().clear().apply()
                             // Navigate to login screen

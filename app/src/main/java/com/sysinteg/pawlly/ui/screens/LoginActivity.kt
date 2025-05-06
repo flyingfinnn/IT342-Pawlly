@@ -71,7 +71,10 @@ class LoginActivity : ComponentActivity() {
                                         prefs.edit()
                                             .putString(KEY_JWT_TOKEN, token)
                                             .apply()
-                                            
+                                        // Fetch user details to get user_id
+                                        val user = userApi.getMe("Bearer $token")
+                                        prefs.edit().putLong("user_id", user.userId ?: 0L).apply()
+                                        
                                         // Verify token was stored correctly
                                         val storedToken = prefs.getString(KEY_JWT_TOKEN, null)
                                         if (storedToken == null || storedToken != token) {

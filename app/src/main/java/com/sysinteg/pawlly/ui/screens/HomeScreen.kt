@@ -47,16 +47,6 @@ import com.sysinteg.pawlly.utils.Constants.PAWLLY_PREFS
 import com.sysinteg.pawlly.utils.Constants.KEY_JWT_TOKEN
 import kotlinx.coroutines.launch
 
-// Sample pet data
-private val samplePets = listOf(
-    Pet(1, "Milo", "Golden Retriever", "2 yrs", "Lagos", R.drawable.smile_dog),
-    Pet(2, "Luna", "Siamese Cat", "1 yr", "Abuja", R.drawable.smile_cat),
-    Pet(3, "Buddy", "Rabbit", "6 mo", "Ibadan", R.drawable.smile_dog),
-    Pet(4, "Bella", "Persian Cat", "3 yrs", "Kano", R.drawable.smile_cat),
-    Pet(5, "Max", "Labrador", "4 yrs", "Enugu", R.drawable.smile_dog),
-    Pet(6, "Coco", "Poodle", "2 yrs", "Port Harcourt", R.drawable.smile_dog)
-)
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AdoptScreen(
@@ -66,7 +56,8 @@ fun AdoptScreen(
     onLostFoundClick: () -> Unit = {},
     onNavHome: () -> Unit = {},
     onNavNotifications: () -> Unit = {},
-    onNavProfile: () -> Unit = {}
+    onNavProfile: () -> Unit = {},
+    onAdoptPetDetail: (Int, String) -> Unit = { _, _ -> }
 ) {
     val filters = listOf("Dog", "Cat", "Small", "Nearby", "All")
     var selectedFilter by remember { mutableStateOf("All") }
@@ -80,6 +71,39 @@ fun AdoptScreen(
     val coroutineScope = rememberCoroutineScope()
     var showCompleteProfileDialog by remember { mutableStateOf(false) }
     var user by remember { mutableStateOf<UserResponse?>(null) }
+    var currentUsername by remember { mutableStateOf("") }
+
+    // --- Fetch pets from backend ---
+    var pets by remember { mutableStateOf<List<Pet>>(emptyList()) }
+    var petsLoading by remember { mutableStateOf(true) }
+    var petsError by remember { mutableStateOf("") }
+    LaunchedEffect(Unit) {
+        petsLoading = true
+        petsError = ""
+        try {
+            val response = userApi.getAllPets()
+            pets = response.map {
+                Pet(
+                    id = it.pid,
+                    name = it.name ?: "",
+                    breed = it.breed ?: "",
+                    age = it.age ?: "",
+                    location = it.address ?: "",
+                    photo1 = it.photo1,
+                    photo2 = it.photo2,
+                    photo3 = it.photo3,
+                    photo4 = it.photo4,
+                    weight = it.weight,
+                    color = it.color,
+                    height = it.height,
+                    user_name = it.userName
+                )
+            }
+        } catch (e: Exception) {
+            petsError = e.message ?: "Failed to load pets"
+        }
+        petsLoading = false
+    }
 
     // Fetch user data and check for missing attributes
     LaunchedEffect(Unit) {
@@ -97,6 +121,7 @@ fun AdoptScreen(
                 ) {
                     showCompleteProfileDialog = true
                 }
+                currentUsername = me.username ?: ""
             } catch (_: Exception) {
                 // ignore
             }
@@ -204,23 +229,40 @@ fun AdoptScreen(
             )
             Spacer(modifier = Modifier.height(24.dp))
             // Pet Cards Grid
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(cardHeight * 3 + cardSpacing * 2)
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    userScrollEnabled = false
-                ) {
-                    items(samplePets) { pet ->
-                        PetCard(
-                            pet = pet,
-                            onClick = { onPetClick(pet.id) }
-                        )
+            val featuredPets = remember(pets) { pets.shuffled().take(6) }
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(cardHeight * 3 + cardSpacing * 2)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                userScrollEnabled = false
+            ) {
+                when {
+                    petsLoading -> {
+                        item {
+                            Text("Loading pets...", color = Color.Gray)
+                        }
+                    }
+                    petsError.isNotEmpty() -> {
+                        item {
+                            Text("Error: $petsError", color = Color.Red)
+                        }
+                    }
+                    else -> {
+                        items(featuredPets) { pet ->
+                            PetCard(
+                                pet = pet,
+                                currentUsername = currentUsername,
+                                onOwnerClick = { onPetClick(pet.id) },
+                                onPublicClick = { onAdoptPetDetail(pet.id, pet.name) }
+                            )
+                        }
                     }
                 }
+            }
             Button(
                 onClick = onBrowseAll,
                 modifier = Modifier

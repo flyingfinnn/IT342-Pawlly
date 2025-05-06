@@ -36,17 +36,21 @@ public class AdoptionService {
         if (existingAdoptionOpt.isPresent()) {
             AdoptionEntity existingAdoption = existingAdoptionOpt.get();
 
-            // Update the fields
-            existingAdoption.setAdoptionDate(adoption.getAdoptionDate());
+            // Update the new fields
+            existingAdoption.setUserId(adoption.getUserId());
+            existingAdoption.setPetId(adoption.getPetId());
+            existingAdoption.setPetName(adoption.getPetName());
+            existingAdoption.setHouseholdType(adoption.getHouseholdType());
+            existingAdoption.setHouseholdOwnership(adoption.getHouseholdOwnership());
+            existingAdoption.setNumAdults(adoption.getNumAdults());
+            existingAdoption.setNumChildren(adoption.getNumChildren());
+            existingAdoption.setOtherPets(adoption.getOtherPets());
+            existingAdoption.setExperienceWithPets(adoption.getExperienceWithPets());
+            existingAdoption.setDailyRoutine(adoption.getDailyRoutine());
+            existingAdoption.setHoursAlonePerDay(adoption.getHoursAlonePerDay());
+            existingAdoption.setReasonForAdoption(adoption.getReasonForAdoption());
             existingAdoption.setStatus(adoption.getStatus());
-            existingAdoption.setName(adoption.getName());
-            existingAdoption.setAddress(adoption.getAddress());
-            existingAdoption.setContactNumber(adoption.getContactNumber());
-            existingAdoption.setPetType(adoption.getPetType());
-            existingAdoption.setBreed(adoption.getBreed());
-            existingAdoption.setDescription(adoption.getDescription());
-            existingAdoption.setSubmissionDate(adoption.getSubmissionDate());
-            existingAdoption.setPhoto(adoption.getPhoto());
+            existingAdoption.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
 
             return adoptionRepository.save(existingAdoption);
         }
@@ -60,5 +64,15 @@ public class AdoptionService {
             return true;
         }
         return false; // Return false if not found
+    }
+
+    // Get adoptions by user ID
+    public List<AdoptionEntity> getAdoptionsByUserId(Long userId) {
+        return adoptionRepository.findByUserId(userId);
+    }
+
+    // Get adoptions by userId and petId
+    public List<AdoptionEntity> getAdoptionsByUserIdAndPetId(Long userId, Integer petId) {
+        return adoptionRepository.findByUserIdAndPetId(userId, petId);
     }
 }

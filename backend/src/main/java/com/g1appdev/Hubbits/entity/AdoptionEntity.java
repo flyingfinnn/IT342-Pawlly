@@ -1,142 +1,117 @@
-
 package com.g1appdev.Hubbits.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
-@Table(name = "adoptions")
+@Table(name = "adoptapplication")
 public class AdoptionEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long adoptionID;
+    private Long id;
 
-    private LocalDate adoptionDate;
+    @JsonProperty("user_id")
+    @Column(nullable = false)
+    private Long userId;
 
-    @Enumerated(EnumType.STRING)
-    private Status status;
+    @JsonProperty("pet_id")
+    @Column(nullable = false)
+    private Integer petId;
 
-    private String name;
-    private String address;
-    private String contactNumber;
-    private String petType;
-    private String breed;
-    private String description;
-    private LocalDate submissionDate;
-    private String photo;
+    @JsonProperty("household_type")
+    private String householdType;
 
-    public enum Status {
-        PENDING, APPROVED, REJECTED
-    }
+    @JsonProperty("household_ownership")
+    private String householdOwnership;
+
+    @JsonProperty("num_adults")
+    private Integer numAdults;
+
+    @JsonProperty("num_children")
+    private Integer numChildren;
+
+    @JsonProperty("other_pets")
+    @Column(name = "other_pets")
+    private Boolean otherPets;
+
+    @JsonProperty("experience_with_pets")
+    private String experienceWithPets;
+
+    @JsonProperty("daily_routine")
+    private String dailyRoutine;
+
+    @JsonProperty("hours_alone_per_day")
+    private Integer hoursAlonePerDay;
+
+    @JsonProperty("reason_for_adoption")
+    private String reasonForAdoption;
+
+    @JsonProperty("pet_name")
+    @Column(name = "pet_name")
+    private String petName;
+
+    private String status = "pending";
+
+    private java.sql.Timestamp createdAt;
+    private java.sql.Timestamp updatedAt;
 
     public AdoptionEntity() {
-        this.adoptionDate = LocalDate.now();
-        this.status = Status.PENDING;
-        this.submissionDate = LocalDate.now();
+        this.status = "pending";
+        this.createdAt = new java.sql.Timestamp(System.currentTimeMillis());
+        this.updatedAt = new java.sql.Timestamp(System.currentTimeMillis());
     }
 
-    // Getter and setter methods
-    public Long getAdoptionID() {
-        return adoptionID;
-    }
+    // Getters and setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setAdoptionID(Long adoptionID) {
-        this.adoptionID = adoptionID;
-    }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 
-    public LocalDate getAdoptionDate() {
-        return adoptionDate;
-    }
+    public Integer getPetId() { return petId; }
+    public void setPetId(Integer petId) { this.petId = petId; }
 
-    public void setAdoptionDate(LocalDate adoptionDate) {
-        this.adoptionDate = adoptionDate;
-    }
+    public String getHouseholdType() { return householdType; }
+    public void setHouseholdType(String householdType) { this.householdType = householdType; }
 
-    public Status getStatus() {
-        return status;
-    }
+    public String getHouseholdOwnership() { return householdOwnership; }
+    public void setHouseholdOwnership(String householdOwnership) { this.householdOwnership = householdOwnership; }
 
-    public void setStatus(Status status) {
-        this.status = status;
-    }
+    public Integer getNumAdults() { return numAdults; }
+    public void setNumAdults(Integer numAdults) { this.numAdults = numAdults; }
 
-    public String getName() {
-        return name;
-    }
+    public Integer getNumChildren() { return numChildren; }
+    public void setNumChildren(Integer numChildren) { this.numChildren = numChildren; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public Boolean getOtherPets() { return otherPets; }
+    public void setOtherPets(Boolean otherPets) { this.otherPets = otherPets; }
 
-    public String getAddress() {
-        return address;
-    }
+    public String getExperienceWithPets() { return experienceWithPets; }
+    public void setExperienceWithPets(String experienceWithPets) { this.experienceWithPets = experienceWithPets; }
 
-    public void setAddress(String address) {
-        this.address = address;
-    }
+    public String getDailyRoutine() { return dailyRoutine; }
+    public void setDailyRoutine(String dailyRoutine) { this.dailyRoutine = dailyRoutine; }
 
-    public String getContactNumber() {
-        return contactNumber;
-    }
+    public Integer getHoursAlonePerDay() { return hoursAlonePerDay; }
+    public void setHoursAlonePerDay(Integer hoursAlonePerDay) { this.hoursAlonePerDay = hoursAlonePerDay; }
 
-    public void setContactNumber(String contactNumber) {
-        this.contactNumber = contactNumber;
-    }
+    public String getReasonForAdoption() { return reasonForAdoption; }
+    public void setReasonForAdoption(String reasonForAdoption) { this.reasonForAdoption = reasonForAdoption; }
 
-    public String getPetType() {
-        return petType;
-    }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
-    public void setPetType(String petType) {
-        this.petType = petType;
-    }
+    public java.sql.Timestamp getCreatedAt() { return createdAt; }
+    public void setCreatedAt(java.sql.Timestamp createdAt) { this.createdAt = createdAt; }
 
-    public String getBreed() {
-        return breed;
-    }
+    public java.sql.Timestamp getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(java.sql.Timestamp updatedAt) { this.updatedAt = updatedAt; }
 
-    public void setBreed(String breed) {
-        this.breed = breed;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public LocalDate getSubmissionDate() {
-        return submissionDate;
-    }
-
-    public void setSubmissionDate(LocalDate submissionDate) {
-        this.submissionDate = submissionDate;
-    }
-
-    public String getPhoto() {
-        return photo;
-    }
-
-    public void setPhoto(String photo) {
-        this.photo = photo;
-    }
-
-    // Methods for operations
-    public void applyForAdoption() {
-        this.status = Status.PENDING;
-    }
-
-    public void updateStatus(Status newStatus) {
-        this.status = newStatus;
-    }
-
-    public String viewAdoptionStatus() {
-        return "Adoption ID: " + adoptionID + ", Status: " + status +
-                ", Name: " + name + ", Type of Pet: " + petType +
-                ", Breed: " + breed + ", Description: " + description;
-    }
+    public String getPetName() { return petName; }
+    public void setPetName(String petName) { this.petName = petName; }
 }

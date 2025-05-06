@@ -31,6 +31,11 @@ import android.util.Log
 import androidx.lifecycle.lifecycleScope
 import java.io.File
 import okhttp3.RequestBody.Companion.asRequestBody
+import android.content.SharedPreferences
+import android.content.Context
+import com.sysinteg.pawlly.utils.Constants.KEY_JWT_TOKEN
+import com.sysinteg.pawlly.utils.Constants.PAWLLY_PREFS
+import com.sysinteg.pawlly.LoginRequest
 
 @AndroidEntryPoint
 class SignUpActivity : ComponentActivity() {
@@ -104,6 +109,13 @@ class SignUpActivity : ComponentActivity() {
                                             context.startActivity(intent)
                                             finish()
                                         }
+
+                                        // After successful signup, log the user in to get the token
+                                        val loginResponse = userApi.login(LoginRequest(email = email, password = password))
+                                        val prefs = getSharedPreferences(PAWLLY_PREFS, Context.MODE_PRIVATE)
+                                        prefs.edit().putString(KEY_JWT_TOKEN, loginResponse.token).apply()
+                                        val user = userApi.getMe("Bearer ${loginResponse.token}")
+                                        prefs.edit().putLong("user_id", user.userId ?: 0L).apply()
                                     } catch (e: Exception) {
                                         Log.e("SignUpActivity", "Sign up error", e)
                                         runOnUiThread {

@@ -10,11 +10,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sysinteg.pawlly.ui.theme.Purple
 import com.sysinteg.pawlly.ui.theme.White
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun AdoptAdoptionFinishScreen(
-    onReturnToProfile: () -> Unit = {},
-    onAdoptMore: () -> Unit = {}
+    onReturnToHome: () -> Unit = {}
 ) {
     Scaffold(
         containerColor = White
@@ -28,31 +28,24 @@ fun AdoptAdoptionFinishScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                "Congratulations!",
+                "Your application has been sent!",
                 fontWeight = FontWeight.Bold,
                 fontSize = 26.sp,
-                color = Purple,
+                color = Color.Black,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
             Text(
-                "Your adoption process is complete. Thank you for giving a pet a new home!",
+                "Please wait until the admin audits your adoption application. We'll notify you once your application has been successfully reviewed",
                 fontSize = 18.sp,
-                color = Purple,
+                color = Color(0xFF888888),
                 modifier = Modifier.padding(bottom = 32.dp)
             )
             Button(
-                onClick = onReturnToProfile,
+                onClick = onReturnToHome,
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Purple)
             ) {
-                Text("Return to Profile", color = White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            OutlinedButton(
-                onClick = onAdoptMore,
-                modifier = Modifier.fillMaxWidth().height(48.dp)
-            ) {
-                Text("Adopt More", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("Return to Home", color = White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
             }
         }
     }

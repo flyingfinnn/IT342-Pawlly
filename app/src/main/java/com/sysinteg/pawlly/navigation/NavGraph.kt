@@ -38,6 +38,11 @@ import androidx.compose.runtime.LaunchedEffect
 import com.sysinteg.pawlly.UserSignupRequest
 import java.io.File
 import okhttp3.RequestBody.Companion.asRequestBody
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 
 sealed class Screen(val route: String) {
     object Landing : Screen("landing")
@@ -51,14 +56,13 @@ sealed class Screen(val route: String) {
     // Adopt flow
     object AdoptHome : Screen("adopt")
     object AdoptResults : Screen("adopt/results")
-    object AdoptPetDetail : Screen("adopt/pet/{id}")
-    object AdoptStep1 : Screen("adopt/start")
-    object AdoptStep2 : Screen("adopt/address")
-    object AdoptStep3 : Screen("adopt/home")
-    object AdoptStep4 : Screen("adopt/images")
-    object AdoptStep5 : Screen("adopt/roommate")
-    object AdoptStep6 : Screen("adopt/other-animals")
-    object AdoptStep7 : Screen("adopt/confirm")
+    object AdoptPetDetail : Screen("adopt/pet/{id}/{name}")
+    object AdoptStart : Screen("adopt/start")
+    object AdoptPersonal : Screen("adopt/personal")
+    object AdoptHousehold : Screen("adopt/household")
+    object AdoptOtherPets : Screen("adopt/otherpets")
+    object AdoptLifestyle : Screen("adopt/lifestyle")
+    object AdoptAgreement : Screen("adopt/agreement")
     object AdoptFinish : Screen("adopt/finish")
 }
 
@@ -100,6 +104,10 @@ fun NavGraph(navController: NavHostController) {
                                 // Store token in SharedPreferences using constants
                                 val prefs = context.getSharedPreferences(PAWLLY_PREFS, Context.MODE_PRIVATE)
                                 prefs.edit().putString(KEY_JWT_TOKEN, token).apply()
+                                
+                                // Fetch user details to get user_id
+                                val user = userApi.getMe("Bearer $token")
+                                prefs.edit().putLong("user_id", user.userId ?: 0L).apply()
                                 
                                 withContext(Dispatchers.Main) {
                                     Toast.makeText(context, "Login successful!", Toast.LENGTH_LONG).show()
@@ -272,7 +280,8 @@ fun NavGraph(navController: NavHostController) {
         composable(Screen.Home.route) {
             AdoptScreen(
                 onBrowseAll = { navController.navigate(Screen.AdoptResults.route) },
-                onPetClick = { id -> navController.navigate("adopt/pet/$id") },
+                onPetClick = { id -> navController.navigate("pet_detail/$id") },
+                onAdoptPetDetail = { id, name -> navController.navigate("adopt/pet/$id/$name") },
                 onFilterClick = { /* TODO: filter logic */ },
                 onLostFoundClick = { /* TODO: navigate to Lost and Found */ },
                 onNavHome = { navController.navigate(Screen.Home.route) },
@@ -290,8 +299,8 @@ fun NavGraph(navController: NavHostController) {
             )
         ) { backStackEntry ->
             val context = LocalContext.current
-            val prefs = remember { context.getSharedPreferences(PAWLLY_PREFS, Context.MODE_PRIVATE) }
-            val token = remember { prefs.getString(KEY_JWT_TOKEN, null) }
+            val prefs = context.getSharedPreferences(PAWLLY_PREFS, Context.MODE_PRIVATE)
+            val token = prefs.getString(KEY_JWT_TOKEN, null)
             val editMode = backStackEntry.arguments?.getBoolean("editMode") ?: false
             if (token == null) {
                 // If no token, redirect to login
@@ -357,7 +366,8 @@ fun NavGraph(navController: NavHostController) {
         composable(Screen.AdoptHome.route) {
             AdoptScreen(
                 onBrowseAll = { navController.navigate(Screen.AdoptResults.route) },
-                onPetClick = { id -> navController.navigate("adopt/pet/$id") },
+                onPetClick = { id -> navController.navigate("pet_detail/$id") },
+                onAdoptPetDetail = { id, name -> navController.navigate("adopt/pet/$id/$name") },
                 onFilterClick = { /* TODO: filter logic */ },
                 onLostFoundClick = { /* TODO: navigate to Lost and Found */ },
                 onNavHome = { navController.navigate(Screen.Home.route) },
@@ -367,7 +377,8 @@ fun NavGraph(navController: NavHostController) {
         }
         composable(Screen.AdoptResults.route) {
             AdoptSearchResultsScreen(
-                onPetClick = { id -> navController.navigate("adopt/pet/$id") },
+                onPetClick = { id -> navController.navigate("pet_detail/$id") },
+                onAdoptPetDetail = { id, name -> navController.navigate("adopt/pet/$id/$name") },
                 onBack = { navController.popBackStack() },
                 onFilter = { /* TODO: filter logic */ },
                 onNavHome = { navController.navigate(Screen.Home.route) },
@@ -375,58 +386,94 @@ fun NavGraph(navController: NavHostController) {
                 onNavProfile = { navController.navigate(Screen.Profile.route + "?editMode=false") }
             )
         }
-        composable("adopt/pet/{id}") { backStackEntry ->
+        composable("adopt/existing_application") {
+            val context = LocalContext.current
+            val prefs = context.getSharedPreferences(PAWLLY_PREFS, Context.MODE_PRIVATE)
+            val petId = prefs.getInt("adopt_pet_id", 0)
+            var petName by remember { mutableStateOf<String?>(null) }
+            // Optionally fetch pet name if needed
+            AdoptExistingApplicationScreen(
+                petName = petName,
+                onGoToProfile = { navController.navigate(Screen.Profile.route) }
+            )
+        }
+        composable("adopt/pet/{id}/{name}") { backStackEntry ->
             val id = backStackEntry.arguments?.getString("id")?.toIntOrNull() ?: 1
+            val name = backStackEntry.arguments?.getString("name") ?: ""
+            val context = LocalContext.current
+            val prefs = context.getSharedPreferences(PAWLLY_PREFS, Context.MODE_PRIVATE)
+            // Store the selected pet's pid and name as adopt_pet_id and adopt_pet_name
+            LaunchedEffect(id, name) {
+                prefs.edit().putInt("adopt_pet_id", id).putString("adopt_pet_name", name).apply()
+            }
             AdoptPetDetailScreen(
                 petId = id,
-                onAdoptNow = { navController.navigate(Screen.AdoptStep1.route) },
-                onBack = { navController.popBackStack() }
+                petName = name,
+                onAdoptNow = { /* not used */ },
+                onBack = { navController.popBackStack() },
+                onNavigateToExisting = { navController.navigate("adopt/existing_application") },
+                onNavigateToStart = { navController.navigate(Screen.AdoptStart.route) }
             )
         }
-        composable(Screen.AdoptStep1.route) {
-            AdoptAdoptionStep1Screen(
-                onStart = { navController.navigate(Screen.AdoptStep2.route) }
+        composable(Screen.AdoptStart.route) {
+            val context = LocalContext.current
+            val prefs = context.getSharedPreferences(PAWLLY_PREFS, Context.MODE_PRIVATE)
+            val userId = prefs.getLong("user_id", 0L)
+            val petId = prefs.getInt("adopt_pet_id", 0)
+            val petName = prefs.getString("adopt_pet_name", "")
+            var hasExistingApplication by remember { mutableStateOf(false) }
+            val coroutineScope = rememberCoroutineScope()
+            LaunchedEffect(userId, petId) {
+                if (userId != 0L && petId != 0) {
+                    try {
+                        val applications = userApi.getAdoptionApplications(userId, petId)
+                        android.util.Log.d("AdoptStartAdoption", "userId=$userId, petId=$petId, applications found=${applications.size}")
+                        if (applications.isNotEmpty()) {
+                            hasExistingApplication = true
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("AdoptStartAdoption", "Error fetching applications", e)
+                    }
+                }
+            }
+            AdoptStartAdoptionScreen(
+                onNext = { navController.navigate("adopt/process") },
+                hasExistingApplication = hasExistingApplication,
+                petName = petName,
+                onGoToProfile = { navController.navigate(Screen.Profile.route) }
             )
         }
-        composable(Screen.AdoptStep2.route) {
-            AdoptAdoptionStep2Screen(
-                onContinue = { navController.navigate(Screen.AdoptStep3.route) },
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable(Screen.AdoptStep3.route) {
-            AdoptAdoptionStep3Screen(
-                onContinue = { navController.navigate(Screen.AdoptStep4.route) },
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable(Screen.AdoptStep4.route) {
-            AdoptAdoptionStep4Screen(
-                onContinue = { navController.navigate(Screen.AdoptStep5.route) },
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable(Screen.AdoptStep5.route) {
-            AdoptAdoptionStep5Screen(
-                onContinue = { navController.navigate(Screen.AdoptStep6.route) },
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable(Screen.AdoptStep6.route) {
-            AdoptAdoptionStep6Screen(
-                onContinue = { navController.navigate(Screen.AdoptStep7.route) },
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable(Screen.AdoptStep7.route) {
-            AdoptAdoptionStep7Screen(
-                onReturnToHome = { navController.navigate(Screen.Home.route) }
-            )
-        }
-        composable(Screen.AdoptFinish.route) {
-            AdoptAdoptionFinishScreen(
-                onReturnToProfile = { navController.navigate(Screen.Profile.route + "?editMode=true") },
-                onAdoptMore = { navController.navigate(Screen.AdoptHome.route) }
+        // --- New Single-Screen Adoption Flow ---
+        composable("adopt/process") {
+            val viewModel: AdoptionViewModel = hiltViewModel()
+            val context = LocalContext.current
+            val prefs = context.getSharedPreferences(PAWLLY_PREFS, Context.MODE_PRIVATE)
+            val userId = prefs.getLong("user_id", 0L)
+            val petId = prefs.getInt("adopt_pet_id", 0)
+            val petName = prefs.getString("adopt_pet_name", "")
+            val coroutineScope = rememberCoroutineScope()
+            AdoptionProcessScreen(
+                onBack = { navController.popBackStack() },
+                onSubmit = { personal, household, lifestyle ->
+                    // Log all values before POST
+                    android.util.Log.d("AdoptionProcessScreen", "personal=$personal, household=$household, lifestyle=$lifestyle")
+                    // Set ViewModel state (if needed)
+                    viewModel.setPersonalInfo(personal)
+                    viewModel.setHouseholdInfo(household)
+                    viewModel.setLifestyle(lifestyle)
+                    coroutineScope.launch {
+                        viewModel.submitAdoptionApplication(userId, petId, petName) { success ->
+                            if (success) {
+                                navController.navigate(Screen.AdoptFinish.route) {
+                                    popUpTo("adopt/process") { inclusive = true }
+                                }
+                            } else {
+                                // Show error (toast, dialog, etc.)
+                                android.widget.Toast.makeText(context, "Failed to submit application", android.widget.Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
+                }
             )
         }
         composable("add_pet") {
@@ -438,7 +485,6 @@ fun NavGraph(navController: NavHostController) {
             val petId = backStackEntry.arguments?.getString("petId")?.toIntOrNull() ?: 0
             PetDetailScreen(
                 petId = petId,
-                onEdit = { /* TODO: handle edit */ },
                 onBack = { navController.popBackStack() }
             )
         }

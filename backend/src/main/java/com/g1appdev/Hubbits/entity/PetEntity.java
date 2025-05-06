@@ -5,6 +5,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 
 @Entity
 @Table(name = "pets")
@@ -28,6 +29,30 @@ public class PetEntity {
     private String contactNumber;
     private String submissionDate;
 
+    @Column(name = "photo1")
+    private String photo1;
+
+    @Column(name = "photo2")
+    private String photo2;
+
+    @Column(name = "photo3")
+    private String photo3;
+
+    @Column(name = "photo4")
+    private String photo4;
+
+    @Column(name = "photo1_thumb")
+    private String photo1Thumb;
+
+    @Column(name = "weight")
+    private String weight;
+
+    @Column(name = "color")
+    private String color;
+
+    @Column(name = "height")
+    private String height;
+
     // Default constructor
     public PetEntity(){
         super();
@@ -44,6 +69,28 @@ public class PetEntity {
         this.gender = gender;
         this.description = description;
         this.photo = photo;
+        this.status = status;
+        this.userName = userName;
+        this.address = address;
+        this.contactNumber = contactNumber;
+        this.submissionDate = submissionDate;
+    }
+
+    // Add new constructor for 4 photos
+    public PetEntity(int pid, String name, String type, String breed, int age, String gender, String description, String photo, String photo1, String photo2, String photo3, String photo4, String status, String userName, String address, String contactNumber, String submissionDate){
+        super();
+        this.pid = pid;
+        this.name = name;
+        this.type = type;
+        this.age = age;
+        this.breed = breed;
+        this.gender = gender;
+        this.description = description;
+        this.photo = photo;
+        this.photo1 = photo1;
+        this.photo2 = photo2;
+        this.photo3 = photo3;
+        this.photo4 = photo4;
         this.status = status;
         this.userName = userName;
         this.address = address;
@@ -141,13 +188,8 @@ public class PetEntity {
         this.description = description;
     }
 
-    public String getPhoto(){
-        return photo;
-    }
-
-    public void setPhoto(String photo){
-        this.photo = photo;
-    }
+    public String getPhoto(){ return photo; }
+    public void setPhoto(String photo){ this.photo = photo; }
 
     public String getStatus(){
         return status;
@@ -156,4 +198,25 @@ public class PetEntity {
     public void setStatus(String status){
         this.status = status;
     }
+
+    public String getPhoto1() { return photo1; }
+    public void setPhoto1(String photo1) { this.photo1 = photo1; }
+    public String getPhoto2() { return photo2; }
+    public void setPhoto2(String photo2) { this.photo2 = photo2; }
+    public String getPhoto3() { return photo3; }
+    public void setPhoto3(String photo3) { this.photo3 = photo3; }
+    public String getPhoto4() { return photo4; }
+    public void setPhoto4(String photo4) { this.photo4 = photo4; }
+
+    public String getPhoto1Thumb() { return photo1Thumb; }
+    public void setPhoto1Thumb(String photo1Thumb) { this.photo1Thumb = photo1Thumb; }
+
+    public String getWeight() { return weight; }
+    public void setWeight(String weight) { this.weight = weight; }
+
+    public String getColor() { return color; }
+    public void setColor(String color) { this.color = color; }
+
+    public String getHeight() { return height; }
+    public void setHeight(String height) { this.height = height; }
 }

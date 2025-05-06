@@ -32,19 +32,34 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.foundation.BorderStroke
+import coil.compose.AsyncImage
 
 @Composable
 fun PetCard(
     pet: Pet,
     modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null
+    currentUsername: String? = null,
+    onOwnerClick: (() -> Unit)? = null,
+    onPublicClick: (() -> Unit)? = null
 ) {
     OutlinedCard(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(1f)
             .clip(RoundedCornerShape(16.dp))
-            .clickable(enabled = onClick != null) { onClick?.invoke() },
+            .clickable(enabled = (onOwnerClick != null || onPublicClick != null)) {
+                // Debug logging and normalization
+                val petOwner = pet.user_name?.trim()?.lowercase() ?: ""
+                val currentUser = currentUsername?.trim()?.lowercase() ?: ""
+                println("[DEBUG] PetCard clicked: pet.user_name='$petOwner', currentUsername='$currentUser'")
+                if (currentUser.isNotEmpty() && petOwner == currentUser) {
+                    println("[DEBUG] Navigating to PetDetailScreen (owner view)")
+                    onOwnerClick?.invoke()
+                } else {
+                    println("[DEBUG] Navigating to Adopt_PetDetail (public view)")
+                    onPublicClick?.invoke()
+                }
+            },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(4.dp),
         border = BorderStroke(2.dp, Color(0xFFE0E0E0))
@@ -53,12 +68,22 @@ fun PetCard(
             modifier = Modifier.fillMaxSize()
         ) {
             // Full-bleed image
-            Image(
-                painter = painterResource(id = pet.imageRes),
-                contentDescription = pet.name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
+            if (!pet.photo1Thumb.isNullOrEmpty() || !pet.photo1.isNullOrEmpty()) {
+                AsyncImage(
+                    model = pet.photo1Thumb ?: pet.photo1,
+                    contentDescription = pet.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                // Placeholder image (use a local drawable or icon)
+                Icon(
+                    imageVector = Icons.Outlined.Pets,
+                    contentDescription = "No Image",
+                    tint = Color.LightGray,
+                    modifier = Modifier.fillMaxSize().padding(32.dp)
+                )
+            }
             // Gradient overlay (bottom 40%)
             Box(
                 modifier = Modifier
@@ -104,7 +129,7 @@ fun PetCard(
                     Text(
                         text = pet.breed,
                         fontSize = 14.sp,
-                        color = Color(0xFF555555),
+                        color = Color(0xFFE0E0E0), // even lighter grey
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )

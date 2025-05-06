@@ -13,6 +13,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,23 +41,21 @@ import com.sysinteg.pawlly.ui.components.PetCard
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-
-private val samplePets = listOf(
-    Pet(1, "Milo", "Golden Retriever", "2 yrs", "Lagos", R.drawable.logoiconpurple),
-    Pet(2, "Luna", "Siamese Cat", "1 yr", "Abuja", R.drawable.logoiconpurple),
-    Pet(3, "Buddy", "Rabbit", "6 mo", "Ibadan", R.drawable.logoiconpurple)
-)
+import androidx.compose.ui.platform.LocalContext
+import com.sysinteg.pawlly.userApi
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdoptSearchResultsScreen(
-    pets: List<Pet> = samplePets,
+    pets: List<Pet> = emptyList(),
     onPetClick: (Int) -> Unit = {},
     onBack: () -> Unit = {},
     onFilter: (String) -> Unit = {},
     onNavHome: () -> Unit = {},
     onNavNotifications: () -> Unit = {},
-    onNavProfile: () -> Unit = {}
+    onNavProfile: () -> Unit = {},
+    onAdoptPetDetail: (Int, String) -> Unit = { _, _ -> }
 ) {
     val systemUiController = rememberSystemUiController()
     val useDarkIcons = true
@@ -67,7 +67,40 @@ fun AdoptSearchResultsScreen(
     }
     var searchQuery by remember { mutableStateOf("") }
     var showFilterSheet by remember { mutableStateOf(false) }
-    var filteredPets by remember { mutableStateOf(samplePets) }
+    var allPets by remember { mutableStateOf<List<Pet>>(emptyList()) }
+    var filteredPets by remember { mutableStateOf<List<Pet>>(emptyList()) }
+    var petsLoading by remember { mutableStateOf(true) }
+    var petsError by remember { mutableStateOf("") }
+
+    // Fetch pets from Supabase on load
+    LaunchedEffect(Unit) {
+        petsLoading = true
+        petsError = ""
+        try {
+            val response = userApi.getAllPets()
+            allPets = response.map {
+                Pet(
+                    id = it.pid,
+                    name = it.name ?: "",
+                    breed = it.breed ?: "",
+                    age = it.age ?: "",
+                    location = it.address ?: "",
+                    photo1 = it.photo1,
+                    photo2 = it.photo2,
+                    photo3 = it.photo3,
+                    photo4 = it.photo4,
+                    weight = it.weight,
+                    color = it.color,
+                    height = it.height,
+                    user_name = it.userName
+                )
+            }
+            filteredPets = allPets
+        } catch (e: Exception) {
+            petsError = e.message ?: "Failed to load pets."
+        }
+        petsLoading = false
+    }
 
     // Filter state
     var animalType by remember { mutableStateOf("Dog") }
@@ -75,6 +108,25 @@ fun AdoptSearchResultsScreen(
     var size by remember { mutableStateOf("Small") }
     var gender by remember { mutableStateOf("Male") }
     var age by remember { mutableStateOf(2f) }
+
+    // Pagination state
+    var currentPage by remember { mutableStateOf(1) }
+    val petsPerPage = 8
+    val totalPages = (filteredPets.size + petsPerPage - 1) / petsPerPage
+    val pagedPets = filteredPets.drop((currentPage - 1) * petsPerPage).take(petsPerPage)
+
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences(com.sysinteg.pawlly.utils.Constants.PAWLLY_PREFS, android.content.Context.MODE_PRIVATE) }
+    var currentUsername by remember { mutableStateOf("") }
+    LaunchedEffect(Unit) {
+        val token = prefs.getString(com.sysinteg.pawlly.utils.Constants.KEY_JWT_TOKEN, null)
+        if (token != null) {
+            try {
+                val me = com.sysinteg.pawlly.userApi.getMe("Bearer $token")
+                currentUsername = me.username ?: ""
+            } catch (_: Exception) {}
+        }
+    }
 
     // Helper functions for filtering
     fun getTypeFromBreed(breed: String): String = when {
@@ -157,7 +209,15 @@ fun AdoptSearchResultsScreen(
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                if (filteredPets.isEmpty()) {
+                if (petsLoading) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else if (petsError.isNotEmpty()) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Error: $petsError", color = Color.Red)
+                    }
+                } else if (filteredPets.isEmpty()) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize(),
@@ -173,16 +233,91 @@ fun AdoptSearchResultsScreen(
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
                         modifier = Modifier
-                            .fillMaxSize(),
+                            .fillMaxWidth()
+                            .heightIn(max = 800.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         contentPadding = PaddingValues(16.dp)
                     ) {
-                        items(filteredPets) { pet ->
+                        items(pagedPets) { pet ->
                             PetCard(
                                 pet = pet,
-                                onClick = { onPetClick(pet.id) }
+                                currentUsername = currentUsername,
+                                onOwnerClick = { onPetClick(pet.id) },
+                                onPublicClick = { onAdoptPetDetail(pet.id, pet.name) }
                             )
+                        }
+                    }
+                    // Pagination UI
+                    if (totalPages > 1) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 16.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Previous button
+                            IconButton(
+                                onClick = { if (currentPage > 1) currentPage-- },
+                                enabled = currentPage > 1
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.ChevronLeft,
+                                    contentDescription = "Previous",
+                                    tint = if (currentPage > 1) Purple else Color.LightGray
+                                )
+                            }
+                            // Page numbers (show first, last, current, and ... as needed)
+                            val pageNumbers = mutableListOf<Int>()
+                            if (totalPages <= 6) {
+                                for (i in 1..totalPages) pageNumbers.add(i)
+                            } else {
+                                pageNumbers.add(1)
+                                if (currentPage > 3) pageNumbers.add(-1) // ...
+                                val start = maxOf(2, currentPage - 1)
+                                val end = minOf(totalPages - 1, currentPage + 1)
+                                for (i in start..end) pageNumbers.add(i)
+                                if (currentPage < totalPages - 2) pageNumbers.add(-2) // ...
+                                pageNumbers.add(totalPages)
+                            }
+                            pageNumbers.forEach { page ->
+                                when (page) {
+                                    -1, -2 -> {
+                                        Text("...", modifier = Modifier.padding(horizontal = 8.dp), color = Color.Gray, fontSize = 18.sp)
+                                    }
+                                    else -> {
+                                        Button(
+                                            onClick = { currentPage = page },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = if (currentPage == page) Purple else Color.White
+                                            ),
+                                            shape = RoundedCornerShape(8.dp),
+                                            modifier = Modifier
+                                                .padding(horizontal = 4.dp)
+                                                .size(40.dp, 40.dp),
+                                            contentPadding = PaddingValues(0.dp)
+                                        ) {
+                                            Text(
+                                                text = page.toString(),
+                                                color = if (currentPage == page) Color.White else Color.Black,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            // Next button
+                            IconButton(
+                                onClick = { if (currentPage < totalPages) currentPage++ },
+                                enabled = currentPage < totalPages
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.ChevronRight,
+                                    contentDescription = "Next",
+                                    tint = if (currentPage < totalPages) Purple else Color.LightGray
+                                )
+                            }
                         }
                     }
                 }
@@ -294,7 +429,7 @@ fun AdoptSearchResultsScreen(
                         ) {
                             Button(
                                 onClick = {
-                                    filteredPets = samplePets.filter { pet ->
+                                    filteredPets = allPets.filter { pet ->
                                         getTypeFromBreed(pet.breed) == animalType &&
                                         getSizeFromBreed(pet.breed) == size &&
                                         getGenderFromName(pet.name) == gender &&
@@ -312,7 +447,7 @@ fun AdoptSearchResultsScreen(
                             OutlinedButton(
                                 onClick = {
                                     // Discard changes
-                                    filteredPets = samplePets
+                                    filteredPets = allPets
                                     showFilterSheet = false
                                 },
                                 border = ButtonDefaults.outlinedButtonBorder,

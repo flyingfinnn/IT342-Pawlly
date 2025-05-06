@@ -2,6 +2,8 @@ package com.g1appdev.Hubbits.controller;
 
 import com.g1appdev.Hubbits.entity.AdoptionEntity;
 import com.g1appdev.Hubbits.service.AdoptionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +14,8 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/adoptions")
 public class AdoptionController {
+
+    private static final Logger logger = LoggerFactory.getLogger(AdoptionController.class);
 
     @Autowired
     private AdoptionService adoptionService;
@@ -32,6 +36,7 @@ public class AdoptionController {
     // Create new adoption
     @PostMapping
     public AdoptionEntity createAdoption(@RequestBody AdoptionEntity adoption) {
+        logger.info("Received adoption application: {}", adoption);
         return adoptionService.createAdoption(adoption);
     }
 
@@ -55,5 +60,20 @@ public class AdoptionController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    // Get adoptions by user ID
+    @GetMapping("/user/{userId}")
+    public List<AdoptionEntity> getAdoptionsByUserId(@PathVariable Long userId) {
+        return adoptionService.getAdoptionsByUserId(userId);
+    }
+
+    // Get adoptions by userId and petId
+    @GetMapping(params = {"userId", "petId"})
+    public List<AdoptionEntity> getAdoptionsByUserIdAndPetId(
+        @RequestParam Long userId,
+        @RequestParam Integer petId
+    ) {
+        return adoptionService.getAdoptionsByUserIdAndPetId(userId, petId);
     }
 }
