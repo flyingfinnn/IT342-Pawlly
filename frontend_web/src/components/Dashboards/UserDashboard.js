@@ -8,14 +8,17 @@ import {
     TableHead,
     TableRow,
     Paper,
-    Button,
+    IconButton,
     TextField,
     Typography,
     Container,
+    Stack,
 } from "@mui/material";
+import { Edit, Delete, Save, Close } from "@mui/icons-material";
 
 const UserDashboard = () => {
     const [users, setUsers] = useState([]);
+    const [searchQuery, setSearchQuery] = useState("");
     const [editingUserId, setEditingUserId] = useState(null);
     const [editFormData, setEditFormData] = useState({
         firstName: "",
@@ -41,38 +44,21 @@ const UserDashboard = () => {
 
     const handleEdit = (user) => {
         setEditingUserId(user.userId);
-        setEditFormData({
-            firstName: user.firstName,
-            lastName: user.lastName,
-            username: user.username,
-            email: user.email,
-            address: user.address,
-            phoneNumber: user.phoneNumber,
-        });
+        setEditFormData({ ...user });
     };
 
-    const handleCancelEdit = () => {
-        setEditingUserId(null);
-    };
+    const handleCancelEdit = () => setEditingUserId(null);
 
     const handleEditChange = (e) => {
-        setEditFormData({
-            ...editFormData,
-            [e.target.name]: e.target.value,
-        });
+        setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
     };
 
     const handleSaveEdit = async (id) => {
         const token = localStorage.getItem("token");
+        if (!token) return console.error("Token is missing. Please log in again.");
 
-        if (!token) {
-            console.error("Token is missing. Please log in again.");
-            return;
-        }
-
-        // Prepare FormData
         const formData = new FormData();
-        formData.append("user", JSON.stringify(editFormData)); // Convert user object to JSON string
+        formData.append("user", JSON.stringify(editFormData));
 
         try {
             const response = await axios.put(
@@ -81,238 +67,120 @@ const UserDashboard = () => {
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
-                        "Content-Type": "multipart/form-data", // Explicitly set Content-Type
-                    },
-                }
-            );
-
-            if (response.status === 200) {
-                console.log("User updated successfully:", response.data);
-                fetchUsers(); // Refresh the list of users
-                setEditingUserId(null); // Exit edit mode
-            } else {
-                console.error("Failed to update user.");
-            }
-        } catch (error) {
-            console.error("Error saving user:", error.response ? error.response.data : error.message);
-        }
-    };
-
-
-
-    const handleDelete = async (id) => {
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-            console.error("Token is missing. Please log in again.");
-            return;
-        }
-
-        try {
-            const response = await axios.delete(
-                `${process.env.REACT_APP_BACKEND_URL}/api/users/${id}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "multipart/form-data",
                     },
                 }
             );
 
             if (response.status === 200) {
                 fetchUsers();
+                setEditingUserId(null);
             } else {
-                console.error("Failed to delete user");
+                console.error("Failed to update user.");
             }
+        } catch (error) {
+            console.error("Error saving user:", error.response?.data || error.message);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        const token = localStorage.getItem("token");
+        if (!token) return console.error("Token is missing. Please log in again.");
+
+        try {
+            const response = await axios.delete(
+                `${process.env.REACT_APP_BACKEND_URL}/api/users/${id}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            if (response.status === 200) fetchUsers();
+            else console.error("Failed to delete user");
         } catch (error) {
             console.error("Error deleting user:", error);
         }
     };
 
+    const filteredUsers = users.filter((user) =>
+        `${user.firstName} ${user.lastName} ${user.username}`
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())
+    );
+
     return (
-        <Container>
+        <Container sx={{ mt: 4 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+                <Typography variant="h5" fontWeight="bold">User Dashboard</Typography>
+                <TextField
+                    label="Search"
+                    variant="outlined"
+                    size="small"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+            </Stack>
 
             <TableContainer component={Paper}>
                 <Table>
                     <TableHead>
                         <TableRow>
-                            <TableCell sx={{ fontWeight: 'bold' }}>First Name</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Last Name</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Username</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Address</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Phone Number</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
+                            <TableCell sx={{ fontWeight: "bold" }}>First Name</TableCell>
+                            <TableCell sx={{ fontWeight: "bold" }}>Last Name</TableCell>
+                            <TableCell sx={{ fontWeight: "bold" }}>Username</TableCell>
+                            <TableCell sx={{ fontWeight: "bold" }}>Email</TableCell>
+                            <TableCell sx={{ fontWeight: "bold" }}>Address</TableCell>
+                            <TableCell sx={{ fontWeight: "bold" }}>Phone</TableCell>
+                            <TableCell sx={{ fontWeight: "bold" }}>Actions</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {users.map((user) => (
+                        {filteredUsers.map((user) => (
                             <TableRow key={user.userId}>
-                                <TableCell style={{ width: "150px" }}>
-                                    {editingUserId === user.userId ? (
-                                        <TextField
-                                            name="firstName"
-                                            value={editFormData.firstName}
-                                            onChange={handleEditChange}
-                                            fullWidth
-                                            size="small"
-                                            inputProps={{
-                                                style: {
-                                                    fontSize: "14px",
-                                                    padding: "6px",
-                                                },
-                                            }}
-                                        />
-                                    ) : (
-                                        <Typography variant="body2">
-                                            {user.firstName}
-                                        </Typography>
-                                    )}
-                                </TableCell>
-                                <TableCell style={{ width: "150px" }}>
-                                    {editingUserId === user.userId ? (
-                                        <TextField
-                                            name="lastName"
-                                            value={editFormData.lastName}
-                                            onChange={handleEditChange}
-                                            fullWidth
-                                            size="small"
-                                            inputProps={{
-                                                style: {
-                                                    fontSize: "14px",
-                                                    padding: "6px",
-                                                },
-                                            }}
-                                        />
-                                    ) : (
-                                        <Typography variant="body2">
-                                            {user.lastName}
-                                        </Typography>
-                                    )}
-                                </TableCell>
-                                <TableCell style={{ width: "150px" }}>
-                                    {editingUserId === user.userId ? (
-                                        <TextField
-                                            name="username"
-                                            value={editFormData.username}
-                                            onChange={handleEditChange}
-                                            fullWidth
-                                            size="small"
-                                            inputProps={{
-                                                style: {
-                                                    fontSize: "14px",
-                                                    padding: "6px",
-                                                },
-                                            }}
-                                        />
-                                    ) : (
-                                        <Typography variant="body2">
-                                            {user.username}
-                                        </Typography>
-                                    )}
-                                </TableCell>
-                                <TableCell style={{ width: "200px" }}>
-                                    {editingUserId === user.userId ? (
-                                        <TextField
-                                            name="email"
-                                            value={editFormData.email}
-                                            onChange={handleEditChange}
-                                            fullWidth
-                                            size="small"
-                                            inputProps={{
-                                                style: {
-                                                    fontSize: "14px",
-                                                    padding: "6px",
-                                                },
-                                            }}
-                                        />
-                                    ) : (
-                                        <Typography variant="body2">
-                                            {user.email}
-                                        </Typography>
-                                    )}
-                                </TableCell>
-                                <TableCell style={{ width: "250px" }}>
-                                    {editingUserId === user.userId ? (
-                                        <TextField
-                                            name="address"
-                                            value={editFormData.address}
-                                            onChange={handleEditChange}
-                                            fullWidth
-                                            size="small"
-                                            inputProps={{
-                                                style: {
-                                                    fontSize: "14px",
-                                                    padding: "6px",
-                                                },
-                                            }}
-                                        />
-                                    ) : (
-                                        <Typography variant="body2">
-                                            {user.address}
-                                        </Typography>
-                                    )}
-                                </TableCell>
-                                <TableCell style={{ width: "150px" }}>
-                                    {editingUserId === user.userId ? (
-                                        <TextField
-                                            name="phoneNumber"
-                                            value={editFormData.phoneNumber}
-                                            onChange={handleEditChange}
-                                            fullWidth
-                                            size="small"
-                                            inputProps={{
-                                                style: {
-                                                    fontSize: "14px",
-                                                    padding: "6px",
-                                                },
-                                            }}
-                                        />
-                                    ) : (
-                                        <Typography variant="body2">
-                                            {user.phoneNumber}
-                                        </Typography>
-                                    )}
-                                </TableCell>
-                                <TableCell style={{ width: "250px" }}>
+                                {["firstName", "lastName", "username", "email", "address", "phoneNumber"].map((field) => (
+                                    <TableCell key={field}>
+                                        {editingUserId === user.userId ? (
+                                            <TextField
+                                                name={field}
+                                                value={editFormData[field]}
+                                                onChange={handleEditChange}
+                                                fullWidth
+                                                size="small"
+                                            />
+                                        ) : (
+                                            <Typography variant="body2">{user[field]}</Typography>
+                                        )}
+                                    </TableCell>
+                                ))}
+
+                                <TableCell>
                                     {editingUserId === user.userId ? (
                                         <>
-                                            <Button
-                                                variant="contained"
+                                            <IconButton
                                                 color="primary"
-                                                onClick={() =>
-                                                    handleSaveEdit(user.userId)
-                                                }
-                                                sx={{ mr: 1 }}
+                                                onClick={() => handleSaveEdit(user.userId)}
                                             >
-                                                Save
-                                            </Button>
-                                            <Button
-                                                variant="outlined"
+                                                <Save />
+                                            </IconButton>
+                                            <IconButton
                                                 color="secondary"
                                                 onClick={handleCancelEdit}
                                             >
-                                                Cancel
-                                            </Button>
+                                                <Close />
+                                            </IconButton>
                                         </>
                                     ) : (
                                         <>
-                                            <Button
-                                                variant="contained"
+                                            <IconButton
                                                 color="primary"
                                                 onClick={() => handleEdit(user)}
-                                                sx={{ mr: 1 }}
                                             >
-                                                Edit
-                                            </Button>
-                                            <Button
-                                                variant="contained"
-                                                color="secondary"
-                                                onClick={() =>
-                                                    handleDelete(user.userId)
-                                                }
+                                                <Edit />
+                                            </IconButton>
+                                            <IconButton
+                                                color="error"
+                                                onClick={() => handleDelete(user.userId)}
                                             >
-                                                Delete
-                                            </Button>
+                                                <Delete />
+                                            </IconButton>
                                         </>
                                     )}
                                 </TableCell>
