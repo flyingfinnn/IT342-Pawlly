@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
   Typography,
+  Box,
+  Grid,
+  Card,
+  CardContent,
   TextField,
   Button,
   Snackbar,
-  Card,
-  CardContent,
-  CardMedia,
-  Grid,
 } from '@mui/material';
 import axios from 'axios';
 import { useUser } from '../UserContext';
 
-const AdoptionForm = ({ pet }) => {
+const ModernAdoptionForm = ({ pet }) => {
   const { user } = useUser();
   const [formData, setFormData] = useState({
     name: '',
@@ -24,7 +23,6 @@ const AdoptionForm = ({ pet }) => {
     description: pet?.description || '',
     petType: pet?.type || '',
   });
-
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -49,7 +47,7 @@ const AdoptionForm = ({ pet }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'contactNumber' && !/^[0-9]*$/.test(value)) {
+    if (name === 'contactNumber' && !/^\d*$/.test(value)) {
       setErrorMessage('Contact number must be numeric');
       return;
     }
@@ -58,12 +56,12 @@ const AdoptionForm = ({ pet }) => {
       return;
     }
     setErrorMessage('');
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.contactNumber.match(/^[0-9]+$/)) {
+    if (!formData.contactNumber.match(/^\d+$/)) {
       setErrorMessage('Contact number must be numeric');
       return;
     }
@@ -71,19 +69,23 @@ const AdoptionForm = ({ pet }) => {
       setErrorMessage('Name must only contain letters, spaces, and periods');
       return;
     }
+
     const newAdoption = {
       ...formData,
       adoptionDate: formData.adoptionDate || new Date().toISOString().split('T')[0],
+      description: pet?.description || formData.description,
       status: 'PENDING',
       adoptionID: Date.now(),
       photo: pet?.photo || '',
     };
+
     resetForm();
+
     try {
       await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions`, newAdoption);
       setSuccessMessage('Adoption form submitted successfully!');
-    } catch (err) {
-      console.error('Submission error:', err);
+    } catch (error) {
+      console.error('Failed to submit the adoption form:', error);
     }
   };
 
@@ -100,30 +102,36 @@ const AdoptionForm = ({ pet }) => {
   };
 
   return (
-    <Box maxWidth="md" mx="auto" p={3}>
-      <Grid container spacing={3} alignItems="flex-start">
-        <Grid item xs={12} md={5}>
-          <Card sx={{ boxShadow: 3 }}>
-            {pet?.photo && (
-              <CardMedia
-                component="img"
-                height="200"
-                image={pet.photo}
-                alt={`${pet.type} - ${pet.breed}`}
-              />
-            )}
-            <CardContent>
-              <Typography variant="h6" color="text.secondary">{pet?.type}</Typography>
-              <Typography variant="subtitle1" fontWeight="bold">Breed: {pet?.breed}</Typography>
-              <Typography variant="body2" mt={1}>{pet?.description}</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={7}>
-          <Typography variant="h4" fontWeight="bold" color="#5A20A8" gutterBottom>
-            Adoption Form
-          </Typography>
-          <form onSubmit={handleSubmit}>
+    <Box maxWidth="900px" mx="auto" p={4}>
+      <form onSubmit={handleSubmit}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <Card sx={{ p: 2, borderRadius: 3, boxShadow: 3 }}>
+              <CardContent>
+                {pet?.photo && (
+                  <Box textAlign="center" mb={2}>
+                    <img
+                      src={pet.photo}
+                      alt={`${pet.name}`}
+                      style={{ maxHeight: '200px', maxWidth: '100%', borderRadius: 10 }}
+                    />
+                  </Box>
+                )}
+                <Typography variant="h5" color="primary" fontWeight="bold" gutterBottom>
+                  {pet?.name || 'Unnamed Pet'}
+                </Typography>
+                <Typography variant="body1"><strong>Type:</strong> {pet?.type}</Typography>
+                <Typography variant="body1"><strong>Breed:</strong> {pet?.breed}</Typography>
+                <Typography variant="body1"><strong>Age:</strong> {pet?.age}</Typography>
+                <Typography variant="body1"><strong>Gender:</strong> {pet?.gender}</Typography>
+                <Typography variant="body1" mt={1}><strong>Description:</strong> {pet?.description}</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Typography variant="h4" color="primary" fontWeight="bold" gutterBottom>
+              Adoption Form
+            </Typography>
             <TextField
               label="Your Name"
               name="name"
@@ -163,30 +171,30 @@ const AdoptionForm = ({ pet }) => {
               }}
             />
             {errorMessage && (
-              <Typography color="error" variant="body2" mt={1}>
+              <Typography color="error" mt={1}>
                 {errorMessage}
               </Typography>
             )}
             <Button
               type="submit"
               variant="contained"
+              sx={{ mt: 3, backgroundColor: '#5A20A8' }}
               fullWidth
-              sx={{ mt: 3, backgroundColor: '#5A20A8', color: '#fff' }}
             >
               Submit Adoption
             </Button>
-          </form>
+          </Grid>
         </Grid>
-      </Grid>
+      </form>
       <Snackbar
         open={!!successMessage}
         autoHideDuration={6000}
         onClose={() => setSuccessMessage('')}
         message={successMessage}
-        sx={{ '& .MuiSnackbarContent-root': { backgroundColor: '#5A20A8' } }}
+        sx={{ '& .MuiSnackbarContent-root': { backgroundColor: '#5A20A8', color: 'white' } }}
       />
     </Box>
   );
 };
 
-export default AdoptionForm;
+export default ModernAdoptionForm;
