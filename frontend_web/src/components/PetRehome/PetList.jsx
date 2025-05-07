@@ -115,7 +115,7 @@ const PetList = ({ onPetAdded }) => {
           sx={{
             color: '#5A20A8',
             fontWeight: 'bold',
-            mt: '20px',
+            mt: '30px',
             mb: '8px',
             fontSize: '1.75rem'
           }}
@@ -214,13 +214,12 @@ const PetList = ({ onPetAdded }) => {
                     sx={{
                       borderRadius: "25px",
                       border: "2px solid",
-                      borderColor: "#5A20A8",
-                      backgroundColor: "#5A20A8",
+                      borderColor: "#685ccc",
+                      backgroundColor: "#685ccc",
                       color: "#fff",
-                      fontWeight: "bold",
                       "&:hover": {
                         backgroundColor: "white",
-                        color: "#5A20A8",
+                        color: "#685ccc",
                       },
                     }}
                   >
