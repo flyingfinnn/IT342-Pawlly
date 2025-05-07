@@ -1,226 +1,161 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
-  Grid,
-  Card,
-  CardContent,
+  Box,
+  Tabs,
+  Tab,
   Typography,
-  IconButton,
-  Button,
   Snackbar,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Select,
-  MenuItem,
+  IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Tooltip,
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
 
 const AdoptionDashboard = () => {
   const [adoptions, setAdoptions] = useState([]);
-  const [editAdoption, setEditAdoption] = useState(null);
+  const [tab, setTab] = useState(0);
   const [successMessage, setSuccessMessage] = useState('');
-  const [error, setError] = useState('');
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState(null);
-  const [newStatus, setNewStatus] = useState('');
 
-  // Fetch adoption records
   useEffect(() => {
-    const fetchRecords = async () => {
-      setError('');
+    const fetchAdoptions = async () => {
       try {
-        const adoptionResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions`);
-        setAdoptions(adoptionResponse.data);  // Save fetched data
-      } catch (error) {
-        setError('Failed to load records.');
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions`);
+        setAdoptions(response.data);
+      } catch (err) {
+        console.error('Failed to load records.');
       }
     };
-    fetchRecords();
+    fetchAdoptions();
   }, []);
 
-  const handleEditClick = (adoption) => {
-    setEditAdoption(adoption);
-    setNewStatus(adoption.status);
-    setEditDialogOpen(true);
+  const handleTabChange = (_, newValue) => {
+    setTab(newValue);
   };
 
-  const handleDeleteClick = (adoptionId) => {
-    setDeleteId(adoptionId);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
+  const updateStatus = async (adoptionID, newStatus) => {
     try {
-      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions/${deleteId}`);
-      setAdoptions(adoptions.filter((adoption) => adoption.adoptionID !== deleteId));
-      setSuccessMessage('Adoption record deleted successfully!');
-    } catch (error) {
-      setError('Failed to delete adoption record.');
-    } finally {
-      setDeleteDialogOpen(false);
+      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions/${adoptionID}`, {
+        status: newStatus,
+      });
+      setAdoptions((prev) =>
+        prev.map((a) => (a.adoptionID === adoptionID ? { ...a, status: newStatus } : a))
+      );
+      setSuccessMessage(`Adoption ${newStatus.toLowerCase()} successfully.`);
+    } catch (err) {
+      console.error('Failed to update status');
     }
   };
 
-  const handleDialogClose = () => {
-    setEditDialogOpen(false);
-    setEditAdoption(null);
-  };
+  const filteredAdoptions = adoptions.filter((a) => {
+    if (tab === 0) return a.status === 'PENDING';
+    if (tab === 1) return a.status === 'APPROVED';
+    if (tab === 2) return a.status === 'REJECTED';
+    return false;
+  });
 
-  const handleStatusChange = (event) => {
-    setNewStatus(event.target.value);
-  };
-
-  const handleSaveAdoption = async () => {
-    try {
-      if (editAdoption) {
-        const updatedAdoption = {
-          ...editAdoption,
-          status: newStatus,
-        };
-
-        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions/${editAdoption.adoptionID}`, updatedAdoption);
-        setAdoptions((prev) =>
-          prev.map((adoption) =>
-            adoption.adoptionID === editAdoption.adoptionID ? { ...adoption, ...updatedAdoption } : adoption
-          )
-        );
-
-        setSuccessMessage('Adoption record updated successfully!');
-      }
-    } catch (error) {
-      setError('Failed to update adoption record.');
-    } finally {
-      handleDialogClose();
-    }
-  };
-
-  const renderAdoptionCards = (adoptionList) => (
-    adoptionList.map((adoption) => (
-      <Grid item xs={12} sm={6} md={4} key={adoption.adoptionID}>
-        <Card sx={{ width: 300, height: 580, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', marginBottom: 2, padding: 2 }}>
-          <CardContent>
-            {adoption.photo && (
-              <div style={{ width: '100%', height: 180, marginBottom: 16 }}>
-                <img src={adoption.photo} alt={`Adoption ID: ${adoption.adoptionID}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-            )}
-            <Typography variant="h6">Adoption ID: {adoption.adoptionID}</Typography>
-            <Typography variant="body1">Name: {adoption.name}</Typography>
-            <Typography variant="body1">Address: {adoption.address}</Typography>
-            <Typography variant="body1">Contact Number: {adoption.contactNumber}</Typography>
-            <Typography variant="body1">Pet Type: {adoption.petType}</Typography>
-            <Typography variant="body1">Breed: {adoption.breed}</Typography>
-            <Typography variant="body1">Description: {adoption.description}</Typography>
-            <Typography variant="body1">Submission Date: {adoption.adoptionDate}</Typography>
-            <Typography variant="body1">Status: {adoption.status}</Typography>
-            <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between' }}>
-              <IconButton color="primary" onClick={() => handleEditClick(adoption)} disabled={adoption.status !== 'PENDING'}>
-                <EditIcon />
-              </IconButton>
-              <IconButton color="secondary" onClick={() => handleDeleteClick(adoption.adoptionID)}>
-                <DeleteIcon />
-              </IconButton>
-            </div>
-          </CardContent>
-        </Card>
-      </Grid>
-    ))
-  );
+  const getStatusLabel = () => ['Pending', 'Accepted', 'Rejected'][tab];
 
   return (
-    <div style={{ padding: 20 }}>
-      {error && <Typography variant="body1" sx={{ color: 'red' }}>{error}</Typography>}
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={9}>
-          <Typography variant="h6" sx={{ marginBottom: 2 }}>Pending Adoptions</Typography>
-          <Grid container spacing={3}>
-            {renderAdoptionCards(adoptions.filter(adoption => adoption.status === 'PENDING'))}
-          </Grid>
+    <Box p={4}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h5" fontWeight="bold">{getStatusLabel()} Adoptions</Typography>
+        <Tabs value={tab} onChange={handleTabChange}>
+          <Tabs
+            value={tab}
+            onChange={handleTabChange}
+            TabIndicatorProps={{
+              sx: {
+                backgroundColor:
+                  tab === 0 ? 'gold' : tab === 1 ? 'green' : 'red', // Indicator underline color
+              },
+            }}
+            textColor="inherit"
+          >
+            <Tab
+              label="Pending"
+              sx={{
+                color: tab === 0 ? 'gold' : 'gray',
+                fontWeight: tab === 0 ? 'bold' : 'normal',
+              }}
+            />
+            <Tab
+              label="Accepted"
+              sx={{
+                color: tab === 1 ? 'green' : 'gray',
+                fontWeight: tab === 1 ? 'bold' : 'normal',
+              }}
+            />
+            <Tab
+              label="Rejected"
+              sx={{
+                color: tab === 2 ? 'red' : 'gray',
+                fontWeight: tab === 2 ? 'bold' : 'normal',
+              }}
+            />
+          </Tabs>
+        </Tabs>
+      </Box>
 
-          <Typography variant="h6" sx={{ marginTop: 3, marginBottom: 2 }}>Approved Adoptions</Typography>
-          <Grid container spacing={3}>
-            {renderAdoptionCards(adoptions.filter(adoption => adoption.status === 'APPROVED'))}
-          </Grid>
+      <TableContainer component={Paper} elevation={3}>
+        <Table>
+          <TableHead>
+            <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+              <TableCell><strong>ID</strong></TableCell>
+              <TableCell><strong>Name</strong></TableCell>
+              <TableCell><strong>Pet</strong></TableCell>
+              <TableCell><strong>Breed</strong></TableCell>
+              <TableCell><strong>Contact</strong></TableCell>
+              <TableCell><strong>Status</strong></TableCell>
+              <TableCell align="center"><strong>Actions</strong></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredAdoptions.map((adoption) => (
+              <TableRow key={adoption.adoptionID}>
+                <TableCell>{adoption.adoptionID}</TableCell>
+                <TableCell>{adoption.name}</TableCell>
+                <TableCell>{adoption.petType}</TableCell>
+                <TableCell>{adoption.breed}</TableCell>
+                <TableCell>{adoption.contactNumber}</TableCell>
+                <TableCell>{adoption.status}</TableCell>
+                <TableCell align="center">
+                  {adoption.status === 'PENDING' && (
+                    <>
+                      <Tooltip title="Approve">
+                        <IconButton color="success" onClick={() => updateStatus(adoption.adoptionID, 'APPROVED')}>
+                          <CheckCircleIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Reject">
+                        <IconButton color="error" onClick={() => updateStatus(adoption.adoptionID, 'REJECTED')}>
+                          <CancelIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
-          <Typography variant="h6" sx={{ marginTop: 3, marginBottom: 2 }}>Rejected Adoptions</Typography>
-          <Grid container spacing={3}>
-            {renderAdoptionCards(adoptions.filter(adoption => adoption.status === 'REJECTED'))}
-          </Grid>
-        </Grid>
-      </Grid>
-
-      {/* Edit Dialog (only for status change) */}
-      <Dialog open={editDialogOpen} onClose={handleDialogClose}>
-        <DialogTitle>Edit Adoption Status</DialogTitle>
-        <DialogContent>
-          <Select label="Status" value={newStatus} onChange={handleStatusChange} fullWidth>
-            <MenuItem value="APPROVED">Approved</MenuItem>
-            <MenuItem value="REJECTED">Rejected</MenuItem>
-          </Select>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDialogClose} color="secondary">Cancel</Button>
-          <Button onClick={handleSaveAdoption} color="primary">Save</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Are you sure you want to delete this adoption?</DialogTitle>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)} color="secondary">Cancel</Button>
-          <Button onClick={handleDeleteConfirm} color="primary">Delete</Button>
-        </DialogActions>
-      </Dialog>
-
-      <Snackbar open={!!successMessage} autoHideDuration={6000} onClose={() => setSuccessMessage('')} message={successMessage} />
-    </div>
+      <Snackbar
+        open={!!successMessage}
+        autoHideDuration={4000}
+        onClose={() => setSuccessMessage('')}
+        message={successMessage}
+      />
+    </Box>
   );
-};
-
-const styles = {
-    card: {
-        width: '300px', 
-        height: '580px', 
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        margin: 'auto',
-        marginBottom: '20px',
-        padding: '10px',
-        boxSizing: 'border-box',
-    },
-    buttonContainer: {
-        marginTop: '10px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        width: '100%',
-    },
-    imageContainer: {
-        height: '200px', 
-        width: '100%',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        overflow: 'hidden', 
-    },
-    image: {
-        width: '100%',
-        height: '100%',
-        objectFit: 'cover', 
-    },
-    centeredLeftHeading: {
-        textAlign: 'left',
-        fontFamily: "'Arial', sans-serif",
-        fontWeight: 'bold',
-        color: '#5A20A8',
-        marginBottom: '10px',
-    },
 };
 
 export default AdoptionDashboard;
