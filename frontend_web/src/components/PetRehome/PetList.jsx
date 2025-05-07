@@ -115,7 +115,7 @@ const PetList = ({ onPetAdded }) => {
           sx={{
             color: '#5A20A8',
             fontWeight: 'bold',
-            mt: '10px',
+            mt: '20px',
             mb: '8px',
             fontSize: '1.75rem'
           }}
