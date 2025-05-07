@@ -4,21 +4,19 @@ import {
   Box, Tabs, Tab, Typography, Snackbar, IconButton, Table,
   TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
   Tooltip, Dialog, DialogTitle, DialogContent, DialogActions, Select,
-  MenuItem, Button
+  MenuItem, Button, TextField, TablePagination
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import CheckIcon from '@mui/icons-material/Check';
+import ClearIcon from '@mui/icons-material/Clear';
 
 const PetDashboard = ({ onPetAdded = () => {} }) => {
   const [rehomes, setRehomes] = useState([]);
   const [tab, setTab] = useState(0);
-  const [editRehome, setEditRehome] = useState(null);
-  const [newStatus, setNewStatus] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [error, setError] = useState('');
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [deleteRehomeId, setDeleteRehomeId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
   useEffect(() => {
     const fetchRehomes = async () => {
@@ -32,79 +30,54 @@ const PetDashboard = ({ onPetAdded = () => {} }) => {
     fetchRehomes();
   }, []);
 
-  const handleTabChange = (_, newValue) => setTab(newValue);
-
-  const handleEditRehomeClick = (rehome) => {
-    setEditRehome(rehome);
-    setNewStatus(rehome.status);
-    setEditDialogOpen(true);
+  const handleTabChange = (_, newValue) => {
+    setTab(newValue);
+    setPage(0);
   };
 
-  const handleDeleteRehomeClick = (id) => {
-    setDeleteRehomeId(id);
-    setConfirmDialogOpen(true);
-  };
-
-  const handleDialogClose = () => {
-    setEditDialogOpen(false);
-    setConfirmDialogOpen(false);
-    setEditRehome(null);
-    setDeleteRehomeId(null);
-  };
-
-  const handleSaveRehomeStatus = async () => {
+  const handleUpdateStatus = async (rehome, status) => {
     try {
-      if (editRehome) {
-        const updatedPet = { ...editRehome, status: newStatus };
-        if (newStatus === 'REJECTED') {
-          await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/pet/deletePetDetails/${editRehome.pid}`);
-          setRehomes((prev) => prev.filter((r) => r.pid !== editRehome.pid));
-          setSuccessMessage('Rehome record rejected and deleted.');
-        } else {
-          await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/pet/putPetDetails`, updatedPet, {
-            params: { pid: editRehome.pid },
-          });
-          setRehomes((prev) =>
-            prev.map((r) => (r.pid === editRehome.pid ? { ...r, status: newStatus } : r))
-          );
-          setSuccessMessage('Rehome updated.');
-          onPetAdded(updatedPet);
-        }
-      }
+      const updatedPet = { ...rehome, status };
+      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/pet/putPetDetails`, updatedPet, {
+        params: { pid: rehome.pid },
+      });
+      setRehomes((prev) =>
+        prev.map((r) => (r.pid === rehome.pid ? { ...r, status } : r))
+      );
+      setSuccessMessage(status === 'ACCEPTED_REHOME' ? 'Rehome accepted.' : 'Rehome rejected.');
+      onPetAdded(updatedPet);
     } catch (error) {
       setError('Failed to update rehome status.');
-    } finally {
-      handleDialogClose();
     }
   };
 
-  const handleDeleteRehome = async () => {
-    try {
-      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/pet/deletePetDetails/${deleteRehomeId}`);
-      setRehomes((prev) => prev.filter((r) => r.pid !== deleteRehomeId));
-      setSuccessMessage('Rehome record deleted.');
-    } catch (error) {
-      setError('Failed to delete rehome record.');
-    } finally {
-      handleDialogClose();
-    }
-  };
+  const filteredRehomes = rehomes.filter((r) => {
+    const statusMap = ['PENDING_REHOME', 'ACCEPTED_REHOME', 'REJECTED'];
+    return r.status === statusMap[tab] &&
+           (r.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            r.breed?.toLowerCase().includes(searchQuery.toLowerCase()));
+  });
 
-  const filteredRehomes = rehomes.filter((r) =>
-    tab === 0 ? r.status === 'PENDING_REHOME' : r.status === 'ACCEPTED_REHOME'
-  );
-
-  const getStatusLabel = () => (tab === 0 ? 'Pending' : 'Accepted');
+  const paginatedRehomes = filteredRehomes.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   return (
     <Box p={4}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" fontWeight="bold">{getStatusLabel()} Rehomes</Typography>
+        <Typography variant="h5" fontWeight="bold">Pet Rehomes</Typography>
         <Tabs value={tab} onChange={handleTabChange}>
           <Tab label="Pending" />
           <Tab label="Accepted" />
+          <Tab label="Rejected" />
         </Tabs>
       </Box>
+
+      <TextField
+        fullWidth
+        label="Search by name or breed"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        sx={{ mb: 2 }}
+      />
 
       <TableContainer component={Paper}>
         <Table>
@@ -127,7 +100,7 @@ const PetDashboard = ({ onPetAdded = () => {} }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredRehomes.map((rehome) => (
+            {paginatedRehomes.map((rehome) => (
               <TableRow key={rehome.pid}>
                 <TableCell>{rehome.pid}</TableCell>
                 <TableCell>{rehome.name}</TableCell>
@@ -149,14 +122,14 @@ const PetDashboard = ({ onPetAdded = () => {} }) => {
                 <TableCell align="center">
                   {rehome.status === 'PENDING_REHOME' && (
                     <>
-                      <Tooltip title="Edit">
-                        <IconButton color="primary" onClick={() => handleEditRehomeClick(rehome)}>
-                          <EditIcon />
+                      <Tooltip title="Accept">
+                        <IconButton color="success" onClick={() => handleUpdateStatus(rehome, 'ACCEPTED_REHOME')}>
+                          <CheckIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton color="error" onClick={() => handleDeleteRehomeClick(rehome.pid)}>
-                          <DeleteIcon />
+                      <Tooltip title="Reject">
+                        <IconButton color="error" onClick={() => handleUpdateStatus(rehome, 'REJECTED')}>
+                          <ClearIcon />
                         </IconButton>
                       </Tooltip>
                     </>
@@ -166,36 +139,20 @@ const PetDashboard = ({ onPetAdded = () => {} }) => {
             ))}
           </TableBody>
         </Table>
+
+        <TablePagination
+          component="div"
+          count={filteredRehomes.length}
+          page={page}
+          onPageChange={(e, newPage) => setPage(newPage)}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={(e) => {
+            setRowsPerPage(parseInt(e.target.value, 10));
+            setPage(0);
+          }}
+        />
       </TableContainer>
 
-      {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onClose={handleDialogClose}>
-        <DialogTitle>Edit Rehome Status</DialogTitle>
-        <DialogContent>
-          <Select value={newStatus} onChange={(e) => setNewStatus(e.target.value)} fullWidth>
-            <MenuItem value="ACCEPTED_REHOME">Accepted</MenuItem>
-            <MenuItem value="REJECTED">Rejected</MenuItem>
-          </Select>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDialogClose} color="secondary">Cancel</Button>
-          <Button onClick={handleSaveRehomeStatus} color="primary">Save</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Confirm Delete Dialog */}
-      <Dialog open={confirmDialogOpen} onClose={handleDialogClose}>
-        <DialogTitle>Confirm Deletion</DialogTitle>
-        <DialogContent>
-          <Typography>Are you sure you want to delete this rehome record?</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDialogClose} color="secondary">Cancel</Button>
-          <Button onClick={handleDeleteRehome} color="error">Delete</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Feedback Snackbar */}
       <Snackbar
         open={!!successMessage}
         autoHideDuration={4000}
