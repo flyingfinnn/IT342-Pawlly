@@ -109,23 +109,19 @@ const PetList = ({ onPetAdded }) => {
     <>
       <div style={styles.pageContainer}>
         <Typography
-          variant="h4"
+          variant="h5"
           component="h1"
           align="center"
           sx={{
             color: '#5A20A8',
             fontWeight: 'bold',
-            padding: '24px',
-            borderRadius: '12px',
-            mt: '5px',
-            mb: '12px',
-            backgroundColor: '#f3e8ff',
-            boxShadow: '0px 4px 12px rgba(90, 32, 168, 0.2)'
+            mt: '10px',
+            mb: '8px',
+            fontSize: '1.75rem'
           }}
         >
           Find Your New Best Friend — Adopt a Pet Today!
         </Typography>
-
 
         <div style={styles.listContainer}>
           {pets.length > 0 ? (
