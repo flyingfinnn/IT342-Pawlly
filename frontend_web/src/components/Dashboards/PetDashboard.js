@@ -8,6 +8,8 @@ import {
 } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import ClearIcon from '@mui/icons-material/Clear';
+import DeleteIcon from '@mui/icons-material/Delete';
+
 
 const PetDashboard = ({ onPetAdded = () => {} }) => {
   const [rehomes, setRehomes] = useState([]);
@@ -50,6 +52,18 @@ const PetDashboard = ({ onPetAdded = () => {} }) => {
       setError('Failed to update rehome status.');
     }
   };
+
+  const handleDeletePet = async (pid) => {
+    try {
+      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/pet/deletePetDetails/${pid}`);
+      setRehomes((prev) => prev.filter((r) => r.pid !== pid));
+      setSuccessMessage('Pet rehome record deleted.');
+    } catch (error) {
+      setError('Failed to delete rehome record.');
+    }
+  };
+
+
 
   const filteredRehomes = rehomes.filter((r) => {
     const statusMap = ['PENDING_REHOME', 'ACCEPTED_REHOME', 'REJECTED'];
@@ -132,6 +146,26 @@ const PetDashboard = ({ onPetAdded = () => {} }) => {
                           <ClearIcon />
                         </IconButton>
                       </Tooltip>
+                      <TableCell align="center">
+                        {rehome.status === 'PENDING_REHOME' && (
+                          <>
+                            <Tooltip title="Accept">
+                              <IconButton color="success" onClick={() => handleUpdateStatus(rehome, 'ACCEPTED_REHOME')}>
+                                <CheckIcon />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Reject">
+                              <IconButton color="error" onClick={() => handleUpdateStatus(rehome, 'REJECTED')}>
+                                <ClearIcon />
+                              </IconButton>
+                            </Tooltip>
+                          </>
+                        )}
+                        <Tooltip title="Delete">
+                          <IconButton onClick={() => handleDeletePet(rehome.pid)}>
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
                     </>
                   )}
                 </TableCell>
