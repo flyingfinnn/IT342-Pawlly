@@ -1,152 +1,182 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-  Box,
   Tabs,
   Tab,
+  Box,
   Typography,
-  Snackbar,
+  Grid,
+  Card,
+  CardContent,
   IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Tooltip,
+  Snackbar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Select,
+  MenuItem,
+  Button,
+  TextField,
+  InputAdornment,
 } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from '@mui/icons-material/Search';
 
 const AdoptionDashboard = () => {
   const [adoptions, setAdoptions] = useState([]);
   const [tab, setTab] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [editAdoption, setEditAdoption] = useState(null);
+  const [newStatus, setNewStatus] = useState('');
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchAdoptions = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions`);
-        setAdoptions(response.data);
+        const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions`);
+        setAdoptions(res.data);
       } catch (err) {
-        console.error('Failed to load records.');
+        setError('Failed to load adoptions.');
       }
     };
     fetchAdoptions();
   }, []);
 
-  const handleTabChange = (_, newValue) => {
-    setTab(newValue);
+  const handleEditClick = (adoption) => {
+    setEditAdoption(adoption);
+    setNewStatus(adoption.status);
+    setEditDialogOpen(true);
   };
 
-  const updateStatus = async (adoptionID, newStatus) => {
+  const handleDeleteClick = (id) => {
+    setDeleteId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
     try {
-      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions/${adoptionID}`, {
-        status: newStatus,
-      });
-      setAdoptions((prev) =>
-        prev.map((a) => (a.adoptionID === adoptionID ? { ...a, status: newStatus } : a))
-      );
-      setSuccessMessage(`Adoption ${newStatus.toLowerCase()} successfully.`);
-    } catch (err) {
-      console.error('Failed to update status');
+      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions/${deleteId}`);
+      setAdoptions((prev) => prev.filter((a) => a.adoptionID !== deleteId));
+      setSuccessMessage('Deleted successfully!');
+    } catch {
+      setError('Failed to delete.');
+    } finally {
+      setDeleteDialogOpen(false);
     }
   };
 
-  const filteredAdoptions = adoptions.filter((a) => {
-    if (tab === 0) return a.status === 'PENDING';
-    if (tab === 1) return a.status === 'APPROVED';
-    if (tab === 2) return a.status === 'REJECTED';
-    return false;
-  });
+  const handleSaveAdoption = async () => {
+    try {
+      if (editAdoption) {
+        const updated = { ...editAdoption, status: newStatus };
+        await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions/${editAdoption.adoptionID}`, updated);
+        setAdoptions((prev) =>
+          prev.map((a) => (a.adoptionID === editAdoption.adoptionID ? { ...a, ...updated } : a))
+        );
+        setSuccessMessage('Status updated!');
+        setEditDialogOpen(false);
+      }
+    } catch {
+      setError('Failed to update.');
+    }
+  };
 
-  const getStatusLabel = () => ['Pending', 'Accepted', 'Rejected'][tab];
+  const filtered = adoptions.filter(
+    (a) =>
+      a.status === ['PENDING', 'APPROVED', 'REJECTED'][tab] &&
+      (a.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        a.address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        a.breed?.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   return (
-    <Box p={4}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" fontWeight="bold">{getStatusLabel()} Adoptions</Typography>
-        <Tabs value={tab} onChange={handleTabChange}>
-          <Tabs
-            value={tab}
-            onChange={handleTabChange}
-            TabIndicatorProps={{
-              sx: {
-                backgroundColor:
-                  tab === 0 ? 'gold' : tab === 1 ? 'green' : 'red', // Indicator underline color
-              },
-            }}
-            textColor="inherit"
-          >
-            <Tab
-              label="Pending"
-              sx={{
-                color: tab === 0 ? 'gold' : 'gray',
-                fontWeight: tab === 0 ? 'bold' : 'normal',
-              }}
-            />
-            <Tab
-              label="Accepted"
-              sx={{
-                color: tab === 1 ? 'green' : 'gray',
-                fontWeight: tab === 1 ? 'bold' : 'normal',
-              }}
-            />
-            <Tab
-              label="Rejected"
-              sx={{
-                color: tab === 2 ? 'red' : 'gray',
-                fontWeight: tab === 2 ? 'bold' : 'normal',
-              }}
-            />
-          </Tabs>
-        </Tabs>
-      </Box>
+    <Box p={3}>
+      <Typography variant="h5" gutterBottom color="primary">Adoption Dashboard</Typography>
 
-      <TableContainer component={Paper} elevation={3}>
-        <Table>
-          <TableHead>
-            <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-              <TableCell><strong>ID</strong></TableCell>
-              <TableCell><strong>Name</strong></TableCell>
-              <TableCell><strong>Pet</strong></TableCell>
-              <TableCell><strong>Breed</strong></TableCell>
-              <TableCell><strong>Contact</strong></TableCell>
-              <TableCell><strong>Status</strong></TableCell>
-              <TableCell align="center"><strong>Actions</strong></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredAdoptions.map((adoption) => (
-              <TableRow key={adoption.adoptionID}>
-                <TableCell>{adoption.adoptionID}</TableCell>
-                <TableCell>{adoption.name}</TableCell>
-                <TableCell>{adoption.petType}</TableCell>
-                <TableCell>{adoption.breed}</TableCell>
-                <TableCell>{adoption.contactNumber}</TableCell>
-                <TableCell>{adoption.status}</TableCell>
-                <TableCell align="center">
-                  {adoption.status === 'PENDING' && (
-                    <>
-                      <Tooltip title="Approve">
-                        <IconButton color="success" onClick={() => updateStatus(adoption.adoptionID, 'APPROVED')}>
-                          <CheckCircleIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Reject">
-                        <IconButton color="error" onClick={() => updateStatus(adoption.adoptionID, 'REJECTED')}>
-                          <CancelIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Tabs value={tab} onChange={(e, v) => setTab(v)} textColor="primary" indicatorColor="primary" sx={{ mb: 2 }}>
+        <Tab label="Pending" />
+        <Tab label="Approved" />
+        <Tab label="Rejected" />
+      </Tabs>
+
+      <TextField
+        variant="outlined"
+        placeholder="Search by name, breed, or address..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        fullWidth
+        sx={{ mb: 3 }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon color="action" />
+            </InputAdornment>
+          ),
+        }}
+      />
+
+      {error && <Typography color="error">{error}</Typography>}
+
+      <Grid container spacing={3}>
+        {filtered.map((a) => (
+          <Grid item xs={12} sm={6} md={4} key={a.adoptionID}>
+            <Card sx={{ height: 580, display: 'flex', flexDirection: 'column', p: 2 }}>
+              {a.photo && (
+                <Box sx={{ height: 180, overflow: 'hidden', mb: 2 }}>
+                  <img src={a.photo} alt="Pet" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </Box>
+              )}
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Typography variant="subtitle1"><strong>{a.name}</strong> ({a.petType})</Typography>
+                <Typography variant="body2">Breed: {a.breed}</Typography>
+                <Typography variant="body2">Address: {a.address}</Typography>
+                <Typography variant="body2">Contact: {a.contactNumber}</Typography>
+                <Typography variant="body2">Date: {a.adoptionDate}</Typography>
+                <Typography variant="body2" gutterBottom>Description: {a.description}</Typography>
+                <Typography variant="body2"><strong>Status: {a.status}</strong></Typography>
+              </CardContent>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <IconButton onClick={() => handleEditClick(a)} disabled={a.status !== 'PENDING'}>
+                  <EditIcon />
+                </IconButton>
+                <IconButton color="error" onClick={() => handleDeleteClick(a.adoptionID)}>
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)}>
+        <DialogTitle>Edit Status</DialogTitle>
+        <DialogContent>
+          <Select value={newStatus} onChange={(e) => setNewStatus(e.target.value)} fullWidth>
+            <MenuItem value="APPROVED">Approved</MenuItem>
+            <MenuItem value="REJECTED">Rejected</MenuItem>
+          </Select>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleSaveAdoption}>Save</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Delete Confirmation</DialogTitle>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button color="error" onClick={handleDeleteConfirm}>Delete</Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={!!successMessage}
