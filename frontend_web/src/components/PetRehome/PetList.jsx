@@ -121,98 +121,104 @@ const PetList = ({ onPetAdded }) => {
               <Card
                 key={pet.petId}
                 sx={{
-                  width: 360,
-                  height: 590,
+                  width: 320,
+                  height: "auto",
                   display: "flex",
                   flexDirection: "column",
-                  cursor: "pointer",
+                  borderRadius: 4,
+                  boxShadow: 3,
+                  transition: "transform 0.2s ease, box-shadow 0.3s ease",
+                  "&:hover": {
+                    transform: "scale(1.02)",
+                    boxShadow: 6,
+                  },
                 }}
-                onClick={() => handleCardClick(pet)}>
+              >
                 {pet.photo ? (
                   <CardMedia
                     component="img"
-                    height="140"
+                    height="180"
                     image={pet.photo}
                     alt={pet.breed}
-                    sx={{ objectFit: "cover" }}
+                    sx={{ objectFit: "cover", borderTopLeftRadius: 16, borderTopRightRadius: 16 }}
                   />
                 ) : (
                   <Box
                     sx={{
-                      height: 140,
+                      height: 180,
                       backgroundColor: "#f0f0f0",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                    }}>
+                      borderTopLeftRadius: 16,
+                      borderTopRightRadius: 16,
+                    }}
+                  >
                     <Typography variant="body2" color="text.secondary">
                       No Image Available
                     </Typography>
                   </Box>
                 )}
 
-                <CardContent sx={{ flexGrow: 1, overflow: "hidden" }}>
-                  <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-                    <Chip
-                      label={pet.type}
-                      variant="outlined"
-                      color="primary"
-                      sx={{
-                        fontWeight: "bold",
-                        borderWidth: 1.5,
-                        borderColor: "primary.main",
-                      }}
-                    />
-                    <Chip
-                      label={pet.breed}
-                      variant="outlined"
-                      color="primary"
-                      sx={{
-                        fontWeight: "bold",
-                        borderWidth: 1.5,
-                        borderColor: "primary.main",
-                      }}
-                    />
+                <CardContent sx={{ flexGrow: 1, p: 2 }}>
+                  <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+                    <Chip label={pet.type} color="secondary" size="small" />
+                    <Chip label={pet.breed} variant="outlined" size="small" />
                   </Stack>
-                  <Typography color="#5A20A8" fontSize="12px" fontWeight="bold">
+
+                  <Typography variant="subtitle2" color="text.secondary">
                     Name
                   </Typography>
-                  <Typography color="#5A20A8" fontWeight="bold" sx={{ ml: 2 }}>
+                  <Typography variant="body1" fontWeight="bold" gutterBottom>
                     {pet.name}
                   </Typography>
-                  <Typography color="#5A20A8" fontSize="12px" fontWeight="bold">
-                    Pet Type
+
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Age & Gender
                   </Typography>
-                  <Typography color="#5A20A8" fontWeight="bold" sx={{ ml: 2 }}>
-                    {pet.type}
+                  <Typography variant="body2" gutterBottom>
+                    {pet.age} years | {pet.gender}
                   </Typography>
-                  <Typography color="#5A20A8" fontSize="12px" fontWeight="bold">
-                    Breed
+
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Description
                   </Typography>
-                  <Typography color="#5A20A8" fontWeight="bold" sx={{ ml: 2 }}>
-                    {pet.breed}
-                  </Typography>
-                  <Typography color="#5A20A8" fontSize="12px" fontWeight="bold">
-                    Age
-                  </Typography>
-                  <Typography color="#5A20A8" fontWeight="bold" sx={{ ml: 2 }}>
-                    {pet.age} years
-                  </Typography>
-                  <Typography color="#5A20A8" fontSize="12px" fontWeight="bold">
-                    Gender
-                  </Typography>
-                  <Typography color="#5A20A8" fontWeight="bold" sx={{ ml: 2 }}>
-                    {pet.gender}
-                  </Typography>
-                  <br />
                   <Typography
-                    color="#5A20A8"
-                    fontStyle="italic"
-                    fontWeight="bold"
-                    noWrap>
+                    variant="body2"
+                    color="text.primary"
+                    sx={{
+                      fontStyle: "italic",
+                      overflow: "hidden",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                    }}
+                  >
                     {pet.description}
                   </Typography>
                 </CardContent>
+
+                <Box sx={{ p: 2, pt: 0, mt: "auto" }}>
+                  <ToggleButton
+                    value="adopt"
+                    fullWidth
+                    onClick={() => handleCardClick(pet)}
+                    sx={{
+                      borderRadius: "25px",
+                      border: "2px solid",
+                      borderColor: "#5A20A8",
+                      backgroundColor: "#5A20A8",
+                      color: "#fff",
+                      fontWeight: "bold",
+                      "&:hover": {
+                        backgroundColor: "white",
+                        color: "#5A20A8",
+                      },
+                    }}
+                  >
+                    Adopt Pet
+                  </ToggleButton>
+                </Box>
               </Card>
             ))
           ) : (
