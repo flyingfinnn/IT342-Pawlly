@@ -127,10 +127,14 @@ const AdoptionDashboard = () => {
           <TableHead>
             <TableRow>
               <TableCell><strong>ID</strong></TableCell>
+              <TableCell><strong>Photo</strong></TableCell>
               <TableCell><strong>Name</strong></TableCell>
-              <TableCell><strong>Pet</strong></TableCell>
-              <TableCell><strong>Breed</strong></TableCell>
+              <TableCell><strong>Address</strong></TableCell>
               <TableCell><strong>Contact</strong></TableCell>
+              <TableCell><strong>Pet Type</strong></TableCell>
+              <TableCell><strong>Breed</strong></TableCell>
+              <TableCell><strong>Description</strong></TableCell>
+              <TableCell><strong>Date</strong></TableCell>
               <TableCell><strong>Status</strong></TableCell>
               <TableCell align="center"><strong>Actions</strong></TableCell>
             </TableRow>
@@ -139,10 +143,16 @@ const AdoptionDashboard = () => {
             {filteredAdoptions.map((adoption) => (
               <TableRow key={adoption.adoptionID}>
                 <TableCell>{adoption.adoptionID}</TableCell>
+                <TableCell>
+                  <img src={adoption.photo} alt="Pet" width={50} height={50} />
+                </TableCell>
                 <TableCell>{adoption.name}</TableCell>
+                <TableCell>{adoption.address}</TableCell>
+                <TableCell>{adoption.contact}</TableCell>
                 <TableCell>{adoption.petType}</TableCell>
                 <TableCell>{adoption.breed}</TableCell>
-                <TableCell>{adoption.contactNumber}</TableCell>
+                <TableCell>{adoption.description}</TableCell>
+                <TableCell>{adoption.date}</TableCell>
                 <TableCell>{adoption.status}</TableCell>
                 <TableCell align="center">
                   {adoption.status === 'PENDING' && (
