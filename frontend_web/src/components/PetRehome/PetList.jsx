@@ -108,20 +108,22 @@ const PetList = ({ onPetAdded }) => {
   return (
     <>
       <div style={styles.pageContainer}>
-        <Typography
-          variant="h5"
-          component="h1"
-          align="center"
-          sx={{
-            color: '#5A20A8',
-            fontWeight: 'bold',
-            mt: '30px',
-            mb: '8px',
-            fontSize: '1.75rem'
-          }}
-        >
-          Find Your New Best Friend — Adopt a Pet Today!
-        </Typography>
+        <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
+            <Typography
+              variant="h5"
+              component="h1"
+              sx={{
+                color: '#5A20A8',
+                fontWeight: 'bold',
+                mt: '30px',
+                mb: '8px',
+                fontSize: '1.75rem',
+                textAlign: 'center',
+              }}
+            >
+              Find Your New Best Friend — Adopt a Pet Today!
+            </Typography>
+          </Box>
 
         <div style={styles.listContainer}>
           {pets.length > 0 ? (
@@ -332,7 +334,7 @@ const styles = {
     flexDirection: "column",
     alignItems: "flex-start",
     minHeight: "100vh",
-    paddingBottom: "30px", // extra space for footer
+    paddingBottom: "50px", // extra space for footer
   },
   listContainer: {
     display: "grid",
