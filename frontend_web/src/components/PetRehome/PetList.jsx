@@ -328,17 +328,21 @@ const PetList = ({ onPetAdded }) => {
 
 const styles = {
   pageContainer: {
+    display: "flex",
     flexDirection: "column",
     alignItems: "flex-start",
     minHeight: "100vh",
+    paddingBottom: "30px", // extra space for footer
   },
   listContainer: {
-    display: "flex",
-    flexWrap: "wrap",
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
     gap: "20px",
-    justifyContent: "flex-start",
+    justifyContent: "center",
+    width: "100%",
     padding: "10px",
   },
 };
+
 
 export default PetList;
