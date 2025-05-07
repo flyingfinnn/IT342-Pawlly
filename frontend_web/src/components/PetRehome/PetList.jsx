@@ -334,7 +334,7 @@ const styles = {
     flexDirection: "column",
     alignItems: "flex-start",
     minHeight: "100vh",
-    paddingBottom: "50px", // extra space for footer
+    paddingBottom: "70px", // extra space for footer
   },
   listContainer: {
     display: "grid",
