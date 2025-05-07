@@ -109,10 +109,20 @@ const PetList = ({ onPetAdded }) => {
     <>
       <div style={styles.pageContainer}>
         <Typography
-          variant="h6"
-          component="h6"
-          sx={{ color: "#5A20A8", fontWeight: "bold", padding: "20px" }}>
-          List of Pets to Adopt
+          variant="h4"
+          component="h1"
+          align="center"
+          sx={{
+            color: '#5A20A8',
+            fontWeight: 'bold',
+            backgroundColor: '#f3e8ff',
+            padding: '24px',
+            borderRadius: '12px',
+            boxShadow: '0px 4px 12px rgba(90, 32, 168, 0.2)',
+            mb: 4
+          }}
+        >
+          Find Your New Best Friend — Adopt a Pet Today!
         </Typography>
 
         <div style={styles.listContainer}>
