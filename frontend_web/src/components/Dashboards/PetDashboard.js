@@ -146,29 +146,15 @@ const PetDashboard = ({ onPetAdded = () => {} }) => {
                           <ClearIcon />
                         </IconButton>
                       </Tooltip>
-                      <TableCell align="center">
-                        {rehome.status === 'PENDING_REHOME' && (
-                          <>
-                            <Tooltip title="Accept">
-                              <IconButton color="success" onClick={() => handleUpdateStatus(rehome, 'ACCEPTED_REHOME')}>
-                                <CheckIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Reject">
-                              <IconButton color="error" onClick={() => handleUpdateStatus(rehome, 'REJECTED')}>
-                                <ClearIcon />
-                              </IconButton>
-                            </Tooltip>
-                          </>
-                        )}
-                        <Tooltip title="Delete">
-                          <IconButton onClick={() => handleDeletePet(rehome.pid)}>
-                            <DeleteIcon />
-                          </IconButton>
-                        </Tooltip>
                     </>
                   )}
+                  <Tooltip title="Delete">
+                    <IconButton onClick={() => handleDeletePet(rehome.pid)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </Tooltip>
                 </TableCell>
+
               </TableRow>
             ))}
           </TableBody>
