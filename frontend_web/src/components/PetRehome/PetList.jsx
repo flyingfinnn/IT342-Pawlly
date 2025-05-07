@@ -115,10 +115,8 @@ const PetList = ({ onPetAdded }) => {
           sx={{
             color: '#5A20A8',
             fontWeight: 'bold',
-            backgroundColor: '#f3e8ff',
             padding: '24px',
             borderRadius: '12px',
-            boxShadow: '0px 4px 12px rgba(90, 32, 168, 0.2)',
             mb: 4
           }}
         >
