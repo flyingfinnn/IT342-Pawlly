@@ -117,11 +117,15 @@ const PetList = ({ onPetAdded }) => {
             fontWeight: 'bold',
             padding: '24px',
             borderRadius: '12px',
-            mb: 4
+            mt: '5px',
+            mb: '12px',
+            backgroundColor: '#f3e8ff',
+            boxShadow: '0px 4px 12px rgba(90, 32, 168, 0.2)'
           }}
         >
           Find Your New Best Friend — Adopt a Pet Today!
         </Typography>
+
 
         <div style={styles.listContainer}>
           {pets.length > 0 ? (
