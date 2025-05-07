@@ -87,7 +87,7 @@ const Navbar = () => {
                     <img
                         src={PurrLogo}
                         alt="Logo"
-                        style={{ height: "60px", marginRight: "10px" }}
+                        style={{ height: "40px", marginRight: "10px" }}
                     />
                     <Typography
                         variant="h4"
