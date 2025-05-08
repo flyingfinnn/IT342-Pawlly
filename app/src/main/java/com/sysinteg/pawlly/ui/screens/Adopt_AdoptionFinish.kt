@@ -1,52 +1,91 @@
 package com.sysinteg.pawlly.ui.screens
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sysinteg.pawlly.R
 import com.sysinteg.pawlly.ui.theme.Purple
 import com.sysinteg.pawlly.ui.theme.White
-import androidx.compose.ui.graphics.Color
+import com.sysinteg.pawlly.ui.theme.Inter
 
 @Composable
-fun AdoptAdoptionFinishScreen(
-    onReturnToHome: () -> Unit = {}
+fun AdoptFinishScreen(
+    onBack: () -> Unit,
+    onGoToHome: () -> Unit
 ) {
-    Scaffold(
-        containerColor = White
-    ) { innerPadding ->
-        Column(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(White)
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.logoiconpurpleround),
+            contentDescription = "Pawlly Logo",
             modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .size(120.dp)
+                .padding(bottom = 32.dp)
+        )
+
+        Text(
+            text = "Application Submitted!",
+            style = MaterialTheme.typography.headlineMedium,
+            color = Purple,
+            fontFamily = Inter,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        Text(
+            text = "Thank you for your interest in adopting. We will review your application and get back to you soon.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = Color.Black,
+            fontFamily = Inter,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(bottom = 32.dp)
+        )
+
+        Button(
+            onClick = onGoToHome,
+            colors = ButtonDefaults.buttonColors(containerColor = Purple),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+                .clip(RoundedCornerShape(8.dp))
         ) {
             Text(
-                "Your application has been sent!",
-                fontWeight = FontWeight.Bold,
-                fontSize = 26.sp,
-                color = Color.Black,
-                modifier = Modifier.padding(bottom = 16.dp)
+                "Return to Home",
+                color = White,
+                fontFamily = Inter,
+                fontWeight = FontWeight.Medium
             )
+        }
+
+        TextButton(
+            onClick = onBack,
+            modifier = Modifier.padding(top = 8.dp)
+        ) {
             Text(
-                "Please wait until the admin audits your adoption application. We'll notify you once your application has been successfully reviewed",
-                fontSize = 18.sp,
-                color = Color(0xFF888888),
-                modifier = Modifier.padding(bottom = 32.dp)
+                "Back",
+                color = Purple,
+                fontFamily = Inter,
+                fontWeight = FontWeight.Medium
             )
-            Button(
-                onClick = onReturnToHome,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Purple)
-            ) {
-                Text("Return to Home", color = White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            }
         }
     }
 } 

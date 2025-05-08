@@ -452,12 +452,21 @@ fun NavGraph(navController: NavHostController) {
             val petId = prefs.getInt("adopt_pet_id", 0)
             val petName = prefs.getString("adopt_pet_name", "")
             val coroutineScope = rememberCoroutineScope()
+            
+            // Check if we have a valid user ID
+            if (userId == 0L) {
+                LaunchedEffect(Unit) {
+                    Toast.makeText(context, "Please log in again", Toast.LENGTH_LONG).show()
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo("adopt/process") { inclusive = true }
+                    }
+                }
+                return@composable
+            }
+            
             AdoptionProcessScreen(
                 onBack = { navController.popBackStack() },
                 onSubmit = { personal, household, lifestyle ->
-                    // Log all values before POST
-                    android.util.Log.d("AdoptionProcessScreen", "personal=$personal, household=$household, lifestyle=$lifestyle")
-                    // Set ViewModel state (if needed)
                     viewModel.setPersonalInfo(personal)
                     viewModel.setHouseholdInfo(household)
                     viewModel.setLifestyle(lifestyle)
@@ -468,12 +477,17 @@ fun NavGraph(navController: NavHostController) {
                                     popUpTo("adopt/process") { inclusive = true }
                                 }
                             } else {
-                                // Show error (toast, dialog, etc.)
-                                android.widget.Toast.makeText(context, "Failed to submit application", android.widget.Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "Failed to submit application. Please try again.", Toast.LENGTH_LONG).show()
                             }
                         }
                     }
                 }
+            )
+        }
+        composable(Screen.AdoptFinish.route) {
+            AdoptFinishScreen(
+                onBack = { navController.popBackStack() },
+                onGoToHome = { navController.navigate(Screen.Home.route) }
             )
         }
         composable("add_pet") {

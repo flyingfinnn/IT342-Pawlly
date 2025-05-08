@@ -56,8 +56,15 @@ class AdoptionViewModel @Inject constructor(
                     reasonForAdoption = lifestyle.reasonForAdoption
                 )
                 val response = userApi.submitAdoptionApplication(request)
-                onResult(response.isSuccessful)
+                if (response.isSuccessful && response.body() != null) {
+                    android.util.Log.d("AdoptionViewModel", "Adoption application submitted successfully")
+                    onResult(true)
+                } else {
+                    android.util.Log.e("AdoptionViewModel", "Failed to submit adoption application: ${response.code()}")
+                    onResult(false)
+                }
             } catch (e: Exception) {
+                android.util.Log.e("AdoptionViewModel", "Error submitting adoption application", e)
                 onResult(false)
             }
         }

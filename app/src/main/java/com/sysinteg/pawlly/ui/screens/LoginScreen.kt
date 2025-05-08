@@ -106,6 +106,10 @@ fun LoginScreen(
                 val prefs = context.getSharedPreferences(PAWLLY_PREFS, Context.MODE_PRIVATE)
                 prefs.edit().putString(KEY_JWT_TOKEN, token).apply()
                 
+                // Fetch user details to get user_id
+                val user = userApi.getMe("Bearer $token")
+                prefs.edit().putLong("user_id", user.userId ?: 0L).apply()
+                
                 Toast.makeText(context, "Login successful!", Toast.LENGTH_LONG).show()
                 navController.navigate(Screen.Home.route) {
                     popUpTo(Screen.Login.route) { inclusive = true }
@@ -417,7 +421,7 @@ fun LoginScreen(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    "Sign in with Google",
+                    "Continue with Google",
                     fontFamily = Inter,
                     fontWeight = FontWeight.Medium,
                     fontSize = 13.sp,

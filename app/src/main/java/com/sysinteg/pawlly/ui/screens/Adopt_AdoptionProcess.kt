@@ -438,10 +438,7 @@ fun AdoptionProcessScreen(
             ) { Text("Back", color = Purple) }
             Button(
                 onClick = {
-                    showError = true
-                    if (allValid()) {
-                        onSubmit(personalState, householdState, lifestyleState)
-                    }
+                    onSubmit(personalState, householdState, lifestyleState)
                 },
                 enabled = allValid(),
                 colors = ButtonDefaults.buttonColors(containerColor = Purple)
