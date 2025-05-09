@@ -27,9 +27,18 @@ import {
     Paper,
     Chip,
     Divider,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    DialogContentText,
+    Badge,
+    Menu,
+    MenuItem,
 } from "@mui/material";
 import { useUser } from "./UserContext";
-import { Visibility, VisibilityOff, Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon } from "@mui/icons-material";
+import { Visibility, VisibilityOff, Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon, Delete as DeleteIcon, MoreVert as MoreVertIcon, AdminPanelSettings as AdminIcon } from "@mui/icons-material";
+import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
     const { user, updateUser, loading } = useUser();
@@ -65,6 +74,11 @@ const Profile = () => {
     const [tabValue, setTabValue] = useState(0);
     const [rehomeApplications, setRehomeApplications] = useState([]);
     const [adoptionApplications, setAdoptionApplications] = useState([]);
+    const navigate = useNavigate();
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [menuAnchorEl, setMenuAnchorEl] = useState(null);
+    const [selectedApplication, setSelectedApplication] = useState(null);
+    const [editApplication, setEditApplication] = useState(null);
 
     useEffect(() => {
         if (user) {
@@ -318,6 +332,68 @@ const Profile = () => {
         }
     };
 
+    const formatMemberSince = (date) => {
+        return new Date(date).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
+    const handleDeleteAccount = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            await axios.delete(
+                `${process.env.REACT_APP_BACKEND_URL}/api/users/${user.userId}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` }
+                }
+            );
+            localStorage.removeItem("token");
+            navigate("/login");
+        } catch (error) {
+            setSnackbar({
+                open: true,
+                message: "Error deleting account. Please try again.",
+                severity: "error"
+            });
+        }
+    };
+
+    const handleDeleteApplication = async (id, type) => {
+        try {
+            const token = localStorage.getItem("token");
+            const endpoint = type === 'rehome' 
+                ? `/api/pet/deletePet/${id}`
+                : `/api/adoptions/${id}`;
+            
+            await axios.delete(
+                `${process.env.REACT_APP_BACKEND_URL}${endpoint}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` }
+                }
+            );
+
+            if (type === 'rehome') {
+                setRehomeApplications(prev => prev.filter(app => app.pid !== id));
+            } else {
+                setAdoptionApplications(prev => prev.filter(app => app.adoptionID !== id));
+            }
+
+            setSnackbar({
+                open: true,
+                message: "Application deleted successfully",
+                severity: "success"
+            });
+        } catch (error) {
+            setSnackbar({
+                open: true,
+                message: "Error deleting application",
+                severity: "error"
+            });
+        }
+    };
+
     const renderProfileCard = () => (
         <Card sx={{ mb: 4, borderRadius: 2, boxShadow: 3 }}>
             <CardContent>
@@ -350,12 +426,29 @@ const Profile = () => {
                         </Box>
                     </Grid>
                     <Grid item xs={12} md={8}>
-                        <Typography variant="h4" gutterBottom sx={{ color: 'primary.main', fontWeight: 'bold' }}>
-                            {user?.firstName} {user?.lastName}
-                        </Typography>
-                        <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-                            @{user?.username}
-                        </Typography>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <Box>
+                                <Typography variant="h4" gutterBottom sx={{ color: 'primary.main', fontWeight: 'bold' }}>
+                                    {user?.firstName} {user?.lastName}
+                                </Typography>
+                                <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                                    @{user?.username}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    Member since {formatMemberSince(user?.createdAt)}
+                                </Typography>
+                            </Box>
+                            <Box>
+                                <Button
+                                    variant="outlined"
+                                    color="error"
+                                    startIcon={<DeleteIcon />}
+                                    onClick={() => setDeleteDialogOpen(true)}
+                                >
+                                    Delete Account
+                                </Button>
+                            </Box>
+                        </Box>
                         <Divider sx={{ my: 2 }} />
                         <Grid container spacing={2}>
                             <Grid item xs={12} sm={6}>
@@ -371,6 +464,16 @@ const Profile = () => {
                                 <Typography variant="body1">{user?.address}</Typography>
                             </Grid>
                         </Grid>
+                        {user?.roles?.includes('ROLE_ADMIN') && (
+                            <Button
+                                variant="contained"
+                                startIcon={<AdminIcon />}
+                                sx={{ mt: 2 }}
+                                onClick={() => navigate('/admin-dashboard')}
+                            >
+                                Admin Dashboard
+                            </Button>
+                        )}
                     </Grid>
                 </Grid>
             </CardContent>
@@ -501,6 +604,71 @@ const Profile = () => {
         <Container maxWidth="lg" sx={{ py: 4 }}>
             {renderProfileCard()}
             {renderApplications()}
+            
+            {/* Delete Account Dialog */}
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+            >
+                <DialogTitle>Delete Account</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleDeleteAccount} color="error" variant="contained">
+                        Delete Account
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Application Menu */}
+            <Menu
+                anchorEl={menuAnchorEl}
+                open={Boolean(menuAnchorEl)}
+                onClose={() => setMenuAnchorEl(null)}
+            >
+                <MenuItem onClick={() => {
+                    setEditApplication(selectedApplication);
+                    setMenuAnchorEl(null);
+                }}>
+                    <EditIcon sx={{ mr: 1 }} /> Edit
+                </MenuItem>
+                <MenuItem onClick={() => {
+                    handleDeleteApplication(
+                        selectedApplication?.pid || selectedApplication?.adoptionID,
+                        selectedApplication?.type
+                    );
+                    setMenuAnchorEl(null);
+                }}>
+                    <DeleteIcon sx={{ mr: 1 }} /> Delete
+                </MenuItem>
+            </Menu>
+
+            {/* Edit Application Dialog */}
+            <Dialog
+                open={Boolean(editApplication)}
+                onClose={() => setEditApplication(null)}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>Edit Application</DialogTitle>
+                <DialogContent>
+                    {/* Add your edit form fields here */}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setEditApplication(null)}>Cancel</Button>
+                    <Button onClick={() => {
+                        // Handle save
+                        setEditApplication(null);
+                    }} color="primary">
+                        Save Changes
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
             <Snackbar
                 open={snackbar.open}
                 autoHideDuration={4000}
