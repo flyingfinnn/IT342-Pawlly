@@ -561,7 +561,7 @@ const Profile = () => {
                                 variant="contained"
                                 startIcon={<AdminIcon />}
                                 sx={{ mt: 2 }}
-                                onClick={() => navigate('/admin-dashboard')}
+                                onClick={() => navigate('/admin')}
                             >
                                 Admin Dashboard
                             </Button>
