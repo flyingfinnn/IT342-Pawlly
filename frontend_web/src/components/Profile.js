@@ -394,6 +394,59 @@ const Profile = () => {
         }
     };
 
+    const handleUpdateApplication = async (updatedApplication) => {
+        try {
+            const token = localStorage.getItem("token");
+            const endpoint = updatedApplication.type === 'rehome' 
+                ? `/api/pet/putPetDetails`
+                : `/api/adoptions/${updatedApplication.adoptionID}`;
+            
+            const response = await axios.put(
+                `${process.env.REACT_APP_BACKEND_URL}${endpoint}`,
+                updatedApplication,
+                {
+                    headers: { 
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            if (response.status === 200) {
+                // Update the local state
+                if (updatedApplication.type === 'rehome') {
+                    setRehomeApplications(prev => 
+                        prev.map(app => app.pid === updatedApplication.pid ? updatedApplication : app)
+                    );
+                } else {
+                    setAdoptionApplications(prev => 
+                        prev.map(app => app.adoptionID === updatedApplication.adoptionID ? updatedApplication : app)
+                    );
+                }
+
+                setSnackbar({
+                    open: true,
+                    message: "Application updated successfully",
+                    severity: "success"
+                });
+            }
+        } catch (error) {
+            console.error("Error updating application:", error);
+            setSnackbar({
+                open: true,
+                message: "Error updating application. Please try again.",
+                severity: "error"
+            });
+        }
+    };
+
+    const handleEditApplicationChange = (field, value) => {
+        setEditApplication(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
     const renderProfileCard = () => (
         <Card sx={{ mb: 4, borderRadius: 2, boxShadow: 3 }}>
             <CardContent>
@@ -694,21 +747,21 @@ const Profile = () => {
                             fullWidth
                             label="Name"
                             value={editApplication?.name || ''}
-                            onChange={(e) => setEditApplication(prev => ({ ...prev, name: e.target.value }))}
+                            onChange={(e) => handleEditApplicationChange('name', e.target.value)}
                             sx={{ mb: 2 }}
                         />
                         <TextField
                             fullWidth
                             label="Type"
                             value={editApplication?.type || editApplication?.petType || ''}
-                            onChange={(e) => setEditApplication(prev => ({ ...prev, type: e.target.value }))}
+                            onChange={(e) => handleEditApplicationChange('type', e.target.value)}
                             sx={{ mb: 2 }}
                         />
                         <TextField
                             fullWidth
                             label="Breed"
                             value={editApplication?.breed || ''}
-                            onChange={(e) => setEditApplication(prev => ({ ...prev, breed: e.target.value }))}
+                            onChange={(e) => handleEditApplicationChange('breed', e.target.value)}
                             sx={{ mb: 2 }}
                         />
                         <TextField
@@ -717,7 +770,7 @@ const Profile = () => {
                             multiline
                             rows={4}
                             value={editApplication?.description || ''}
-                            onChange={(e) => setEditApplication(prev => ({ ...prev, description: e.target.value }))}
+                            onChange={(e) => handleEditApplicationChange('description', e.target.value)}
                         />
                     </Box>
                 </DialogContent>
@@ -725,7 +778,6 @@ const Profile = () => {
                     <Button onClick={() => setEditApplication(null)}>Cancel</Button>
                     <Button 
                         onClick={() => {
-                            // Handle save
                             handleUpdateApplication(editApplication);
                             setEditApplication(null);
                         }} 
