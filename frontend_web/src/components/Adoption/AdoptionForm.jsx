@@ -15,19 +15,13 @@ import { useUser } from '../UserContext';
 const ModernAdoptionForm = ({ pet }) => {
   const { user } = useUser();
   const [formData, setFormData] = useState({
-    userId: user?.userId || '',
-    petId: pet?.id || '',
-    householdType: '',
-    householdOwnership: '',
-    numAdults: '',
-    numChildren: '',
-    otherPets: false,
-    experienceWithPets: '',
-    dailyRoutine: '',
-    hoursAlonePerDay: '',
-    reasonForAdoption: '',
-    petName: pet?.name || '',
-    status: 'pending'
+    name: '',
+    address: '',
+    contactNumber: '',
+    adoptionDate: '',
+    breed: pet?.breed || '',
+    description: pet?.description || '',
+    petType: pet?.type || '',
   });
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -67,42 +61,43 @@ const ModernAdoptionForm = ({ pet }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    if (!formData.contactNumber.match(/^\d+$/)) {
+      setErrorMessage('Contact number must be numeric');
+      return;
+    }
+    if (!formData.name.match(/^[a-zA-Z\s.]+$/)) {
+      setErrorMessage('Name must only contain letters, spaces, and periods');
+      return;
+    }
+
     const newAdoption = {
       ...formData,
-      userId: user.userId,
-      petId: pet.id,
-      petName: pet.name,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      adoptionDate: formData.adoptionDate || new Date().toISOString().split('T')[0],
+      description: pet?.description || formData.description,
+      status: 'PENDING',
+      adoptionID: Date.now(),
+      photo: pet?.photo || '',
     };
+
+    resetForm();
 
     try {
       await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions`, newAdoption);
       setSuccessMessage('Adoption form submitted successfully!');
-      resetForm();
     } catch (error) {
       console.error('Failed to submit the adoption form:', error);
-      setErrorMessage('Failed to submit adoption form. Please try again.');
     }
   };
 
   const resetForm = () => {
     setFormData({
-      userId: user?.userId || '',
-      petId: pet?.id || '',
-      householdType: '',
-      householdOwnership: '',
-      numAdults: '',
-      numChildren: '',
-      otherPets: false,
-      experienceWithPets: '',
-      dailyRoutine: '',
-      hoursAlonePerDay: '',
-      reasonForAdoption: '',
-      petName: pet?.name || '',
-      status: 'pending'
+      name: '',
+      address: '',
+      contactNumber: '',
+      adoptionDate: '',
+      breed: pet?.breed || '',
+      description: pet?.description || '',
+      petType: pet?.type || '',
     });
   };
 
