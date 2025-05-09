@@ -165,6 +165,37 @@ data class AdoptionApplicationResponse(
     @Json(name = "status") val status: String
 )
 
+data class DetailedAdoptionApplicationResponse(
+    @Json(name = "id") val id: Int,
+    @Json(name = "user_id") val userId: Long,
+    @Json(name = "pet_id") val petId: Int,
+    @Json(name = "pet_name") val petName: String? = null,
+    @Json(name = "status") val status: String,
+    @Json(name = "applicant_name") val applicantName: String? = null,
+    @Json(name = "applicant_email") val applicantEmail: String? = null,
+    @Json(name = "applicant_phone") val applicantPhone: String? = null,
+    @Json(name = "applicant_address") val applicantAddress: String? = null,
+    @Json(name = "created_at") val createdAt: String? = null,
+    @Json(name = "reason_for_adoption") val reasonForAdoption: String? = null,
+    @Json(name = "experience_with_pets") val experienceWithPets: String? = null,
+    @Json(name = "household_type") val householdType: String? = null,
+    @Json(name = "household_ownership") val householdOwnership: String? = null,
+    @Json(name = "num_adults") val numAdults: Int? = null,
+    @Json(name = "num_children") val numChildren: Int? = null,
+    @Json(name = "daily_routine") val dailyRoutine: String? = null,
+    @Json(name = "other_pets") val otherPets: Boolean? = null,
+    @Json(name = "application_id") val applicationId: Int? = null
+)
+
+data class NotificationResponse(
+    val notification_id: Long,
+    val notification_title: String,
+    val notification_description: String,
+    val notification_date_and_time: String,
+    val pet_id: Long?,
+    val pet_name: String?
+)
+
 // --- Logging interceptor must be top-level ---
 val logging = HttpLoggingInterceptor().apply {
     level = HttpLoggingInterceptor.Level.BODY
@@ -243,12 +274,27 @@ interface UserApi {
 
     @GET("adoptions")
     suspend fun getAdoptionApplications(
-        @Query("userId") userId: Long,
-        @Query("petId") petId: Int
+        @Query("userId") userId: Long? = null,
+        @Query("petId") petId: Int? = null
     ): List<AdoptionApplicationResponse>
 
     @GET("adoptions/user/{userId}")
     suspend fun getAdoptionApplicationsByUserId(@Path("userId") userId: Long): List<AdoptionApplicationResponse>
+
+    @GET("adoptions/{id}")
+    suspend fun getAdoptionApplicationById(@Path("id") id: Int): DetailedAdoptionApplicationResponse
+
+    @PUT("adoptions/{id}")
+    suspend fun updateAdoptionStatus(
+        @Path("id") id: Int,
+        @Body statusUpdate: Map<String, String>
+    ): retrofit2.Response<Unit>
+
+    @GET("users/{id}")
+    suspend fun getUserById(@Path("id") userId: Long): UserResponse
+
+    @GET("api/notifications/{id}")
+    suspend fun getNotificationById(@Path("id") id: Long): NotificationResponse
 }
 
 fun getAuthToken(context: Context): String {

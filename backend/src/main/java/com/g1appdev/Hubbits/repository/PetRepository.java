@@ -15,4 +15,6 @@ public interface PetRepository extends JpaRepository<PetEntity, Integer>{
 
     List<PetEntity> findByUserName(String userName);
 
+    List<PetEntity> findByNameContainingIgnoreCase(String name);
+
 }

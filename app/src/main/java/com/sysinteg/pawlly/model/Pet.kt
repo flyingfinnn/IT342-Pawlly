@@ -5,6 +5,7 @@ data class Pet(
     val name: String,
     val breed: String,
     val age: String,
+    val type: String? = null,
     val location: String? = null,
     val photo1: String? = null,
     val photo1Thumb: String? = null,

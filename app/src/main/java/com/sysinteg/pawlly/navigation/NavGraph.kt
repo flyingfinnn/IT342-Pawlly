@@ -64,6 +64,7 @@ sealed class Screen(val route: String) {
     object AdoptLifestyle : Screen("adopt/lifestyle")
     object AdoptAgreement : Screen("adopt/agreement")
     object AdoptFinish : Screen("adopt/finish")
+    object ApplicationView : Screen("application/{id}")
 }
 
 @Composable
@@ -302,6 +303,8 @@ fun NavGraph(navController: NavHostController) {
             val prefs = context.getSharedPreferences(PAWLLY_PREFS, Context.MODE_PRIVATE)
             val token = prefs.getString(KEY_JWT_TOKEN, null)
             val editMode = backStackEntry.arguments?.getBoolean("editMode") ?: false
+            // Add a refresh trigger state
+            val refreshTrigger = remember { mutableStateOf(false) }
             if (token == null) {
                 // If no token, redirect to login
                 LaunchedEffect(Unit) {
@@ -328,16 +331,26 @@ fun NavGraph(navController: NavHostController) {
                 onNavNotifications = { navController.navigate(Screen.Notifications.route) },
                 onAddPet = { navController.navigate("add_pet") },
                 onPetDetail = { petId -> navController.navigate("pet_detail/$petId") },
+                onViewApplication = { applicationId, isOwnerView ->
+                    navController.currentBackStackEntry?.savedStateHandle?.set("refreshTrigger", refreshTrigger)
+                    navController.navigate("application/$applicationId?isOwnerView=$isOwnerView")
+                },
                 editMode = editMode
             )
         }
-        composable(Screen.Notifications.route) {
+        composable(Screen.Notifications.route + "?notificationId={notificationId}",
+            arguments = listOf(
+                navArgument("notificationId") { type = NavType.LongType; defaultValue = -1L }
+            )
+        ) { backStackEntry ->
+            val notificationId = backStackEntry.arguments?.getLong("notificationId")?.takeIf { it != -1L }
             NotificationScreen(
                 navController = navController,
                 onNavHome = { navController.navigate(Screen.Home.route) },
                 onNavProfile = { navController.navigate(Screen.Profile.route) },
                 onNavNotifications = { navController.navigate(Screen.Notifications.route) },
-                selectedScreen = "Notifications"
+                selectedScreen = "Notifications",
+                notificationId = notificationId
             )
         }
         composable(
@@ -473,8 +486,8 @@ fun NavGraph(navController: NavHostController) {
                     coroutineScope.launch {
                         viewModel.submitAdoptionApplication(userId, petId, petName) { success ->
                             if (success) {
-                                navController.navigate(Screen.AdoptFinish.route) {
-                                    popUpTo("adopt/process") { inclusive = true }
+                            navController.navigate(Screen.AdoptFinish.route) {
+                                popUpTo("adopt/process") { inclusive = true }
                                 }
                             } else {
                                 Toast.makeText(context, "Failed to submit application. Please try again.", Toast.LENGTH_LONG).show()
@@ -500,6 +513,26 @@ fun NavGraph(navController: NavHostController) {
             PetDetailScreen(
                 petId = petId,
                 onBack = { navController.popBackStack() }
+            )
+        }
+        composable(
+            route = Screen.ApplicationView.route + "?isOwnerView={isOwnerView}",
+            arguments = listOf(
+                navArgument("id") { type = NavType.IntType },
+                navArgument("isOwnerView") { type = NavType.BoolType; defaultValue = false }
+            )
+        ) { backStackEntry ->
+            val applicationId = backStackEntry.arguments?.getInt("id") ?: 0
+            val isOwnerView = backStackEntry.arguments?.getBoolean("isOwnerView") ?: false
+            // Retrieve the refresh trigger from the previous back stack entry
+            val refreshTrigger = navController.previousBackStackEntry?.savedStateHandle?.get<MutableState<Boolean>>("refreshTrigger")
+            ApplicationView(
+                applicationId = applicationId,
+                onBack = { navController.popBackStack() },
+                isOwnerView = isOwnerView,
+                onStatusChanged = {
+                    refreshTrigger?.value = !(refreshTrigger?.value ?: false)
+                }
             )
         }
     }

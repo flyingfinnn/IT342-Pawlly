@@ -1,47 +1,70 @@
 package com.sysinteg.pawlly.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.sysinteg.pawlly.R
-import com.sysinteg.pawlly.ui.theme.Purple
-import com.sysinteg.pawlly.ui.theme.White
-import com.sysinteg.pawlly.ui.theme.Inter
-import com.sysinteg.pawlly.model.Pet
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.ui.text.style.TextAlign
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.runtime.SideEffect
-import com.sysinteg.pawlly.ui.components.PetCard
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.sysinteg.pawlly.model.Pet
+import com.sysinteg.pawlly.ui.components.PetCard
+import com.sysinteg.pawlly.ui.theme.Purple
+import com.sysinteg.pawlly.ui.theme.White
 import com.sysinteg.pawlly.userApi
 import kotlinx.coroutines.launch
 
@@ -59,6 +82,7 @@ fun AdoptSearchResultsScreen(
 ) {
     val systemUiController = rememberSystemUiController()
     val useDarkIcons = true
+    val scope = rememberCoroutineScope()
     SideEffect {
         systemUiController.setSystemBarsColor(
             color = Color.Transparent,
@@ -71,6 +95,100 @@ fun AdoptSearchResultsScreen(
     var filteredPets by remember { mutableStateOf<List<Pet>>(emptyList()) }
     var petsLoading by remember { mutableStateOf(true) }
     var petsError by remember { mutableStateOf("") }
+    var isSearching by remember { mutableStateOf(false) }
+
+    // Search filter function for frontend filtering
+    fun filterPets(query: String, pets: List<Pet>): List<Pet> {
+        if (query.isBlank()) return pets
+        return pets.filter { pet ->
+            pet.name.lowercase().contains(query.lowercase()) ||
+            pet.breed.lowercase().contains(query.lowercase()) ||
+            pet.type?.lowercase()?.contains(query.lowercase()) == true
+        }
+    }
+
+    // Function to search pets by name using the backend
+    suspend fun searchPetsByName(query: String) {
+        if (query.isBlank()) {
+            filteredPets = allPets
+            return
+        }
+        isSearching = true
+        petsLoading = true
+        try {
+            val response = userApi.getAllPets() // Temporarily use getAllPets until searchPetsByName is implemented
+            filteredPets = response.map { pet ->
+                Pet(
+                    id = pet.pid,
+                    name = pet.name ?: "",
+                    breed = pet.breed ?: "",
+                    age = pet.age ?: "",
+                    type = pet.type,
+                    location = pet.address ?: "",
+                    photo1 = pet.photo1,
+                    photo2 = pet.photo2,
+                    photo3 = pet.photo3,
+                    photo4 = pet.photo4,
+                    weight = pet.weight,
+                    color = pet.color,
+                    height = pet.height,
+                    user_name = pet.userName
+                )
+            }.filter { pet ->
+                pet.name.lowercase().contains(query.lowercase())
+            }
+        } catch (e: Exception) {
+            petsError = e.message ?: "Failed to search pets."
+        }
+        petsLoading = false
+        isSearching = false
+    }
+
+    // Update filtered pets when search query changes
+    LaunchedEffect(searchQuery) {
+        if (!isSearching) {
+            filteredPets = filterPets(searchQuery, allPets)
+        }
+    }
+
+    // Filter state
+    var animalType by remember { mutableStateOf("Dog") }
+    var gender by remember { mutableStateOf("Male") }
+    var age by remember { mutableStateOf(2f) }
+
+    // Helper functions for filtering
+    fun getTypeFromBreed(breed: String): String = when {
+        breed.contains("cat", ignoreCase = true) -> "Cat"
+        else -> "Dog"
+    }
+
+    fun getAgeInYears(ageStr: String): Float = when {
+        ageStr.contains("yr") -> ageStr.split(" ")[0].toFloatOrNull() ?: 0f
+        ageStr.contains("mo") -> (ageStr.split(" ")[0].toFloatOrNull() ?: 0f) / 12f
+        else -> 0f
+    }
+
+    fun getGenderFromName(name: String): String = when (name) {
+        "Milo", "Buddy", "Max" -> "Male"
+        "Luna", "Bella", "Coco" -> "Female"
+        else -> "Male"
+    }
+
+    // Apply filters function
+    fun applyFilters(pets: List<Pet>): List<Pet> {
+        return pets.filter { pet ->
+            val matchesType = getTypeFromBreed(pet.breed) == animalType
+            val matchesGender = getGenderFromName(pet.name) == gender
+            val matchesAge = getAgeInYears(pet.age) <= age
+            matchesType && matchesGender && matchesAge
+        }
+    }
+
+    // Update filtered pets when filters change
+    LaunchedEffect(animalType, gender, age) {
+        val searchFiltered = filterPets(searchQuery, allPets)
+        filteredPets = applyFilters(searchFiltered)
+    }
 
     // Fetch pets from Supabase on load
     LaunchedEffect(Unit) {
@@ -84,6 +202,7 @@ fun AdoptSearchResultsScreen(
                     name = it.name ?: "",
                     breed = it.breed ?: "",
                     age = it.age ?: "",
+                    type = it.type,
                     location = it.address ?: "",
                     photo1 = it.photo1,
                     photo2 = it.photo2,
@@ -102,13 +221,6 @@ fun AdoptSearchResultsScreen(
         petsLoading = false
     }
 
-    // Filter state
-    var animalType by remember { mutableStateOf("Dog") }
-    var locationKm by remember { mutableStateOf(10f) }
-    var size by remember { mutableStateOf("Small") }
-    var gender by remember { mutableStateOf("Male") }
-    var age by remember { mutableStateOf(2f) }
-
     // Pagination state
     var currentPage by remember { mutableStateOf(1) }
     val petsPerPage = 8
@@ -126,28 +238,6 @@ fun AdoptSearchResultsScreen(
                 currentUsername = me.username ?: ""
             } catch (_: Exception) {}
         }
-    }
-
-    // Helper functions for filtering
-    fun getTypeFromBreed(breed: String): String = when {
-        breed.contains("cat", ignoreCase = true) -> "Cat"
-        else -> "Dog"
-    }
-    fun getSizeFromBreed(breed: String): String = when {
-        breed.contains("retriever", ignoreCase = true) || breed.contains("labrador", ignoreCase = true) -> "Large"
-        breed.contains("siamese", ignoreCase = true) || breed.contains("persian", ignoreCase = true) -> "Medium"
-        breed.contains("rabbit", ignoreCase = true) -> "Small"
-        else -> "Small"
-    }
-    fun getAgeInYears(ageStr: String): Float = when {
-        ageStr.contains("yr") -> ageStr.split(" ")[0].toFloatOrNull() ?: 0f
-        ageStr.contains("mo") -> (ageStr.split(" ")[0].toFloatOrNull() ?: 0f) / 12f
-        else -> 0f
-    }
-    fun getGenderFromName(name: String): String = when (name) {
-        "Milo", "Buddy", "Max" -> "Male"
-        "Luna", "Bella", "Coco" -> "Female"
-        else -> "Male"
     }
 
     Scaffold(
@@ -192,20 +282,48 @@ fun AdoptSearchResultsScreen(
                             unfocusedBorderColor = Color(0xFFCCCCCC)
                         ),
                         textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black),
-                        keyboardOptions = KeyboardOptions.Default
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Search
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onSearch = {
+                                scope.launch {
+                                    searchPetsByName(searchQuery)
+                                }
+                            }
+                        )
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = { showFilterSheet = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = Purple),
-                        shape = RoundedCornerShape(50),
-                        modifier = Modifier.height(48.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.FilterList,
-                            contentDescription = "",
-                            tint = Color.White
-                        )
+                    Box {
+                        Button(
+                            onClick = { showFilterSheet = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = Purple),
+                            shape = RoundedCornerShape(50),
+                            modifier = Modifier.height(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FilterList,
+                                contentDescription = "",
+                                tint = Color.White
+                            )
+                        }
+                        // Green dot indicator when filters are active
+                        if (animalType != "Dog" || gender != "Male" || age != 2f) {
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .background(Color.White, CircleShape)
+                                    .align(Alignment.TopEnd)
+                                    .offset(x = 2.dp, y = 2.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .background(Color.Green, CircleShape)
+                                        .align(Alignment.Center)
+                                )
+                            }
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
@@ -353,37 +471,6 @@ fun AdoptSearchResultsScreen(
                             }
                         }
                         Spacer(Modifier.height(16.dp))
-                        // Location
-                        Text("Location (km)", color = Color(0xFFEDE7F6), fontWeight = FontWeight.Bold)
-                        Slider(
-                            value = locationKm,
-                            onValueChange = { locationKm = it },
-                            valueRange = 1f..100f,
-                            steps = 9,
-                            colors = SliderDefaults.colors(
-                                thumbColor = Color.White,
-                                activeTrackColor = Color.White,
-                                inactiveTrackColor = Color.White.copy(alpha = 0.3f)
-                            )
-                        )
-                        Text("${locationKm.toInt()} km", color = Color.White)
-                        Spacer(Modifier.height(16.dp))
-                        // Size
-                        Text("Size", color = Color(0xFFEDE7F6), fontWeight = FontWeight.Bold)
-                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            listOf("Small", "Medium", "Large").forEach { sz ->
-                                FilterChip(
-                                    selected = size == sz,
-                                    onClick = { size = sz },
-                                    label = { Text(sz, color = Color.White) },
-                                    shape = RoundedCornerShape(50),
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        containerColor = if (size == sz) Color.White.copy(alpha = 0.2f) else Color.Transparent
-                                    )
-                                )
-                            }
-                        }
-                        Spacer(Modifier.height(16.dp))
                         // Gender
                         Text("Gender", color = Color(0xFFEDE7F6), fontWeight = FontWeight.Bold)
                         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -429,12 +516,7 @@ fun AdoptSearchResultsScreen(
                         ) {
                             Button(
                                 onClick = {
-                                    filteredPets = allPets.filter { pet ->
-                                        getTypeFromBreed(pet.breed) == animalType &&
-                                        getSizeFromBreed(pet.breed) == size &&
-                                        getGenderFromName(pet.name) == gender &&
-                                        getAgeInYears(pet.age) <= age
-                                    }
+                                    filteredPets = applyFilters(allPets)
                                     showFilterSheet = false
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color.White),
@@ -446,7 +528,10 @@ fun AdoptSearchResultsScreen(
                             Spacer(Modifier.width(16.dp))
                             OutlinedButton(
                                 onClick = {
-                                    // Discard changes
+                                    // Reset all filters to default values
+                                    animalType = "Dog"
+                                    gender = "Male"
+                                    age = 2f
                                     filteredPets = allPets
                                     showFilterSheet = false
                                 },
@@ -454,7 +539,7 @@ fun AdoptSearchResultsScreen(
                                 shape = RoundedCornerShape(50),
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text("Discard Changes", color = Color.White, fontWeight = FontWeight.Bold)
+                                Text("Discard", color = Color.White, fontWeight = FontWeight.Bold)
                             }
                         }
                         Spacer(Modifier.height(8.dp))

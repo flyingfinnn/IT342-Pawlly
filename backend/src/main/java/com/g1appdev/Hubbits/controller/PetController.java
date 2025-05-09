@@ -211,4 +211,9 @@ public class PetController {
     public List<PetEntity> getPetsByUserName(@PathVariable String userName) {
         return pserv.getPetsByUserName(userName);
     }
+
+    @GetMapping("/searchByName/{name}")
+    public List<PetEntity> searchPetsByName(@PathVariable String name) {
+        return pserv.searchPetsByName(name);
+    }
 }

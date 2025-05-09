@@ -36,20 +36,10 @@ public class AdoptionService {
         if (existingAdoptionOpt.isPresent()) {
             AdoptionEntity existingAdoption = existingAdoptionOpt.get();
 
-            // Update the new fields
-            existingAdoption.setUserId(adoption.getUserId());
-            existingAdoption.setPetId(adoption.getPetId());
-            existingAdoption.setPetName(adoption.getPetName());
-            existingAdoption.setHouseholdType(adoption.getHouseholdType());
-            existingAdoption.setHouseholdOwnership(adoption.getHouseholdOwnership());
-            existingAdoption.setNumAdults(adoption.getNumAdults());
-            existingAdoption.setNumChildren(adoption.getNumChildren());
-            existingAdoption.setOtherPets(adoption.getOtherPets());
-            existingAdoption.setExperienceWithPets(adoption.getExperienceWithPets());
-            existingAdoption.setDailyRoutine(adoption.getDailyRoutine());
-            existingAdoption.setHoursAlonePerDay(adoption.getHoursAlonePerDay());
-            existingAdoption.setReasonForAdoption(adoption.getReasonForAdoption());
-            existingAdoption.setStatus(adoption.getStatus());
+            // Only update status if present
+            if (adoption.getStatus() != null) {
+                existingAdoption.setStatus(adoption.getStatus());
+            }
             existingAdoption.setUpdatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
 
             return adoptionRepository.save(existingAdoption);

@@ -25,13 +25,13 @@ fun AdoptFinishScreen(
     onBack: () -> Unit,
     onGoToHome: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
             .background(White)
             .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
     ) {
         Image(
             painter = painterResource(id = R.drawable.logoiconpurpleround),

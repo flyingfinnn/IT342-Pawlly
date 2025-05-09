@@ -87,4 +87,8 @@ public class PetService {
         return prepo.findByUserName(userName);
     }
 
+    public List<PetEntity> searchPetsByName(String name) {
+        return prepo.findByNameContainingIgnoreCase(name);
+    }
+
 }

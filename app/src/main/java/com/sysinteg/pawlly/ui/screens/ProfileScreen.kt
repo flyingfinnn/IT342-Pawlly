@@ -95,6 +95,8 @@ import androidx.compose.foundation.layout.heightIn
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.sysinteg.pawlly.R
+import androidx.compose.material3.Switch
+import androidx.compose.runtime.State
 
 val LightRed = Color(0xFFFF6B6B)
 
@@ -120,7 +122,9 @@ fun ProfileScreen(
     onAddPet: () -> Unit = {},
     onPetDetail: (Int) -> Unit = {},
     editMode: Boolean = false,
-    onAdoptPetDetail: (Int, String) -> Unit = { _, _ -> }
+    onAdoptPetDetail: (Int, String) -> Unit = { _, _ -> },
+    onViewApplication: (Int, Boolean) -> Unit = { _, _ -> },
+    refreshTrigger: State<Boolean>? = null
 ) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences(PAWLLY_PREFS, Context.MODE_PRIVATE) }
@@ -340,6 +344,32 @@ fun ProfileScreen(
         }
     }
 
+    // Observe refreshTrigger and reload applications when it changes
+    LaunchedEffect(refreshTrigger?.value) {
+        if (refreshTrigger != null && userId != null && userId != 0L) {
+            try {
+                val applications = withContext(Dispatchers.IO) {
+                    userApi.getAdoptionApplicationsByUserId(userId!!)
+                }
+                myApplications.clear()
+                myApplications.addAll(applications.map {
+                    Application(
+                        id = it.id.toInt(),
+                        petId = it.petId.toInt(),
+                        petName = it.petName ?: "Pet Name",
+                        status = when (it.status.lowercase()) {
+                            "pending" -> ApplicationStatus.PENDING
+                            "accepted", "success" -> ApplicationStatus.ACCEPTED
+                            else -> ApplicationStatus.PENDING
+                        }
+                    )
+                })
+            } catch (e: Exception) {
+                Log.e("ProfileScreen", "Failed to refresh applications", e)
+            }
+        }
+    }
+
     LaunchedEffect(statusType) {
         if (statusType != StatusType.None) {
             showStatusChip = true
@@ -360,6 +390,56 @@ fun ProfileScreen(
 
     // Use the username from state as currentUsername
     val currentUsernameValue = username
+
+    // Add state for toggle
+    var showIncoming by remember { mutableStateOf(false) }
+
+    // Add state for incoming applications
+    val incomingApplications = remember { mutableStateListOf<Application>() }
+    var incomingLoading by remember { mutableStateOf(false) }
+    var incomingError by remember { mutableStateOf("") }
+
+    // Fetch incoming applications when myPets changes or when showIncoming is toggled on
+    LaunchedEffect(myPets, showIncoming) {
+        if (showIncoming && myPets.isNotEmpty() && userId != null && userId != 0L) {
+            incomingLoading = true
+            incomingError = ""
+            incomingApplications.clear()
+            try {
+                val allApplications = mutableListOf<Application>()
+                for (pet in myPets) {
+                    try {
+                        val apps = withContext(Dispatchers.IO) {
+                            userApi.getAdoptionApplications(userId = null, petId = pet.id)
+                        }
+                        allApplications.addAll(apps.filter { it.userId != userId }.map {
+                            Application(
+                                id = it.id.toInt(),
+                                petId = it.petId.toInt(),
+                                petName = it.petName ?: pet.name,
+                                status = when (it.status.lowercase()) {
+                                    "pending" -> ApplicationStatus.PENDING
+                                    "accepted", "success" -> ApplicationStatus.ACCEPTED
+                                    else -> ApplicationStatus.PENDING
+                                }
+                            )
+                        })
+                    } catch (e: Exception) {
+                        // Ignore errors for individual pets
+                    }
+                }
+                incomingApplications.addAll(allApplications)
+            } catch (e: Exception) {
+                incomingError = e.message ?: "Failed to load incoming applications."
+            }
+            incomingLoading = false
+        }
+    }
+
+    // Update onViewApplication to accept isOwnerView
+    fun handleViewApplication(applicationId: Int, isOwnerView: Boolean) {
+        onViewApplication(applicationId, isOwnerView)
+    }
 
     if (isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -970,100 +1050,206 @@ fun ProfileScreen(
                         }
                     }
                     Spacer(modifier = Modifier.height(32.dp))
-                    // My Applications Section
+                    // Applications Section
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(Color.White, RoundedCornerShape(16.dp))
                             .padding(16.dp)
                     ) {
-                        Text(
-                            "My Applications",
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = Inter,
-                            fontSize = 20.sp,
-                            color = Purple,
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        )
-
-                        if (myApplications.isEmpty()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
-                                "Ready to bring your new friend home?",
-                                color = Color.Gray,
+                                "Applications",
+                                fontWeight = FontWeight.Bold,
                                 fontFamily = Inter,
-                                fontSize = 16.sp,
+                                fontSize = 20.sp,
+                                color = Purple,
                                 modifier = Modifier.padding(bottom = 12.dp)
                             )
-                            Button(
-                                onClick = onNavHome,
-                                colors = ButtonDefaults.buttonColors(containerColor = Purple),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text("Browse Pets", color = Color.White, fontFamily = Inter)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    if (showIncoming) "Incoming" else "Outgoing",
+                                    fontFamily = Inter,
+                                    fontSize = 14.sp,
+                                    color = Color.Gray,
+                                    modifier = Modifier.padding(end = 4.dp)
+                                )
+                                Switch(
+                                    checked = showIncoming,
+                                    onCheckedChange = { showIncoming = it },
+                                    thumbContent = null
+                                )
                             }
-                        } else {
-                            myApplications.forEach { application ->
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 8.dp)
-                                        .align(Alignment.CenterHorizontally)
+                        }
+
+                        if (!showIncoming) {
+                            // Outgoing applications (current behavior)
+                            if (myApplications.isEmpty()) {
+                                Text(
+                                    "Ready to bring your new friend home?",
+                                    color = Color.Gray,
+                                    fontFamily = Inter,
+                                    fontSize = 16.sp,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                )
+                                Button(
+                                    onClick = onNavHome,
+                                    colors = ButtonDefaults.buttonColors(containerColor = Purple),
+                                    shape = RoundedCornerShape(8.dp),
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Card(
-                                        shape = RoundedCornerShape(16.dp),
-                                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA)),
-                                        elevation = CardDefaults.cardElevation(2.dp),
+                                    Text("Browse Pets", color = Color.White, fontFamily = Inter)
+                                }
+                            } else {
+                                myApplications.forEach { application ->
+                                    Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .align(Alignment.Center)
+                                            .padding(vertical = 8.dp)
+                                            .align(Alignment.CenterHorizontally)
                                     ) {
-                                        Row(
+                                        Card(
+                                            shape = RoundedCornerShape(16.dp),
+                                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA)),
+                                            elevation = CardDefaults.cardElevation(2.dp),
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .padding(20.dp),
-                                            verticalAlignment = Alignment.CenterVertically
+                                                .align(Alignment.Center)
+                                                .clickable { handleViewApplication(application.id, false) }
                                         ) {
-                                            Column(
-                                                modifier = Modifier.weight(1f)
-                                            ) {
-                                                Text(
-                                                    text = "Adopt Application for ${application.petName}",
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 18.sp,
-                                                    color = Color.Black
-                                                )
-                                                Spacer(modifier = Modifier.height(4.dp))
-                                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                                    Text(
-                                                        text = "ID #${application.id}",
-                                                        fontSize = 14.sp,
-                                                        color = Color.Gray,
-                                                        fontWeight = FontWeight.Medium
-                                                    )
-                                                    Spacer(modifier = Modifier.width(12.dp))
-                                                    Text(
-                                                        text = "STATUS: ${application.status.name.replaceFirstChar { it.uppercase() }}",
-                                                        fontSize = 14.sp,
-                                                        color = Color.Gray,
-                                                        fontWeight = FontWeight.Medium
-                                                    )
-                                                }
-                                            }
-                                            // Status dot
-                                            val statusColor = when (application.status.name.lowercase()) {
-                                                "pending" -> Color(0xFFFFC107)
-                                                "success" -> Color(0xFF4CAF50)
-                                                "accepted" -> Color(0xFF4CAF50)
-                                                "rejected" -> Color(0xFFE53935)
-                                                else -> Color.LightGray
-                                            }
-                                            Spacer(modifier = Modifier.width(10.dp))
-                                            Box(
+                                            Row(
                                                 modifier = Modifier
-                                                    .size(14.dp)
-                                                    .background(statusColor, shape = CircleShape)
-                                            )
+                                                    .fillMaxWidth()
+                                                    .padding(20.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Column(
+                                                    modifier = Modifier.weight(1f)
+                                                ) {
+                                                    Text(
+                                                        text = "Adopt Application for ${application.petName}",
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 18.sp,
+                                                        color = Color.Black
+                                                    )
+                                                    Spacer(modifier = Modifier.height(4.dp))
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Text(
+                                                            text = "ID #${application.id}",
+                                                            fontSize = 14.sp,
+                                                            color = Color.Gray,
+                                                            fontWeight = FontWeight.Medium
+                                                        )
+                                                        Spacer(modifier = Modifier.width(12.dp))
+                                                        Text(
+                                                            text = "STATUS: ${application.status.name.replaceFirstChar { it.uppercase() }}",
+                                                            fontSize = 14.sp,
+                                                            color = Color.Gray,
+                                                            fontWeight = FontWeight.Medium
+                                                        )
+                                                    }
+                                                }
+                                                // Status dot
+                                                val statusColor = when (application.status.name.lowercase()) {
+                                                    "pending" -> Color(0xFFFFC107)
+                                                    "success" -> Color(0xFF4CAF50)
+                                                    "accepted" -> Color(0xFF4CAF50)
+                                                    "rejected" -> Color(0xFFE53935)
+                                                    else -> Color.LightGray
+                                                }
+                                                Spacer(modifier = Modifier.width(10.dp))
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(14.dp)
+                                                        .background(statusColor, shape = CircleShape)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            // Incoming applications (for user's pets)
+                            if (incomingLoading) {
+                                Text("Loading incoming applications...", color = Color.Gray, fontFamily = Inter)
+                            } else if (incomingError.isNotEmpty()) {
+                                Text("Error: $incomingError", color = Color.Red, fontFamily = Inter)
+                            } else if (incomingApplications.isEmpty()) {
+                                Text(
+                                    "No incoming applications for your pets yet.",
+                                    color = Color.Gray,
+                                    fontFamily = Inter,
+                                    fontSize = 16.sp,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                )
+                            } else {
+                                incomingApplications.forEach { application ->
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 8.dp)
+                                            .align(Alignment.CenterHorizontally)
+                                    ) {
+                                        Card(
+                                            shape = RoundedCornerShape(16.dp),
+                                            colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA)),
+                                            elevation = CardDefaults.cardElevation(2.dp),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .align(Alignment.Center)
+                                                .clickable { handleViewApplication(application.id, true) }
+                                        ) {
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(20.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Column(
+                                                    modifier = Modifier.weight(1f)
+                                                ) {
+                                                    Text(
+                                                        text = "Adopt Application for ${application.petName}",
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 18.sp,
+                                                        color = Color.Black
+                                                    )
+                                                    Spacer(modifier = Modifier.height(4.dp))
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Text(
+                                                            text = "ID #${application.id}",
+                                                            fontSize = 14.sp,
+                                                            color = Color.Gray,
+                                                            fontWeight = FontWeight.Medium
+                                                        )
+                                                        Spacer(modifier = Modifier.width(12.dp))
+                                                        Text(
+                                                            text = "STATUS: ${application.status.name.replaceFirstChar { it.uppercase() }}",
+                                                            fontSize = 14.sp,
+                                                            color = Color.Gray,
+                                                            fontWeight = FontWeight.Medium
+                                                        )
+                                                    }
+                                                }
+                                                // Status dot
+                                                val statusColor = when (application.status.name.lowercase()) {
+                                                    "pending" -> Color(0xFFFFC107)
+                                                    "success" -> Color(0xFF4CAF50)
+                                                    "accepted" -> Color(0xFF4CAF50)
+                                                    "rejected" -> Color(0xFFE53935)
+                                                    else -> Color.LightGray
+                                                }
+                                                Spacer(modifier = Modifier.width(10.dp))
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(14.dp)
+                                                        .background(statusColor, shape = CircleShape)
+                                                )
+                                            }
                                         }
                                     }
                                 }

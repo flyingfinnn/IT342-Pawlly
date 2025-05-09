@@ -152,8 +152,27 @@ fun AddPetScreen(
         "French Bulldog",
         "Border Collie",
         "Pembroke Welsh Corgi",
-        // Cat breeds (optional, can be expanded)
-        "Persian", "Maine Coon", "Siamese", "Ragdoll", "Bengal", "Sphynx", "British Shorthair", "Abyssinian", "Birman", "Oriental"
+        // Cat breeds (expanded)
+        "Domestic Shorthair",
+        "Siamese",
+        "Maine Coon",
+        "Persian",
+        "Ragdoll",
+        "Bengal",
+        "British Shorthair",
+        "Sphynx",
+        "Abyssinian",
+        "Scottish Fold",
+        "Birman",
+        "American Shorthair",
+        "Oriental Shorthair",
+        "Russian Blue",
+        "Norwegian Forest Cat",
+        "Devon Rex",
+        "Burmese",
+        "Tonkinese",
+        "Turkish Angora",
+        "Exotic Shorthair"
     )
     var breedSuggestions by remember { mutableStateOf(listOf<String>()) }
     var breedDropdownExpanded by remember { mutableStateOf(false) }
@@ -674,6 +693,13 @@ fun AddPetScreen(
                                         height = heightToSend.takeIf { it.isNotBlank() }?.toRequestBody()
                                     )
                                 }
+                                // Fetch notification with ID 1 after pet is added
+                                val notification = withContext(Dispatchers.IO) {
+                                    userApi.getNotificationById(1)
+                                }
+                                // Navigate to NotificationScreen and pass notification ID as argument
+                                // (Assume navController is available in scope, or use a callback)
+                                // Example: navController.navigate("notifications?notificationId=${notification.notification_id}")
                                 isSubmitting = false
                                 onPetAdded()
                             } catch (e: Exception) {

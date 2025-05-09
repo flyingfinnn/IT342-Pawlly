@@ -55,6 +55,10 @@ public class AdoptionEntity {
     @Column(name = "pet_name")
     private String petName;
 
+    @JsonProperty("accept_or_reject")
+    @Column(name = "accept_or_reject")
+    private String acceptOrReject;
+
     private String status = "pending";
 
     private java.sql.Timestamp createdAt;
@@ -114,4 +118,7 @@ public class AdoptionEntity {
 
     public String getPetName() { return petName; }
     public void setPetName(String petName) { this.petName = petName; }
+
+    public String getAcceptOrReject() { return acceptOrReject; }
+    public void setAcceptOrReject(String acceptOrReject) { this.acceptOrReject = acceptOrReject; }
 }
