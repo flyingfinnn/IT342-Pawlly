@@ -25,9 +25,11 @@ import {
     TableHead,
     TableRow,
     Paper,
+    Chip,
+    Divider,
 } from "@mui/material";
 import { useUser } from "./UserContext";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff, Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon } from "@mui/icons-material";
 
 const Profile = () => {
     const { user, updateUser, loading } = useUser();
@@ -301,68 +303,191 @@ const Profile = () => {
         setTabValue(newValue);
     };
 
-    const renderApplications = () => {
-        return (
-            <Box sx={{ mt: 4 }}>
-                <Tabs value={tabValue} onChange={handleTabChange} centered>
-                    <Tab label="Rehome Applications" />
-                    <Tab label="Adoption Applications" />
-                </Tabs>
-
-                {tabValue === 0 && (
-                    <TableContainer component={Paper} sx={{ mt: 2 }}>
-                        <Table>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>Pet Name</TableCell>
-                                    <TableCell>Type</TableCell>
-                                    <TableCell>Breed</TableCell>
-                                    <TableCell>Status</TableCell>
-                                    <TableCell>Submission Date</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {rehomeApplications.map((rehome) => (
-                                    <TableRow key={rehome.pid}>
-                                        <TableCell>{rehome.name}</TableCell>
-                                        <TableCell>{rehome.type}</TableCell>
-                                        <TableCell>{rehome.breed}</TableCell>
-                                        <TableCell>{rehome.status}</TableCell>
-                                        <TableCell>{rehome.submissionDate}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                )}
-
-                {tabValue === 1 && (
-                    <TableContainer component={Paper} sx={{ mt: 2 }}>
-                        <Table>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>Pet Type</TableCell>
-                                    <TableCell>Breed</TableCell>
-                                    <TableCell>Status</TableCell>
-                                    <TableCell>Submission Date</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {adoptionApplications.map((adoption) => (
-                                    <TableRow key={adoption.adoptionID}>
-                                        <TableCell>{adoption.petType}</TableCell>
-                                        <TableCell>{adoption.breed}</TableCell>
-                                        <TableCell>{adoption.status}</TableCell>
-                                        <TableCell>{adoption.submissionDate}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                )}
-            </Box>
-        );
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'PENDING':
+            case 'PENDING_REHOME':
+                return 'warning';
+            case 'APPROVED':
+            case 'ACCEPTED_REHOME':
+                return 'success';
+            case 'REJECTED':
+                return 'error';
+            default:
+                return 'default';
+        }
     };
+
+    const renderProfileCard = () => (
+        <Card sx={{ mb: 4, borderRadius: 2, boxShadow: 3 }}>
+            <CardContent>
+                <Grid container spacing={3}>
+                    <Grid item xs={12} md={4} sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <Box sx={{ position: 'relative' }}>
+                            <Avatar
+                                src={profilePicture}
+                                sx={{
+                                    width: 150,
+                                    height: 150,
+                                    border: '4px solid #675BC8',
+                                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+                                }}
+                            />
+                            {editingUserId === user?.userId && (
+                                <IconButton
+                                    sx={{
+                                        position: 'absolute',
+                                        bottom: 0,
+                                        right: 0,
+                                        backgroundColor: 'primary.main',
+                                        '&:hover': { backgroundColor: 'primary.dark' }
+                                    }}
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    <EditIcon sx={{ color: 'white' }} />
+                                </IconButton>
+                            )}
+                        </Box>
+                    </Grid>
+                    <Grid item xs={12} md={8}>
+                        <Typography variant="h4" gutterBottom sx={{ color: 'primary.main', fontWeight: 'bold' }}>
+                            {user?.firstName} {user?.lastName}
+                        </Typography>
+                        <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                            @{user?.username}
+                        </Typography>
+                        <Divider sx={{ my: 2 }} />
+                        <Grid container spacing={2}>
+                            <Grid item xs={12} sm={6}>
+                                <Typography variant="body2" color="text.secondary">Email</Typography>
+                                <Typography variant="body1">{user?.email}</Typography>
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <Typography variant="body2" color="text.secondary">Phone</Typography>
+                                <Typography variant="body1">{user?.phoneNumber}</Typography>
+                            </Grid>
+                            <Grid item xs={12}>
+                                <Typography variant="body2" color="text.secondary">Address</Typography>
+                                <Typography variant="body1">{user?.address}</Typography>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </CardContent>
+        </Card>
+    );
+
+    const renderApplications = () => (
+        <Box sx={{ mt: 4 }}>
+            <Tabs 
+                value={tabValue} 
+                onChange={handleTabChange} 
+                centered
+                sx={{
+                    '& .MuiTab-root': {
+                        fontSize: '1.1rem',
+                        fontWeight: 'bold',
+                        textTransform: 'none',
+                        minWidth: 200,
+                    },
+                    '& .Mui-selected': {
+                        color: 'primary.main',
+                    },
+                }}
+            >
+                <Tab label="Rehome Applications" />
+                <Tab label="Adoption Applications" />
+            </Tabs>
+
+            {tabValue === 0 && (
+                <Grid container spacing={3} sx={{ mt: 2 }}>
+                    {rehomeApplications.map((rehome) => (
+                        <Grid item xs={12} md={6} key={rehome.pid}>
+                            <Card sx={{ 
+                                borderRadius: 2, 
+                                boxShadow: 3,
+                                transition: 'transform 0.2s',
+                                '&:hover': {
+                                    transform: 'translateY(-4px)',
+                                }
+                            }}>
+                                <CardContent>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                                            {rehome.name}
+                                        </Typography>
+                                        <Chip 
+                                            label={rehome.status} 
+                                            color={getStatusColor(rehome.status)}
+                                            sx={{ fontWeight: 'bold' }}
+                                        />
+                                    </Box>
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={6}>
+                                            <Typography variant="body2" color="text.secondary">Type</Typography>
+                                            <Typography variant="body1">{rehome.type}</Typography>
+                                        </Grid>
+                                        <Grid item xs={6}>
+                                            <Typography variant="body2" color="text.secondary">Breed</Typography>
+                                            <Typography variant="body1">{rehome.breed}</Typography>
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <Typography variant="body2" color="text.secondary">Submission Date</Typography>
+                                            <Typography variant="body1">{rehome.submissionDate}</Typography>
+                                        </Grid>
+                                    </Grid>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    ))}
+                </Grid>
+            )}
+
+            {tabValue === 1 && (
+                <Grid container spacing={3} sx={{ mt: 2 }}>
+                    {adoptionApplications.map((adoption) => (
+                        <Grid item xs={12} md={6} key={adoption.adoptionID}>
+                            <Card sx={{ 
+                                borderRadius: 2, 
+                                boxShadow: 3,
+                                transition: 'transform 0.2s',
+                                '&:hover': {
+                                    transform: 'translateY(-4px)',
+                                }
+                            }}>
+                                <CardContent>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                                            {adoption.petType}
+                                        </Typography>
+                                        <Chip 
+                                            label={adoption.status} 
+                                            color={getStatusColor(adoption.status)}
+                                            sx={{ fontWeight: 'bold' }}
+                                        />
+                                    </Box>
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={6}>
+                                            <Typography variant="body2" color="text.secondary">Breed</Typography>
+                                            <Typography variant="body1">{adoption.breed}</Typography>
+                                        </Grid>
+                                        <Grid item xs={6}>
+                                            <Typography variant="body2" color="text.secondary">Pet Name</Typography>
+                                            <Typography variant="body1">{adoption.name}</Typography>
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <Typography variant="body2" color="text.secondary">Submission Date</Typography>
+                                            <Typography variant="body1">{adoption.submissionDate}</Typography>
+                                        </Grid>
+                                    </Grid>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    ))}
+                </Grid>
+            )}
+        </Box>
+    );
 
     if (loading) {
         return <div>Loading...</div>;
@@ -373,293 +498,23 @@ const Profile = () => {
     }
 
     return (
-        <Container maxWidth="lg">
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+            {renderProfileCard()}
+            {renderApplications()}
             <Snackbar
                 open={snackbar.open}
-                autoHideDuration={6000}
+                autoHideDuration={4000}
                 onClose={handleSnackbarClose}
-                anchorOrigin={{ vertical: "top", horizontal: "center" }}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >
-                <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: "100%" }}>
+                <Alert 
+                    onClose={handleSnackbarClose} 
+                    severity={snackbar.severity}
+                    sx={{ width: '100%' }}
+                >
                     {snackbar.message}
                 </Alert>
             </Snackbar>
-            <Box sx={{ mt: 5, maxWidth: 500, mx: "auto" }}>
-                <Typography variant="h4" align="center" gutterBottom>
-                    Profile
-                </Typography>
-                <Box
-                    sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        p: 3,
-                        borderRadius: 2,
-                        boxShadow: 3,
-                        bgcolor: "background.paper",
-                    }}
-                >
-                    <Tooltip
-                        title={
-                            editingUserId
-                                ? "Click to upload a new profile picture"
-                                : ""
-                        }
-                    >
-                        <Avatar
-                            src={
-                                profilePicture instanceof File || profilePicture instanceof Blob
-                                    ? URL.createObjectURL(profilePicture)
-                                    : user.profilePicture
-                                        ? `data:image/jpeg;base64,${user.profilePicture}`
-                                        : null
-                            }
-                            alt="Profile Picture"
-                            sx={{
-                                width: 125,
-                                height: 125,
-                                bgcolor: "grey.300",
-                                mb: 2,
-                                fontSize: "48px",
-                                cursor: editingUserId ? "pointer" : "default",
-                            }}
-                            onClick={() => editingUserId && fileInputRef.current.click()}
-                        >
-                            {(!profilePicture && !user.profilePicture) &&
-                                (user.firstName ? user.firstName[0] : "")}
-                        </Avatar>
-                    </Tooltip>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        ref={fileInputRef}
-                        onChange={(e) => setProfilePicture(e.target.files[0])}
-                        style={{ display: "none" }}
-                    />
-                    <Stack spacing={2} sx={{ width: "100%" }}>
-                        <Grid container >
-                            <Grid item xs={6}
-                                  sx={{ pl: 0, pr: 2, pt: 2 }}
-                            >
-                                <TextField
-                                    name="firstName"
-                                    label="First Name"
-                                    value={editFormData.firstName}
-                                    onChange={handleEditChange}
-                                    variant="outlined"
-                                    fullWidth
-                                    size="small"
-                                    InputProps={{
-                                        readOnly: !editingUserId,
-                                    }}
-                                />
-                            </Grid>
-                            <Grid item xs={6}
-                                  sx={{ pl: 0, pr: 0, pt: 2 }}
-                            >
-                                <TextField
-                                    name="lastName"
-                                    label="Last Name"
-                                    value={editFormData.lastName}
-                                    onChange={handleEditChange}
-                                    variant="outlined"
-                                    fullWidth
-                                    size="small"
-                                    InputProps={{
-                                        readOnly: !editingUserId,
-                                    }}
-                                />
-                            </Grid>
-                        </Grid>
-                        <TextField
-                            name="username"
-                            label="Username"
-                            value={editFormData.username}
-                            onChange={handleEditChange}
-                            variant="outlined"
-                            fullWidth
-                            size="small"
-                            error={usernameExists}
-                            helperText={usernameExists ? "Username is already taken." : ""}
-                        />
-                        <TextField
-                            name="email"
-                            label="Email"
-                            value={editFormData.email}
-                            onChange={handleEditChange}
-                            variant="outlined"
-                            fullWidth
-                            size="small"
-                            error={emailExists}
-                            helperText={emailExists ? "Email is already registered." : ""}
-                        />
-
-                        <TextField
-                            name="address"
-                            label="Address"
-                            value={editFormData.address}
-                            onChange={handleEditChange}
-                            variant="outlined"
-                            fullWidth
-                            size="small"
-                            InputProps={{
-                                readOnly: !editingUserId,
-                            }}
-                        />
-                        <TextField
-                            name="phoneNumber"
-                            label="Phone Number"
-                            value={editFormData.phoneNumber}
-                            onChange={handleEditChange}
-                            variant="outlined"
-                            fullWidth
-                            size="small"
-                            InputProps={{
-                                readOnly: !editingUserId,
-                            }}
-                        />
-                    </Stack>
-                    <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
-                        {editingUserId ? (
-                            <>
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    onClick={handleSaveEdit}
-                                    disabled={isSaving || usernameExists || emailExists}
-                                >
-                                    {isSaving ? "Saving..." : "Save"}
-                                </Button>
-                                <Button
-                                    variant="outlined"
-                                    color="secondary"
-                                    onClick={handleCancelEdit}
-                                >
-                                    Cancel
-                                </Button>
-                            </>
-                        ) : (
-                            <>
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    onClick={handleEdit}
-                                >
-                                    Edit Profile
-                                </Button>
-                                <Button
-                                    variant="outlined"
-                                    color="primary"
-                                    onClick={() => setPasswordChange(!passwordChange)}
-                                >
-                                    Change Password
-                                </Button>
-                            </>
-                        )}
-                    </Box>
-                    {passwordChange && (
-                        <Box sx={{ mt: 3, width: "100%" }}>
-                            <TextField
-                                label="Old Password"
-                                name="oldPassword"
-                                type={showOldPassword ? "text" : "password"}
-                                value={passwordData.oldPassword}
-                                onChange={(e) =>
-                                    setPasswordData({
-                                        ...passwordData,
-                                        oldPassword: e.target.value,
-                                    })
-                                }
-                                fullWidth
-                                margin="normal"
-                                size="small"
-                                InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                onClick={() => setShowOldPassword(!showOldPassword)}
-                                            >
-                                                {showOldPassword ? <VisibilityOff /> : <Visibility />}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
-                                }}
-                            />
-                            <TextField
-                                label="New Password"
-                                name="newPassword"
-                                type={showNewPassword ? "text" : "password"}
-                                value={passwordData.newPassword}
-                                onChange={(e) =>
-                                    setPasswordData({
-                                        ...passwordData,
-                                        newPassword: e.target.value,
-                                    })
-                                }
-                                fullWidth
-                                margin="normal"
-                                size="small"
-                                InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                onClick={() => setShowNewPassword(!showNewPassword)}
-                                            >
-                                                {showNewPassword ? <VisibilityOff /> : <Visibility />}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
-                                }}
-                            />
-                            <TextField
-                                label="Confirm New Password"
-                                name="confirmPassword"
-                                type={showConfirmPassword ? "text" : "password"}
-                                value={passwordData.confirmPassword}
-                                onChange={(e) =>
-                                    setPasswordData({
-                                        ...passwordData,
-                                        confirmPassword: e.target.value,
-                                    })
-                                }
-                                fullWidth
-                                margin="normal"
-                                size="small"
-                                InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                onClick={() =>
-                                                    setShowConfirmPassword(!showConfirmPassword)
-                                                }
-                                            >
-                                                {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
-                                }}
-                            />
-                            <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    onClick={handlePasswordChange}
-                                >
-                                    Confirm
-                                </Button>
-                                <Button
-                                    variant="outlined"
-                                    color="secondary"
-                                    onClick={() => setPasswordChange(false)}
-                                >
-                                    Cancel
-                                </Button>
-                            </Box>
-                        </Box>
-                    )}
-                </Box>
-            </Box>
-            {renderApplications()}
         </Container>
     );
 };
