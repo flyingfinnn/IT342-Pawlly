@@ -14,6 +14,17 @@ import {
     Tooltip,
     Snackbar,
     Alert,
+    Tabs,
+    Tab,
+    Card,
+    CardContent,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
 } from "@mui/material";
 import { useUser } from "./UserContext";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
@@ -49,6 +60,9 @@ const Profile = () => {
         severity: "success",
     });
     const fileInputRef = useRef(null);
+    const [tabValue, setTabValue] = useState(0);
+    const [rehomeApplications, setRehomeApplications] = useState([]);
+    const [adoptionApplications, setAdoptionApplications] = useState([]);
 
     useEffect(() => {
         if (user) {
@@ -62,6 +76,35 @@ const Profile = () => {
             });
             setProfilePicture(user.profilePicture);
         }
+    }, [user]);
+
+    useEffect(() => {
+        const fetchApplications = async () => {
+            if (user) {
+                try {
+                    // Fetch rehome applications
+                    const rehomeResponse = await axios.get(
+                        `${process.env.REACT_APP_BACKEND_URL}/api/pet/getAllPets`
+                    );
+                    const userRehomes = rehomeResponse.data.filter(
+                        pet => pet.userName === `${user.firstName} ${user.lastName}`
+                    );
+                    setRehomeApplications(userRehomes);
+
+                    // Fetch adoption applications
+                    const adoptionResponse = await axios.get(
+                        `${process.env.REACT_APP_BACKEND_URL}/api/adoptions`
+                    );
+                    const userAdoptions = adoptionResponse.data.filter(
+                        adoption => adoption.name === `${user.firstName} ${user.lastName}`
+                    );
+                    setAdoptionApplications(userAdoptions);
+                } catch (error) {
+                    console.error("Error fetching applications:", error);
+                }
+            }
+        };
+        fetchApplications();
     }, [user]);
 
     const handleSnackbarClose = () => {
@@ -254,6 +297,73 @@ const Profile = () => {
         }
     };
 
+    const handleTabChange = (event, newValue) => {
+        setTabValue(newValue);
+    };
+
+    const renderApplications = () => {
+        return (
+            <Box sx={{ mt: 4 }}>
+                <Tabs value={tabValue} onChange={handleTabChange} centered>
+                    <Tab label="Rehome Applications" />
+                    <Tab label="Adoption Applications" />
+                </Tabs>
+
+                {tabValue === 0 && (
+                    <TableContainer component={Paper} sx={{ mt: 2 }}>
+                        <Table>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>Pet Name</TableCell>
+                                    <TableCell>Type</TableCell>
+                                    <TableCell>Breed</TableCell>
+                                    <TableCell>Status</TableCell>
+                                    <TableCell>Submission Date</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {rehomeApplications.map((rehome) => (
+                                    <TableRow key={rehome.pid}>
+                                        <TableCell>{rehome.name}</TableCell>
+                                        <TableCell>{rehome.type}</TableCell>
+                                        <TableCell>{rehome.breed}</TableCell>
+                                        <TableCell>{rehome.status}</TableCell>
+                                        <TableCell>{rehome.submissionDate}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                )}
+
+                {tabValue === 1 && (
+                    <TableContainer component={Paper} sx={{ mt: 2 }}>
+                        <Table>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>Pet Type</TableCell>
+                                    <TableCell>Breed</TableCell>
+                                    <TableCell>Status</TableCell>
+                                    <TableCell>Submission Date</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {adoptionApplications.map((adoption) => (
+                                    <TableRow key={adoption.adoptionID}>
+                                        <TableCell>{adoption.petType}</TableCell>
+                                        <TableCell>{adoption.breed}</TableCell>
+                                        <TableCell>{adoption.status}</TableCell>
+                                        <TableCell>{adoption.submissionDate}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                )}
+            </Box>
+        );
+    };
+
     if (loading) {
         return <div>Loading...</div>;
     }
@@ -263,7 +373,7 @@ const Profile = () => {
     }
 
     return (
-        <Container>
+        <Container maxWidth="lg">
             <Snackbar
                 open={snackbar.open}
                 autoHideDuration={6000}
@@ -549,6 +659,7 @@ const Profile = () => {
                     )}
                 </Box>
             </Box>
+            {renderApplications()}
         </Container>
     );
 };
