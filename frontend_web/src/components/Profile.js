@@ -79,6 +79,8 @@ const Profile = () => {
     const [menuAnchorEl, setMenuAnchorEl] = useState(null);
     const [selectedApplication, setSelectedApplication] = useState(null);
     const [editApplication, setEditApplication] = useState(null);
+    const [success, setSuccess] = useState('');
+    const [error, setError] = useState('');
 
     useEffect(() => {
         if (user) {
@@ -103,7 +105,7 @@ const Profile = () => {
                         `${process.env.REACT_APP_BACKEND_URL}/api/pet/getAllPets`
                     );
                     const userRehomes = rehomeResponse.data.filter(
-                        pet => pet.userName === `${user.firstName} ${user.lastName}`
+                        pet => pet.ownerName === user.fullName
                     );
                     setRehomeApplications(userRehomes);
 
@@ -112,11 +114,12 @@ const Profile = () => {
                         `${process.env.REACT_APP_BACKEND_URL}/api/adoptions`
                     );
                     const userAdoptions = adoptionResponse.data.filter(
-                        adoption => adoption.name === `${user.firstName} ${user.lastName}`
+                        adoption => adoption.userId === user.userId
                     );
                     setAdoptionApplications(userAdoptions);
                 } catch (error) {
-                    console.error("Error fetching applications:", error);
+                    console.error('Error fetching applications:', error);
+                    setError('Failed to fetch applications');
                 }
             }
         };
@@ -360,26 +363,17 @@ const Profile = () => {
         }
     };
 
-    const handleDeleteApplication = async (id, type) => {
+    const handleDeleteApplication = async (applicationId) => {
         try {
-            const token = localStorage.getItem("token");
-            const endpoint = type === 'rehome' 
-                ? `/api/pet/deletePet/${id}`
-                : `/api/adoptions/${id}`;
-            
             await axios.delete(
-                `${process.env.REACT_APP_BACKEND_URL}${endpoint}`,
-                {
-                    headers: { Authorization: `Bearer ${token}` }
-                }
+                `${process.env.REACT_APP_BACKEND_URL}/api/adoptions/${applicationId}`
             );
-
-            if (type === 'rehome') {
-                setRehomeApplications(prev => prev.filter(app => app.pid !== id));
-            } else {
-                setAdoptionApplications(prev => prev.filter(app => app.adoptionID !== id));
-            }
-
+            
+            // Update local state
+            setAdoptionApplications(prevApplications =>
+                prevApplications.filter(app => app.id !== applicationId)
+            );
+            
             setSnackbar({
                 open: true,
                 message: "Application deleted successfully",
@@ -394,49 +388,26 @@ const Profile = () => {
         }
     };
 
-    const handleUpdateApplication = async (updatedApplication) => {
+    const handleUpdateApplication = async (applicationId, updatedData) => {
         try {
-            const token = localStorage.getItem("token");
-            const endpoint = updatedApplication.type === 'rehome' 
-                ? `/api/pet/putPetDetails`
-                : `/api/adoptions/${updatedApplication.adoptionID}`;
-            
             const response = await axios.put(
-                `${process.env.REACT_APP_BACKEND_URL}${endpoint}`,
-                updatedApplication,
+                `${process.env.REACT_APP_BACKEND_URL}/api/adoptions/${applicationId}`,
                 {
-                    headers: { 
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
+                    ...updatedData,
+                    updatedAt: new Date().toISOString()
                 }
             );
-
-            if (response.status === 200) {
-                // Update the local state
-                if (updatedApplication.type === 'rehome') {
-                    setRehomeApplications(prev => 
-                        prev.map(app => app.pid === updatedApplication.pid ? updatedApplication : app)
-                    );
-                } else {
-                    setAdoptionApplications(prev => 
-                        prev.map(app => app.adoptionID === updatedApplication.adoptionID ? updatedApplication : app)
-                    );
-                }
-
-                setSnackbar({
-                    open: true,
-                    message: "Application updated successfully",
-                    severity: "success"
-                });
-            }
+            
+            setAdoptionApplications(prevApplications =>
+                prevApplications.map(app =>
+                    app.id === applicationId ? response.data : app
+                )
+            );
+            
+            setSuccess('Application updated successfully');
         } catch (error) {
-            console.error("Error updating application:", error);
-            setSnackbar({
-                open: true,
-                message: "Error updating application. Please try again.",
-                severity: "error"
-            });
+            console.error('Error updating application:', error);
+            setError('Failed to update application');
         }
     };
 
@@ -453,9 +424,9 @@ const Profile = () => {
                 <Grid container spacing={3}>
                     <Grid item xs={12} md={4} sx={{ display: 'flex', justifyContent: 'center' }}>
                         <Box sx={{ position: 'relative' }}>
-                            <Avatar
+                        <Avatar
                                 src={profilePicture}
-                                sx={{
+                            sx={{
                                     width: 150,
                                     height: 150,
                                     border: '4px solid #675BC8',
@@ -482,11 +453,11 @@ const Profile = () => {
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <Box>
                                 {editingUserId === user?.userId ? (
-                                    <TextField
+                                <TextField
                                         fullWidth
-                                        name="firstName"
-                                        value={editFormData.firstName}
-                                        onChange={handleEditChange}
+                                    name="firstName"
+                                    value={editFormData.firstName}
+                                    onChange={handleEditChange}
                                         sx={{ mb: 1 }}
                                     />
                                 ) : (
@@ -503,33 +474,33 @@ const Profile = () => {
                             </Box>
                             <Box>
                                 {editingUserId === user?.userId ? (
-                                    <>
-                                        <Button
-                                            variant="contained"
-                                            color="primary"
+                            <>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
                                             startIcon={<SaveIcon />}
-                                            onClick={handleSaveEdit}
+                                    onClick={handleSaveEdit}
                                             sx={{ mr: 1 }}
-                                        >
+                                >
                                             Save
-                                        </Button>
-                                        <Button
-                                            variant="outlined"
+                                </Button>
+                                <Button
+                                    variant="outlined"
                                             color="error"
                                             startIcon={<CancelIcon />}
-                                            onClick={handleCancelEdit}
-                                        >
-                                            Cancel
-                                        </Button>
-                                    </>
-                                ) : (
-                                    <Button
+                                    onClick={handleCancelEdit}
+                                >
+                                    Cancel
+                                </Button>
+                            </>
+                        ) : (
+                                <Button
                                         variant="outlined"
                                         startIcon={<EditIcon />}
-                                        onClick={handleEdit}
-                                    >
-                                        Edit Profile
-                                    </Button>
+                                    onClick={handleEdit}
+                                >
+                                    Edit Profile
+                                </Button>
                                 )}
                                 <Button
                                     variant="outlined"
@@ -572,67 +543,109 @@ const Profile = () => {
         </Card>
     );
 
-    const renderApplicationCard = (application, type) => (
-        <Card sx={{ 
-            borderRadius: 2, 
-            boxShadow: 3,
-            transition: 'transform 0.2s',
-            '&:hover': {
-                transform: 'translateY(-4px)',
-            }
-        }}>
-            <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                        {type === 'rehome' ? application.name : application.petType}
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Chip 
-                            label={application.status} 
-                            color={getStatusColor(application.status)}
-                            sx={{ fontWeight: 'bold' }}
-                        />
-                        <IconButton
-                            onClick={(e) => {
-                                setMenuAnchorEl(e.currentTarget);
-                                setSelectedApplication({ ...application, type });
-                            }}
-                        >
-                            <MoreVertIcon />
-                        </IconButton>
+    const renderApplicationCard = (application, type) => {
+        if (type === 'adoption') {
+            return (
+                <Card>
+                    <CardContent>
+                        <Typography variant="h6">{application.petName}</Typography>
+                        <Typography color="textSecondary">
+                            Status: {application.status}
+                        </Typography>
+                        <Typography color="textSecondary">
+                            Submitted: {new Date(application.createdAt).toLocaleDateString()}
+                        </Typography>
+                        <Typography color="textSecondary">
+                            Household Type: {application.householdType}
+                        </Typography>
+                        <Typography color="textSecondary">
+                            Experience: {application.experienceWithPets}
+                        </Typography>
+                        <Box sx={{ mt: 2 }}>
+                            <Button
+                                size="small"
+                                    color="primary"
+                                onClick={() => handleUpdateApplication(application.id, {
+                                    ...application,
+                                    status: 'pending'
+                                })}
+                            >
+                                Update
+                            </Button>
+                            <Button
+                                size="small"
+                                color="error"
+                                onClick={() => handleDeleteApplication(application.id)}
+                            >
+                                Delete
+                                </Button>
                     </Box>
-                </Box>
-                <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                        <Box
-                            component="img"
-                            src={`${process.env.REACT_APP_BACKEND_URL}${application.photo}`}
-                            alt={type === 'rehome' ? application.name : application.petType}
-                            sx={{
-                                width: '100%',
-                                height: 200,
-                                objectFit: 'cover',
-                                borderRadius: 1,
-                                mb: 2
-                            }}
-                        />
+                    </CardContent>
+                </Card>
+            );
+        }
+        return (
+            <Card sx={{ 
+                borderRadius: 2, 
+                boxShadow: 3,
+                transition: 'transform 0.2s',
+                '&:hover': {
+                    transform: 'translateY(-4px)',
+                }
+            }}>
+                <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                            {type === 'rehome' ? application.name : application.petType}
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Chip 
+                                label={application.status} 
+                                color={getStatusColor(application.status)}
+                                sx={{ fontWeight: 'bold' }}
+                            />
+                                            <IconButton
+                                onClick={(e) => {
+                                    setMenuAnchorEl(e.currentTarget);
+                                    setSelectedApplication({ ...application, type });
+                                }}
+                                            >
+                                <MoreVertIcon />
+                                            </IconButton>
+                        </Box>
+                    </Box>
+                    <Grid container spacing={2}>
+                        <Grid item xs={12}>
+                            <Box
+                                component="img"
+                                src={`${process.env.REACT_APP_BACKEND_URL}${application.photo}`}
+                                alt={type === 'rehome' ? application.name : application.petType}
+                                sx={{
+                                    width: '100%',
+                                    height: 200,
+                                    objectFit: 'cover',
+                                    borderRadius: 1,
+                                    mb: 2
+                                }}
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <Typography variant="body2" color="text.secondary">Type</Typography>
+                            <Typography variant="body1">{type === 'rehome' ? application.type : application.petType}</Typography>
+                        </Grid>
+                        <Grid item xs={6}>
+                            <Typography variant="body2" color="text.secondary">Breed</Typography>
+                            <Typography variant="body1">{application.breed}</Typography>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <Typography variant="body2" color="text.secondary">Submission Date</Typography>
+                            <Typography variant="body1">{application.submissionDate}</Typography>
+                        </Grid>
                     </Grid>
-                    <Grid item xs={6}>
-                        <Typography variant="body2" color="text.secondary">Type</Typography>
-                        <Typography variant="body1">{type === 'rehome' ? application.type : application.petType}</Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                        <Typography variant="body2" color="text.secondary">Breed</Typography>
-                        <Typography variant="body1">{application.breed}</Typography>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <Typography variant="body2" color="text.secondary">Submission Date</Typography>
-                        <Typography variant="body1">{application.submissionDate}</Typography>
-                    </Grid>
-                </Grid>
-            </CardContent>
-        </Card>
-    );
+                </CardContent>
+            </Card>
+        );
+    };
 
     const renderApplications = () => (
         <Box sx={{ mt: 4 }}>
@@ -669,7 +682,7 @@ const Profile = () => {
             {tabValue === 1 && (
                 <Grid container spacing={3} sx={{ mt: 2 }}>
                     {adoptionApplications.map((adoption) => (
-                        <Grid item xs={12} md={6} key={adoption.adoptionID}>
+                        <Grid item xs={12} md={6} key={adoption.id}>
                             {renderApplicationCard(adoption, 'adoption')}
                         </Grid>
                     ))}
@@ -723,10 +736,7 @@ const Profile = () => {
                     <EditIcon sx={{ mr: 1 }} /> Edit
                 </MenuItem>
                 <MenuItem onClick={() => {
-                    handleDeleteApplication(
-                        selectedApplication?.pid || selectedApplication?.adoptionID,
-                        selectedApplication?.type
-                    );
+                    handleDeleteApplication(selectedApplication?.id);
                     setMenuAnchorEl(null);
                 }}>
                     <DeleteIcon sx={{ mr: 1 }} /> Delete
@@ -738,7 +748,7 @@ const Profile = () => {
                 open={Boolean(editApplication)}
                 onClose={() => setEditApplication(null)}
                 maxWidth="sm"
-                fullWidth
+                                fullWidth
             >
                 <DialogTitle>Edit Application</DialogTitle>
                 <DialogContent>
@@ -763,9 +773,9 @@ const Profile = () => {
                             value={editApplication?.breed || ''}
                             onChange={(e) => handleEditApplicationChange('breed', e.target.value)}
                             sx={{ mb: 2 }}
-                        />
-                        <TextField
-                            fullWidth
+                            />
+                            <TextField
+                                fullWidth
                             label="Description"
                             multiline
                             rows={4}
@@ -776,15 +786,15 @@ const Profile = () => {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setEditApplication(null)}>Cancel</Button>
-                    <Button 
+                                <Button
                         onClick={() => {
-                            handleUpdateApplication(editApplication);
+                            handleUpdateApplication(selectedApplication?.id, editApplication);
                             setEditApplication(null);
                         }} 
-                        color="primary"
-                    >
+                                    color="primary"
+                                >
                         Save Changes
-                    </Button>
+                                </Button>
                 </DialogActions>
             </Dialog>
 

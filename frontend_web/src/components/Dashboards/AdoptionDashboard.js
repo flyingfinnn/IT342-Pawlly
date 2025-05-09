@@ -25,15 +25,16 @@ const AdoptionDashboard = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
+  const fetchAdoptions = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions`);
+      setAdoptions(response.data);
+    } catch (error) {
+      setError('Failed to load adoption records.');
+    }
+  };
+
   useEffect(() => {
-    const fetchAdoptions = async () => {
-      try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions`);
-        setAdoptions(response.data);
-      } catch (error) {
-        setError('Failed to load adoption records.');
-      }
-    };
     fetchAdoptions();
   }, []);
 
@@ -56,7 +57,7 @@ const AdoptionDashboard = () => {
   const handleDeleteConfirm = async () => {
     try {
       await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions/${deleteId}`);
-      setAdoptions(adoptions.filter((a) => a.adoptionID !== deleteId));
+      setAdoptions(adoptions.filter((a) => a.id !== deleteId));
       setSuccessMessage('Adoption record deleted successfully!');
     } catch {
       setError('Failed to delete adoption record.');
@@ -72,14 +73,22 @@ const AdoptionDashboard = () => {
 
   const handleSaveAdoption = async () => {
     try {
-      const updatedAdoption = { ...editAdoption, status: newStatus };
-      await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions/${editAdoption.adoptionID}`, updatedAdoption);
-      setAdoptions((prev) => prev.map((a) => a.adoptionID === editAdoption.adoptionID ? updatedAdoption : a));
+      const updatedAdoption = { 
+        ...editAdoption, 
+        status: newStatus,
+        updatedAt: new Date().toISOString()
+      };
+      await axios.put(
+        `${process.env.REACT_APP_BACKEND_URL}/api/adoptions/${editAdoption.id}`, 
+        updatedAdoption
+      );
+      setAdoptions((prev) => 
+        prev.map((a) => a.id === editAdoption.id ? updatedAdoption : a)
+      );
       setSuccessMessage('Adoption record updated successfully!');
-    } catch {
+      setEditAdoption(null);
+    } catch (error) {
       setError('Failed to update adoption record.');
-    } finally {
-      handleDialogClose();
     }
   };
 
@@ -130,8 +139,8 @@ const AdoptionDashboard = () => {
           </TableHead>
           <TableBody>
             {paginatedAdoptions.map((a) => (
-              <TableRow key={a.adoptionID}>
-                <TableCell>{a.adoptionID}</TableCell>
+              <TableRow key={a.id}>
+                <TableCell>{a.id}</TableCell>
                 <TableCell>{a.name}</TableCell>
                 <TableCell>{a.address}</TableCell>
                 <TableCell>{a.contactNumber}</TableCell>
@@ -159,7 +168,7 @@ const AdoptionDashboard = () => {
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Delete">
-                    <IconButton color="error" onClick={() => handleDeleteClick(a.adoptionID)}>
+                    <IconButton color="error" onClick={() => handleDeleteClick(a.id)}>
                       <DeleteIcon />
                     </IconButton>
                   </Tooltip>
