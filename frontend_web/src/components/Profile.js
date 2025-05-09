@@ -428,9 +428,19 @@ const Profile = () => {
                     <Grid item xs={12} md={8}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <Box>
-                                <Typography variant="h4" gutterBottom sx={{ color: 'primary.main', fontWeight: 'bold' }}>
-                                    {user?.firstName} {user?.lastName}
-                                </Typography>
+                                {editingUserId === user?.userId ? (
+                                    <TextField
+                                        fullWidth
+                                        name="firstName"
+                                        value={editFormData.firstName}
+                                        onChange={handleEditChange}
+                                        sx={{ mb: 1 }}
+                                    />
+                                ) : (
+                                    <Typography variant="h4" gutterBottom sx={{ color: 'primary.main', fontWeight: 'bold' }}>
+                                        {user?.firstName} {user?.lastName}
+                                    </Typography>
+                                )}
                                 <Typography variant="subtitle1" color="text.secondary" gutterBottom>
                                     @{user?.username}
                                 </Typography>
@@ -439,6 +449,35 @@ const Profile = () => {
                                 </Typography>
                             </Box>
                             <Box>
+                                {editingUserId === user?.userId ? (
+                                    <>
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            startIcon={<SaveIcon />}
+                                            onClick={handleSaveEdit}
+                                            sx={{ mr: 1 }}
+                                        >
+                                            Save
+                                        </Button>
+                                        <Button
+                                            variant="outlined"
+                                            color="error"
+                                            startIcon={<CancelIcon />}
+                                            onClick={handleCancelEdit}
+                                        >
+                                            Cancel
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <Button
+                                        variant="outlined"
+                                        startIcon={<EditIcon />}
+                                        onClick={handleEdit}
+                                    >
+                                        Edit Profile
+                                    </Button>
+                                )}
                                 <Button
                                     variant="outlined"
                                     color="error"
@@ -464,7 +503,7 @@ const Profile = () => {
                                 <Typography variant="body1">{user?.address}</Typography>
                             </Grid>
                         </Grid>
-                        {user?.roles?.includes('ROLE_ADMIN') && (
+                        {user?.role === 'ROLE_ADMIN' && (
                             <Button
                                 variant="contained"
                                 startIcon={<AdminIcon />}
@@ -474,6 +513,68 @@ const Profile = () => {
                                 Admin Dashboard
                             </Button>
                         )}
+                    </Grid>
+                </Grid>
+            </CardContent>
+        </Card>
+    );
+
+    const renderApplicationCard = (application, type) => (
+        <Card sx={{ 
+            borderRadius: 2, 
+            boxShadow: 3,
+            transition: 'transform 0.2s',
+            '&:hover': {
+                transform: 'translateY(-4px)',
+            }
+        }}>
+            <CardContent>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                        {type === 'rehome' ? application.name : application.petType}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Chip 
+                            label={application.status} 
+                            color={getStatusColor(application.status)}
+                            sx={{ fontWeight: 'bold' }}
+                        />
+                        <IconButton
+                            onClick={(e) => {
+                                setMenuAnchorEl(e.currentTarget);
+                                setSelectedApplication({ ...application, type });
+                            }}
+                        >
+                            <MoreVertIcon />
+                        </IconButton>
+                    </Box>
+                </Box>
+                <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                        <Box
+                            component="img"
+                            src={`${process.env.REACT_APP_BACKEND_URL}${application.photo}`}
+                            alt={type === 'rehome' ? application.name : application.petType}
+                            sx={{
+                                width: '100%',
+                                height: 200,
+                                objectFit: 'cover',
+                                borderRadius: 1,
+                                mb: 2
+                            }}
+                        />
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Typography variant="body2" color="text.secondary">Type</Typography>
+                        <Typography variant="body1">{type === 'rehome' ? application.type : application.petType}</Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Typography variant="body2" color="text.secondary">Breed</Typography>
+                        <Typography variant="body1">{application.breed}</Typography>
+                    </Grid>
+                    <Grid item xs={12}>
+                        <Typography variant="body2" color="text.secondary">Submission Date</Typography>
+                        <Typography variant="body1">{application.submissionDate}</Typography>
                     </Grid>
                 </Grid>
             </CardContent>
@@ -506,41 +607,7 @@ const Profile = () => {
                 <Grid container spacing={3} sx={{ mt: 2 }}>
                     {rehomeApplications.map((rehome) => (
                         <Grid item xs={12} md={6} key={rehome.pid}>
-                            <Card sx={{ 
-                                borderRadius: 2, 
-                                boxShadow: 3,
-                                transition: 'transform 0.2s',
-                                '&:hover': {
-                                    transform: 'translateY(-4px)',
-                                }
-                            }}>
-                                <CardContent>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                                            {rehome.name}
-                                        </Typography>
-                                        <Chip 
-                                            label={rehome.status} 
-                                            color={getStatusColor(rehome.status)}
-                                            sx={{ fontWeight: 'bold' }}
-                                        />
-                                    </Box>
-                                    <Grid container spacing={2}>
-                                        <Grid item xs={6}>
-                                            <Typography variant="body2" color="text.secondary">Type</Typography>
-                                            <Typography variant="body1">{rehome.type}</Typography>
-                                        </Grid>
-                                        <Grid item xs={6}>
-                                            <Typography variant="body2" color="text.secondary">Breed</Typography>
-                                            <Typography variant="body1">{rehome.breed}</Typography>
-                                        </Grid>
-                                        <Grid item xs={12}>
-                                            <Typography variant="body2" color="text.secondary">Submission Date</Typography>
-                                            <Typography variant="body1">{rehome.submissionDate}</Typography>
-                                        </Grid>
-                                    </Grid>
-                                </CardContent>
-                            </Card>
+                            {renderApplicationCard(rehome, 'rehome')}
                         </Grid>
                     ))}
                 </Grid>
@@ -550,41 +617,7 @@ const Profile = () => {
                 <Grid container spacing={3} sx={{ mt: 2 }}>
                     {adoptionApplications.map((adoption) => (
                         <Grid item xs={12} md={6} key={adoption.adoptionID}>
-                            <Card sx={{ 
-                                borderRadius: 2, 
-                                boxShadow: 3,
-                                transition: 'transform 0.2s',
-                                '&:hover': {
-                                    transform: 'translateY(-4px)',
-                                }
-                            }}>
-                                <CardContent>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                                            {adoption.petType}
-                                        </Typography>
-                                        <Chip 
-                                            label={adoption.status} 
-                                            color={getStatusColor(adoption.status)}
-                                            sx={{ fontWeight: 'bold' }}
-                                        />
-                                    </Box>
-                                    <Grid container spacing={2}>
-                                        <Grid item xs={6}>
-                                            <Typography variant="body2" color="text.secondary">Breed</Typography>
-                                            <Typography variant="body1">{adoption.breed}</Typography>
-                                        </Grid>
-                                        <Grid item xs={6}>
-                                            <Typography variant="body2" color="text.secondary">Pet Name</Typography>
-                                            <Typography variant="body1">{adoption.name}</Typography>
-                                        </Grid>
-                                        <Grid item xs={12}>
-                                            <Typography variant="body2" color="text.secondary">Submission Date</Typography>
-                                            <Typography variant="body1">{adoption.submissionDate}</Typography>
-                                        </Grid>
-                                    </Grid>
-                                </CardContent>
-                            </Card>
+                            {renderApplicationCard(adoption, 'adoption')}
                         </Grid>
                     ))}
                 </Grid>
@@ -656,14 +689,48 @@ const Profile = () => {
             >
                 <DialogTitle>Edit Application</DialogTitle>
                 <DialogContent>
-                    {/* Add your edit form fields here */}
+                    <Box sx={{ mt: 2 }}>
+                        <TextField
+                            fullWidth
+                            label="Name"
+                            value={editApplication?.name || ''}
+                            onChange={(e) => setEditApplication(prev => ({ ...prev, name: e.target.value }))}
+                            sx={{ mb: 2 }}
+                        />
+                        <TextField
+                            fullWidth
+                            label="Type"
+                            value={editApplication?.type || editApplication?.petType || ''}
+                            onChange={(e) => setEditApplication(prev => ({ ...prev, type: e.target.value }))}
+                            sx={{ mb: 2 }}
+                        />
+                        <TextField
+                            fullWidth
+                            label="Breed"
+                            value={editApplication?.breed || ''}
+                            onChange={(e) => setEditApplication(prev => ({ ...prev, breed: e.target.value }))}
+                            sx={{ mb: 2 }}
+                        />
+                        <TextField
+                            fullWidth
+                            label="Description"
+                            multiline
+                            rows={4}
+                            value={editApplication?.description || ''}
+                            onChange={(e) => setEditApplication(prev => ({ ...prev, description: e.target.value }))}
+                        />
+                    </Box>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setEditApplication(null)}>Cancel</Button>
-                    <Button onClick={() => {
-                        // Handle save
-                        setEditApplication(null);
-                    }} color="primary">
+                    <Button 
+                        onClick={() => {
+                            // Handle save
+                            handleUpdateApplication(editApplication);
+                            setEditApplication(null);
+                        }} 
+                        color="primary"
+                    >
                         Save Changes
                     </Button>
                 </DialogActions>
