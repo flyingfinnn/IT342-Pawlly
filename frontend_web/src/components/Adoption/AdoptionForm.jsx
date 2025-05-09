@@ -8,6 +8,10 @@ import {
   TextField,
   Button,
   Snackbar,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import axios from 'axios';
 import { useUser } from '../UserContext';
@@ -131,14 +135,19 @@ const ModernAdoptionForm = ({ pet }) => {
               fullWidth
               margin="normal"
             />
-            <TextField
-              label="Household Ownership"
-              name="household_ownership"
-              value={formData.household_ownership}
-              onChange={handleChange}
-              fullWidth
-              margin="normal"
-            />
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Household Ownership</InputLabel>
+              <Select
+                name="household_ownership"
+                value={formData.household_ownership}
+                onChange={handleChange}
+                required
+                label="Household Ownership"
+              >
+                <MenuItem value="Own">Own</MenuItem>
+                <MenuItem value="Rent">Rent</MenuItem>
+              </Select>
+            </FormControl>
             <TextField
               label="Number of Adults"
               name="num_adults"
