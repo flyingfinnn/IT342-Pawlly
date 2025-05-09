@@ -15,13 +15,22 @@ import { useUser } from '../UserContext';
 const ModernAdoptionForm = ({ pet }) => {
   const { user } = useUser();
   const [formData, setFormData] = useState({
-    name: '',
-    address: '',
-    contactNumber: '',
-    adoptionDate: '',
-    breed: pet?.breed || '',
-    description: pet?.description || '',
-    petType: pet?.type || '',
+    user_id: user ? user.userId : '',
+    pet_id: pet?.pid || '',
+    pet_name: pet?.name || '',
+    household_type: '',
+    household_ownership: '',
+    num_adults: '',
+    num_children: '',
+    other_pets: false,
+    experience_with_pets: '',
+    daily_routine: '',
+    hours_alone_per_day: '',
+    reason_for_adoption: '',
+    status: 'PENDING',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    accept_or_reject: '',
   });
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -30,74 +39,56 @@ const ModernAdoptionForm = ({ pet }) => {
     if (pet) {
       setFormData((prev) => ({
         ...prev,
-        breed: pet.breed,
-        description: pet.description,
-        petType: pet.type,
+        pet_id: pet.pid,
+        pet_name: pet.name,
       }));
     }
     if (user) {
       setFormData((prev) => ({
         ...prev,
-        name: `${user.firstName} ${user.lastName}`,
-        address: user.address,
-        contactNumber: user.phoneNumber,
+        user_id: user.userId,
       }));
     }
   }, [pet, user]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    if (name === 'contactNumber' && !/^\d*$/.test(value)) {
-      setErrorMessage('Contact number must be numeric');
-      return;
-    }
-    if (name === 'name' && !/^[a-zA-Z\s.]*$/.test(value)) {
-      setErrorMessage('Name must only contain letters, spaces, and periods');
-      return;
-    }
-    setErrorMessage('');
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.contactNumber.match(/^\d+$/)) {
-      setErrorMessage('Contact number must be numeric');
-      return;
-    }
-    if (!formData.name.match(/^[a-zA-Z\s.]+$/)) {
-      setErrorMessage('Name must only contain letters, spaces, and periods');
-      return;
-    }
-
-    const newAdoption = {
-      ...formData,
-      adoptionDate: formData.adoptionDate || new Date().toISOString().split('T')[0],
-      description: pet?.description || formData.description,
-      status: 'PENDING',
-      adoptionID: Date.now(),
-      photo: pet?.photo || '',
-    };
-
-    resetForm();
-
+    // Add any validation as needed
     try {
-      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions`, newAdoption);
-      setSuccessMessage('Adoption form submitted successfully!');
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions`, formData);
+      setSuccessMessage('Adoption application submitted successfully!');
+      resetForm();
     } catch (error) {
-      console.error('Failed to submit the adoption form:', error);
+      setErrorMessage('Failed to submit the adoption application.');
     }
   };
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      address: '',
-      contactNumber: '',
-      adoptionDate: '',
-      breed: pet?.breed || '',
-      description: pet?.description || '',
-      petType: pet?.type || '',
+      user_id: user ? user.userId : '',
+      pet_id: pet?.pid || '',
+      pet_name: pet?.name || '',
+      household_type: '',
+      household_ownership: '',
+      num_adults: '',
+      num_children: '',
+      other_pets: false,
+      experience_with_pets: '',
+      daily_routine: '',
+      hours_alone_per_day: '',
+      reason_for_adoption: '',
+      status: 'PENDING',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      accept_or_reject: '',
     });
   };
 
@@ -130,45 +121,89 @@ const ModernAdoptionForm = ({ pet }) => {
           </Grid>
           <Grid item xs={12} md={6}>
             <Typography variant="h4" color="primary" fontWeight="bold" gutterBottom>
-              Adoption Form
+              Adoption Application
             </Typography>
             <TextField
-              label="Your Name"
-              name="name"
-              value={formData.name}
+              label="Household Type"
+              name="household_type"
+              value={formData.household_type}
               onChange={handleChange}
               fullWidth
               margin="normal"
             />
             <TextField
-              label="Address"
-              name="address"
-              value={formData.address}
+              label="Household Ownership"
+              name="household_ownership"
+              value={formData.household_ownership}
               onChange={handleChange}
               fullWidth
               margin="normal"
             />
             <TextField
-              label="Contact Number"
-              name="contactNumber"
-              value={formData.contactNumber}
+              label="Number of Adults"
+              name="num_adults"
+              value={formData.num_adults}
               onChange={handleChange}
+              type="number"
               fullWidth
               margin="normal"
             />
             <TextField
-              label="Submission Date"
-              type="date"
-              name="adoptionDate"
-              value={formData.adoptionDate || new Date().toISOString().split('T')[0]}
+              label="Number of Children"
+              name="num_children"
+              value={formData.num_children}
+              onChange={handleChange}
+              type="number"
+              fullWidth
+              margin="normal"
+            />
+            <Box display="flex" alignItems="center" mt={2} mb={2}>
+              <label style={{ marginRight: 8 }}>Other Pets:</label>
+              <input
+                type="checkbox"
+                name="other_pets"
+                checked={formData.other_pets}
+                onChange={handleChange}
+              />
+            </Box>
+            <TextField
+              label="Experience with Pets"
+              name="experience_with_pets"
+              value={formData.experience_with_pets}
               onChange={handleChange}
               fullWidth
               margin="normal"
-              InputLabelProps={{ shrink: true }}
-              inputProps={{
-                min: new Date().toISOString().split('T')[0],
-                max: new Date().toISOString().split('T')[0],
-              }}
+              multiline
+              rows={2}
+            />
+            <TextField
+              label="Daily Routine"
+              name="daily_routine"
+              value={formData.daily_routine}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              multiline
+              rows={2}
+            />
+            <TextField
+              label="Hours Alone Per Day"
+              name="hours_alone_per_day"
+              value={formData.hours_alone_per_day}
+              onChange={handleChange}
+              type="number"
+              fullWidth
+              margin="normal"
+            />
+            <TextField
+              label="Reason for Adoption"
+              name="reason_for_adoption"
+              value={formData.reason_for_adoption}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              multiline
+              rows={2}
             />
             {errorMessage && (
               <Typography color="error" mt={1}>
@@ -181,7 +216,7 @@ const ModernAdoptionForm = ({ pet }) => {
               sx={{ mt: 3, backgroundColor: '#5A20A8' }}
               fullWidth
             >
-              Submit Adoption
+              Submit Application
             </Button>
           </Grid>
         </Grid>

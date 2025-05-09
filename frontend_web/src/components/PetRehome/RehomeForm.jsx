@@ -7,16 +7,23 @@ const RehomeForm = () => {
   const { user } = useUser();
   const [formData, setFormData] = useState({
     name: "",
-    petType: "",
+    type: "",
     breed: "",
     description: "",
-    image: null,  
+    photo: null,
+    photo1: null,
+    photo2: null,
+    photo3: null,
+    photo4: null,
+    photo1_thumb: null,
     userName: user ? user.firstName + ' ' + user.lastName : '',
     address: user ? user.address : '',
     contactNumber: user ? user.phoneNumber : '',
     submissionDate: "",
     age: "",
-    gender: "",  
+    gender: "",
+    weight: "",
+    color: ""
   });
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -47,7 +54,10 @@ const RehomeForm = () => {
   
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-
+    if (name.startsWith("photo") && files) {
+      setFormData((prev) => ({ ...prev, [name]: files[0] }));
+      return;
+    }
     
     if (name === "contactNumber") {
         if (!/^\d*$/.test(value)) {
@@ -70,7 +80,7 @@ const RehomeForm = () => {
     
     setFormData((prev) => ({
         ...prev,
-        [name]: name === "image" ? files[0] : value,
+        [name]: value,
     }));
   };
 
@@ -80,17 +90,24 @@ const RehomeForm = () => {
   
     const form = new FormData();
     form.append("name", formData.name);
-    form.append("type", formData.petType);
+    form.append("type", formData.type);
     form.append("breed", formData.breed);
     form.append("age", formData.age);
     form.append("gender", formData.gender);
     form.append("description", formData.description);
-    form.append("photo", formData.image);
+    form.append("photo", formData.photo);
+    form.append("photo1", formData.photo1);
+    form.append("photo2", formData.photo2);
+    form.append("photo3", formData.photo3);
+    form.append("photo4", formData.photo4);
+    form.append("photo1_thumb", formData.photo1_thumb);
     form.append("userName", formData.userName);
     form.append("address", formData.address);
     form.append("contactNumber", formData.contactNumber);
     form.append("submissionDate", new Date().toISOString().split('T')[0]);
     form.append("status", "PENDING_REHOME");
+    form.append("weight", formData.weight);
+    form.append("color", formData.color);
   
     try {
       await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/pet/postpetrecord`, form, {
@@ -117,7 +134,7 @@ const RehomeForm = () => {
   const resetForm = () => {
     setFormData({
       name: '',
-      petType: '',
+      type: '',
       breed: '',
       age: '',
       gender: '', 
@@ -126,7 +143,9 @@ const RehomeForm = () => {
       userName: '',
       address: '',
       contactNumber: '',
-      submissionDate: ''
+      submissionDate: '',
+      weight: '',
+      color: ''
     });
     if (fileInputRef.current) {
       fileInputRef.current.value = ""; 
@@ -182,9 +201,9 @@ const RehomeForm = () => {
           />
           <TextField
             label="Pet Type"
-            name="petType"
+            name="type"
             fullWidth
-            value={formData.petType}
+            value={formData.type}
             onChange={handleChange}
             required
             sx={{ marginBottom: 2 }}
@@ -236,14 +255,49 @@ const RehomeForm = () => {
             rows={4}
             sx={{ marginBottom: 2 }}
           />
-          {/* Image upload field */}
+          {/* Multiple photo upload fields */}
           <input
             type="file"
-            name="image"
+            name="photo"
             onChange={handleChange}
             accept="image/*"
             required
             ref={fileInputRef}
+            style={{ marginBottom: "8px", display: "block" }}
+          />
+          <input
+            type="file"
+            name="photo1"
+            onChange={handleChange}
+            accept="image/*"
+            style={{ marginBottom: "8px", display: "block" }}
+          />
+          <input
+            type="file"
+            name="photo2"
+            onChange={handleChange}
+            accept="image/*"
+            style={{ marginBottom: "8px", display: "block" }}
+          />
+          <input
+            type="file"
+            name="photo3"
+            onChange={handleChange}
+            accept="image/*"
+            style={{ marginBottom: "8px", display: "block" }}
+          />
+          <input
+            type="file"
+            name="photo4"
+            onChange={handleChange}
+            accept="image/*"
+            style={{ marginBottom: "8px", display: "block" }}
+          />
+          <input
+            type="file"
+            name="photo1_thumb"
+            onChange={handleChange}
+            accept="image/*"
             style={{ marginBottom: "16px", display: "block" }}
           />
         </div>
@@ -288,7 +342,22 @@ const RehomeForm = () => {
             fullWidth
             sx={{ marginBottom: 2 }}
           />
-
+          <TextField
+            label="Weight"
+            name="weight"
+            fullWidth
+            value={formData.weight}
+            onChange={handleChange}
+            sx={{ marginBottom: 2 }}
+          />
+          <TextField
+            label="Color"
+            name="color"
+            fullWidth
+            value={formData.color}
+            onChange={handleChange}
+            sx={{ marginBottom: 2 }}
+          />
         </div>
       </div>
       <div style={styles.buttonContainer}>
