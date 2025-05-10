@@ -67,7 +67,7 @@ const ModernAdoptionForm = ({ pet }) => {
     e.preventDefault();
     // Add any validation as needed
     try {
-      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/adoptapplication`, formData);
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions`, formData);
       setSuccessMessage('Adoption application submitted successfully!');
       resetForm();
     } catch (error) {
