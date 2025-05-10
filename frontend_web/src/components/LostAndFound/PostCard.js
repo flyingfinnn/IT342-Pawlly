@@ -86,6 +86,9 @@ const PostCard = ({ item, fetchLostItems, onEdit }) => {
     onEdit(item);
   };
 
+  const date = new Date();
+  const formatted = date.toISOString().split('T')[0]; // "yyyy-MM-dd"
+
   return (
     <Card
       sx={{
