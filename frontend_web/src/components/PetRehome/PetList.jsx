@@ -21,23 +21,23 @@ import { useUser } from '../UserContext';
 import AuthModal from '../AuthModal';
 
 const SUPABASE_BUCKET_URL = "https://qceuawxsrnqadkfscraj.supabase.co/storage/v1/object/public/petimage/";
-// Define the name of your default placeholder image in the Supabase bucket
-// Make sure an image with this name (e.g., "default-pet-placeholder.png") exists in your Supabase storage at the above path.
-const DEFAULT_PET_PLACEHOLDER_IMAGE_NAME = "default-pet-placeholder.png"; 
-const DEFAULT_PET_IMAGE_URL = SUPABASE_BUCKET_URL + DEFAULT_PET_PLACEHOLDER_IMAGE_NAME;
+// The specific default image URL you want to use
+const DEFAULT_PET_IMAGE_URL = "https://qceuawxsrnqadkfscraj.supabase.co/storage/v1/object/public/petimage/photo1-1746883203316-pet_photo5265892846734146092.tmp";
 
 function getPetPhotos(pet) {
-  let imageUrl = null;
-  const photo1Source = pet.photo1;
+  const potentialPhotoSources = [
+    pet.photo, // Prioritize the main 'photo' field
+    pet.photo1,
+    pet.photo2,
+    pet.photo3,
+    pet.photo4,
+  ];
 
-  if (photo1Source && String(photo1Source).trim() !== "") {
-    const path = String(photo1Source);
-    // Prepend Supabase bucket URL if it's not already a full HTTP/HTTPS URL
-    imageUrl = path.startsWith("http") ? path : SUPABASE_BUCKET_URL + path;
-  }
+  const validImageUrls = potentialPhotoSources
+    .filter(source => source && String(source).trim() !== "") // Filter out empty or invalid sources
+    .map(source => String(source).startsWith("http") ? String(source) : SUPABASE_BUCKET_URL + String(source)); // Prepend bucket URL if not a full URL
 
-  // If photo1 provided an image, use it; otherwise, use the default.
-  return imageUrl ? [imageUrl] : [DEFAULT_PET_IMAGE_URL];
+  return validImageUrls.length > 0 ? validImageUrls : [DEFAULT_PET_IMAGE_URL];
 }
 
 const PetList = ({ onPetAdded }) => {
@@ -146,10 +146,8 @@ const PetList = ({ onPetAdded }) => {
         <div style={styles.listContainer}>
           {pets.length > 0 ? (
             pets.map((pet) => {
-              // Add this line (or uncomment it if it's already there)
-              console.log(`Processing pet: ${pet.name} (ID: ${pet.petId}), photo1 value: '${pet.photo1}', type: ${typeof pet.photo1}`);
               const petImageUrls = getPetPhotos(pet);
-              const displayImageUrl = petImageUrls[0];
+              const displayImageUrl = petImageUrls[0]; // Always take the first image
               const altText = displayImageUrl === DEFAULT_PET_IMAGE_URL
                               ? "Default placeholder for pet image"
                               : (pet.name || pet.breed || "Image of pet");
