@@ -146,7 +146,8 @@ const PetList = ({ onPetAdded }) => {
         <div style={styles.listContainer}>
           {pets.length > 0 ? (
             pets.map((pet) => {
-              // console.log(`Processing pet: ${pet.name}, photo1 value: '${pet.photo1}'`); // Add this line for debugging
+              // Add this line (or uncomment it if it's already there)
+              console.log(`Processing pet: ${pet.name} (ID: ${pet.petId}), photo1 value: '${pet.photo1}', type: ${typeof pet.photo1}`);
               const petImageUrls = getPetPhotos(pet);
               const displayImageUrl = petImageUrls[0];
               const altText = displayImageUrl === DEFAULT_PET_IMAGE_URL
