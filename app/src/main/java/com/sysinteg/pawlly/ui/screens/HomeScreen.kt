@@ -46,6 +46,7 @@ import com.sysinteg.pawlly.UserResponse
 import com.sysinteg.pawlly.utils.Constants.PAWLLY_PREFS
 import com.sysinteg.pawlly.utils.Constants.KEY_JWT_TOKEN
 import kotlinx.coroutines.launch
+import androidx.compose.ui.graphics.painter.Painter
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -263,6 +264,8 @@ fun AdoptScreen(
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(8.dp))
+            // Action Buttons
             Button(
                 onClick = onBrowseAll,
                 modifier = Modifier
@@ -282,11 +285,49 @@ fun AdoptScreen(
                     .height(56.dp)
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(cardCorner),
-                colors = ButtonDefaults.buttonColors(containerColor = Purple)
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                contentPadding = PaddingValues(0.dp)
             ) {
-                Text("Go to Lost and Found", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(cardCorner))
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.map),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.matchParentSize()
+                    )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Black.copy(alpha = 0.35f),
+                                        Color.Transparent
+                                    ),
+                                    startY = Float.POSITIVE_INFINITY,
+                                    endY = 0f
+                                )
+                            )
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "Go to Lost and Found",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        )
+                    }
+                }
             }
-            Spacer(modifier = Modifier.height(16.dp)) // slightly less space here
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 

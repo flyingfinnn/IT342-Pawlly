@@ -26,6 +26,9 @@ import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.http.Query
+import retrofit2.http.DELETE
+import retrofit2.Response
+import com.sysinteg.pawlly.model.LostAndFound
 
 // Data class for signup request
 data class UserSignupRequest(
@@ -80,6 +83,7 @@ data class PetResponse(
     val address: String?,
     val contactNumber: String?,
     val submissionDate: String?,
+    val photo: String?,
     val photo1: String?,
     val photo1Thumb: String?,
     val photo2: String?,
@@ -196,6 +200,10 @@ data class NotificationResponse(
     val pet_name: String?
 )
 
+data class ImageUploadResponse(
+    val url: String
+)
+
 // --- Logging interceptor must be top-level ---
 val logging = HttpLoggingInterceptor().apply {
     level = HttpLoggingInterceptor.Level.BODY
@@ -266,6 +274,9 @@ interface UserApi {
         @Body update: UpdatePetRequest
     ): PetResponse
 
+    @DELETE("pet/deletePetDetails/{id}")
+    suspend fun deletePet(@Path("id") id: Int): Response<Unit>
+
     @GET("users/byUsername/{username}")
     suspend fun getUserByUsername(@Path("username") username: String): UserResponse
 
@@ -290,11 +301,49 @@ interface UserApi {
         @Body statusUpdate: Map<String, String>
     ): retrofit2.Response<Unit>
 
+    @DELETE("adoptions/{id}")
+    suspend fun deleteAdoptionApplication(@Path("id") id: Int): Response<Unit>
+
     @GET("users/{id}")
     suspend fun getUserById(@Path("id") userId: Long): UserResponse
 
     @GET("api/notifications/{id}")
     suspend fun getNotificationById(@Path("id") id: Long): NotificationResponse
+
+    @GET("lostandfound")
+    suspend fun getAllLostAndFoundReports(): Response<List<LostAndFound>>
+
+    @GET("lostandfound/{creatorid}")
+    suspend fun getLostAndFoundReportsByCreator(@Path("creatorid") creatorId: Int): Response<List<LostAndFound>>
+
+    @POST("lostandfound")
+    suspend fun createLostAndFoundReport(
+        @Query("reporttype") reportType: String,
+        @Query("petname") petName: String,
+        @Query("datereported") dateReported: String,
+        @Query("lastseen") lastSeen: String,
+        @Query("description") description: String,
+        @Query("creatorid") creatorId: Int,
+        @Query("imagefile") imageFile: MultipartBody.Part?
+    ): Response<LostAndFound>
+
+    @PUT("lostandfound/{id}")
+    suspend fun updateLostAndFoundReport(
+        @Path("id") id: Int,
+        @Query("reporttype") reportType: String,
+        @Query("petname") petName: String,
+        @Query("datereported") dateReported: String,
+        @Query("lastseen") lastSeen: String,
+        @Query("description") description: String,
+        @Query("imagefile") imageFile: MultipartBody.Part? = null
+    ): Response<Unit>
+
+    @DELETE("lostandfound/{id}")
+    suspend fun deleteLostAndFoundReport(@Path("id") id: Int): Response<Unit>
+
+    @Multipart
+    @POST("storage/upload")
+    suspend fun uploadImage(@Part file: MultipartBody.Part): Response<ImageUploadResponse>
 }
 
 fun getAuthToken(context: Context): String {

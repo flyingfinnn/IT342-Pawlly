@@ -82,7 +82,14 @@ fun AdoptPetDetailScreen(
         try {
             val result = withContext(Dispatchers.IO) { userApi.getPetById(petId) }
             pet = result
-            photoUris = listOfNotNull(result.photo1, result.photo2, result.photo3, result.photo4).filter { it.isNotEmpty() }
+            android.util.Log.d("AdoptPetDetail", "Photo value from API: ${result.photo}")
+            photoUris = if (!result.photo.isNullOrEmpty()) {
+                android.util.Log.d("AdoptPetDetail", "Using photo field: ${result.photo}")
+                listOf(result.photo)
+            } else {
+                android.util.Log.d("AdoptPetDetail", "Using photo1-4 fields")
+                listOfNotNull(result.photo1, result.photo2, result.photo3, result.photo4).filter { it.isNotEmpty() }
+            }
         } catch (e: Exception) {
             error = e.message ?: "Failed to load pet details."
         }

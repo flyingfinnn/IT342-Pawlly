@@ -28,6 +28,9 @@ public class LostAndFoundService {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private StorageService storageService;
+
     private static final String UPLOAD_DIR = "src/main/resources/static/lostfound-images";
 
     public String uploadImage(MultipartFile file) throws IOException {
@@ -46,8 +49,8 @@ public class LostAndFoundService {
 
     // Create a new report
     public LostAndFoundEntity createReport(LostAndFoundEntity report, MultipartFile imageFile) {
-        String username = getAuthenticatedUsername();
-        Optional<UserEntity> currentUser = userService.findByUsername(username);
+        String email = getAuthenticatedUsername();
+        Optional<UserEntity> currentUser = userService.findByEmail(email);
 
         if (currentUser.isEmpty()) {
             throw new IllegalArgumentException("User not found.");
@@ -58,9 +61,9 @@ public class LostAndFoundService {
 
         if (imageFile != null && !imageFile.isEmpty()) {
             try {
-                String imageurl = uploadImage(imageFile);
+                String imageurl = storageService.uploadToSupabase(imageFile, "lostandfound/");
                 report.setImageurl(imageurl);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 throw new RuntimeException("Error saving image file", e);
             }
         }
@@ -80,8 +83,8 @@ public class LostAndFoundService {
     // Update an existing report
     @Transactional
     public LostAndFoundEntity updateReport(int id, LostAndFoundEntity updatedReport, MultipartFile imageFile) {
-        String username = getAuthenticatedUsername();
-        Optional<UserEntity> currentUser = userService.findByUsername(username);
+        String email = getAuthenticatedUsername();
+        Optional<UserEntity> currentUser = userService.findByEmail(email);
 
         if (currentUser.isEmpty()) {
             throw new IllegalArgumentException("User not found.");
@@ -97,7 +100,7 @@ public class LostAndFoundService {
 
             // Update report fields
             existingReport.setReporttype(updatedReport.getReporttype());
-            existingReport.setPetcategory(updatedReport.getPetcategory());
+            existingReport.setPetname(updatedReport.getPetname());
             existingReport.setDatereported(updatedReport.getDatereported());
             existingReport.setLastseen(updatedReport.getLastseen());
             existingReport.setDescription(updatedReport.getDescription());
@@ -117,8 +120,8 @@ public class LostAndFoundService {
 
     @Transactional
     public void deleteReport(int id) {
-        String username = getAuthenticatedUsername();
-        Optional<UserEntity> currentUser = userService.findByUsername(username);
+        String email = getAuthenticatedUsername();
+        Optional<UserEntity> currentUser = userService.findByEmail(email);
 
         if (currentUser.isEmpty()) {
             throw new IllegalArgumentException("User not found.");
@@ -127,7 +130,7 @@ public class LostAndFoundService {
         UserEntity user = currentUser.get();
         boolean isAdmin = user.getRole().equalsIgnoreCase("ROLE_ADMIN");
 
-        System.out.println("Authenticated user: " + username + ", Role: " + user.getRole());
+        System.out.println("Authenticated user: " + email + ", Role: " + user.getRole());
         System.out.println("Attempting to delete report with ID: " + id);
 
         // Retrieve the report

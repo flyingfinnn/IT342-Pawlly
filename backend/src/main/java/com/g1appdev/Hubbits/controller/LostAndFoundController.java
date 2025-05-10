@@ -26,7 +26,7 @@ public class LostAndFoundController {
     @PostMapping
     public ResponseEntity<String> createReport(
             @RequestParam("reporttype") String reporttype,
-            @RequestParam("petcategory") String petcategory,
+            @RequestParam("petname") String petname,
             @RequestParam("datereported") String datereported,
             @RequestParam("lastseen") String lastseen,
             @RequestParam("description") String description,
@@ -42,7 +42,7 @@ public class LostAndFoundController {
 
         LostAndFoundEntity report = new LostAndFoundEntity();
         report.setReporttype(reporttype);
-        report.setPetcategory(petcategory);
+        report.setPetname(petname);
         report.setDatereported(date);
         report.setLastseen(lastseen);
         report.setDescription(description);
@@ -68,7 +68,7 @@ public class LostAndFoundController {
     public ResponseEntity<String> updateReport(
             @PathVariable int id,
             @RequestParam("reporttype") String reporttype,
-            @RequestParam("petcategory") String petcategory,
+            @RequestParam("petname") String petname,
             @RequestParam("datereported") String datereported,
             @RequestParam("lastseen") String lastseen,
             @RequestParam("description") String description,
@@ -83,7 +83,7 @@ public class LostAndFoundController {
 
         LostAndFoundEntity updatedReport = new LostAndFoundEntity();
         updatedReport.setReporttype(reporttype);
-        updatedReport.setPetcategory(petcategory);
+        updatedReport.setPetname(petname);
         updatedReport.setDatereported(date);
         updatedReport.setLastseen(lastseen);
         updatedReport.setDescription(description);

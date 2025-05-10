@@ -5,14 +5,23 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.g1appdev.Hubbits.entity.PetEntity;
 import com.g1appdev.Hubbits.repository.PetRepository;
+import com.g1appdev.Hubbits.repository.AdoptionRepository;
+import com.g1appdev.Hubbits.repository.NotificationRepository;
 
 @Service
 public class PetService {
     @Autowired
     PetRepository prepo;
+
+    @Autowired
+    AdoptionRepository adoptionRepository;
+
+    @Autowired
+    NotificationRepository notificationRepository;
 
     public PetService(){
         super();
@@ -71,14 +80,22 @@ public class PetService {
         }
     }
 
-    // Delete a record
+    // Delete a record with cascading deletes
+    @Transactional
     public String deletePet(int pid){
         String msg = "";
-        if(prepo.findById(pid) != null){
+        if(prepo.findById(pid).isPresent()){
+            // Delete related adoption applications
+            adoptionRepository.deleteByPetId(pid);
+            
+            // Delete related notifications
+            notificationRepository.deleteByPetId(Long.valueOf(pid));
+            
+            // Finally delete the pet
             prepo.deleteById(pid);
             msg = "Pet Record successfully deleted!";
         }else{
-            msg =  pid + " Not found!";
+            msg = pid + " Not found!";
         }
         return msg;
     }

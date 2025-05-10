@@ -30,7 +30,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.*;
 
 @RestController
-@RequestMapping(method = RequestMethod.GET, path = "/api/pet")
+@RequestMapping("/api/pet")
 public class PetController {
     @Autowired
     PetService pserv;

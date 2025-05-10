@@ -65,6 +65,10 @@ sealed class Screen(val route: String) {
     object AdoptAgreement : Screen("adopt/agreement")
     object AdoptFinish : Screen("adopt/finish")
     object ApplicationView : Screen("application/{id}")
+    // Lost and Found flow
+    object LostAndFoundHome : Screen("lostandfound")
+    object AddReport : Screen("lostandfound/add")
+    object ReportView : Screen("lostandfound/report/{id}")
 }
 
 @Composable
@@ -284,7 +288,7 @@ fun NavGraph(navController: NavHostController) {
                 onPetClick = { id -> navController.navigate("pet_detail/$id") },
                 onAdoptPetDetail = { id, name -> navController.navigate("adopt/pet/$id/$name") },
                 onFilterClick = { /* TODO: filter logic */ },
-                onLostFoundClick = { /* TODO: navigate to Lost and Found */ },
+                onLostFoundClick = { navController.navigate(Screen.LostAndFoundHome.route) },
                 onNavHome = { navController.navigate(Screen.Home.route) },
                 onNavNotifications = { navController.navigate(Screen.Notifications.route) },
                 onNavProfile = { navController.navigate(Screen.Profile.route + "?editMode=false") }
@@ -393,7 +397,6 @@ fun NavGraph(navController: NavHostController) {
                 onPetClick = { id -> navController.navigate("pet_detail/$id") },
                 onAdoptPetDetail = { id, name -> navController.navigate("adopt/pet/$id/$name") },
                 onBack = { navController.popBackStack() },
-                onFilter = { /* TODO: filter logic */ },
                 onNavHome = { navController.navigate(Screen.Home.route) },
                 onNavNotifications = { navController.navigate(Screen.Notifications.route) },
                 onNavProfile = { navController.navigate(Screen.Profile.route + "?editMode=false") }
@@ -533,6 +536,40 @@ fun NavGraph(navController: NavHostController) {
                 onStatusChanged = {
                     refreshTrigger?.value = !(refreshTrigger?.value ?: false)
                 }
+            )
+        }
+        // Lost and Found navigation
+        composable(Screen.LostAndFoundHome.route) {
+            LostAndFoundHome(
+                onAddReport = { navController.navigate(Screen.AddReport.route) },
+                onReportClick = { reportId -> navController.navigate("lostandfound/report/$reportId") }
+            )
+        }
+        composable(Screen.AddReport.route) {
+            val context = LocalContext.current
+            val prefs = context.getSharedPreferences(PAWLLY_PREFS, Context.MODE_PRIVATE)
+            val userId = prefs.getLong("user_id", 0L)
+            
+            AddReport(
+                onBack = { navController.popBackStack() },
+                creatorId = userId.toInt()
+            )
+        }
+        composable(
+            route = "lostandfound/report/{id}",
+            arguments = listOf(
+                navArgument("id") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val reportId = backStackEntry.arguments?.getInt("id") ?: 0
+            val context = LocalContext.current
+            val prefs = context.getSharedPreferences(PAWLLY_PREFS, Context.MODE_PRIVATE)
+            val userId = prefs.getLong("user_id", 0L)
+            
+            ReportView(
+                reportId = reportId,
+                onBack = { navController.popBackStack() },
+                currentUserId = userId.toInt()
             )
         }
     }

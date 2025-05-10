@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,22 +24,15 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -74,7 +66,6 @@ fun AdoptSearchResultsScreen(
     pets: List<Pet> = emptyList(),
     onPetClick: (Int) -> Unit = {},
     onBack: () -> Unit = {},
-    onFilter: (String) -> Unit = {},
     onNavHome: () -> Unit = {},
     onNavNotifications: () -> Unit = {},
     onNavProfile: () -> Unit = {},
@@ -90,104 +81,22 @@ fun AdoptSearchResultsScreen(
         )
     }
     var searchQuery by remember { mutableStateOf("") }
-    var showFilterSheet by remember { mutableStateOf(false) }
     var allPets by remember { mutableStateOf<List<Pet>>(emptyList()) }
     var filteredPets by remember { mutableStateOf<List<Pet>>(emptyList()) }
     var petsLoading by remember { mutableStateOf(true) }
     var petsError by remember { mutableStateOf("") }
-    var isSearching by remember { mutableStateOf(false) }
 
     // Search filter function for frontend filtering
     fun filterPets(query: String, pets: List<Pet>): List<Pet> {
         if (query.isBlank()) return pets
         return pets.filter { pet ->
-            pet.name.lowercase().contains(query.lowercase()) ||
-            pet.breed.lowercase().contains(query.lowercase()) ||
-            pet.type?.lowercase()?.contains(query.lowercase()) == true
+            pet.name.lowercase().contains(query.lowercase())
         }
-    }
-
-    // Function to search pets by name using the backend
-    suspend fun searchPetsByName(query: String) {
-        if (query.isBlank()) {
-            filteredPets = allPets
-            return
-        }
-        isSearching = true
-        petsLoading = true
-        try {
-            val response = userApi.getAllPets() // Temporarily use getAllPets until searchPetsByName is implemented
-            filteredPets = response.map { pet ->
-                Pet(
-                    id = pet.pid,
-                    name = pet.name ?: "",
-                    breed = pet.breed ?: "",
-                    age = pet.age ?: "",
-                    type = pet.type,
-                    location = pet.address ?: "",
-                    photo1 = pet.photo1,
-                    photo2 = pet.photo2,
-                    photo3 = pet.photo3,
-                    photo4 = pet.photo4,
-                    weight = pet.weight,
-                    color = pet.color,
-                    height = pet.height,
-                    user_name = pet.userName
-                )
-            }.filter { pet ->
-                pet.name.lowercase().contains(query.lowercase())
-            }
-        } catch (e: Exception) {
-            petsError = e.message ?: "Failed to search pets."
-        }
-        petsLoading = false
-        isSearching = false
     }
 
     // Update filtered pets when search query changes
     LaunchedEffect(searchQuery) {
-        if (!isSearching) {
-            filteredPets = filterPets(searchQuery, allPets)
-        }
-    }
-
-    // Filter state
-    var animalType by remember { mutableStateOf("Dog") }
-    var gender by remember { mutableStateOf("Male") }
-    var age by remember { mutableStateOf(2f) }
-
-    // Helper functions for filtering
-    fun getTypeFromBreed(breed: String): String = when {
-        breed.contains("cat", ignoreCase = true) -> "Cat"
-        else -> "Dog"
-    }
-
-    fun getAgeInYears(ageStr: String): Float = when {
-        ageStr.contains("yr") -> ageStr.split(" ")[0].toFloatOrNull() ?: 0f
-        ageStr.contains("mo") -> (ageStr.split(" ")[0].toFloatOrNull() ?: 0f) / 12f
-        else -> 0f
-    }
-
-    fun getGenderFromName(name: String): String = when (name) {
-        "Milo", "Buddy", "Max" -> "Male"
-        "Luna", "Bella", "Coco" -> "Female"
-        else -> "Male"
-    }
-
-    // Apply filters function
-    fun applyFilters(pets: List<Pet>): List<Pet> {
-        return pets.filter { pet ->
-            val matchesType = getTypeFromBreed(pet.breed) == animalType
-            val matchesGender = getGenderFromName(pet.name) == gender
-            val matchesAge = getAgeInYears(pet.age) <= age
-            matchesType && matchesGender && matchesAge
-        }
-    }
-
-    // Update filtered pets when filters change
-    LaunchedEffect(animalType, gender, age) {
-        val searchFiltered = filterPets(searchQuery, allPets)
-        filteredPets = applyFilters(searchFiltered)
+        filteredPets = filterPets(searchQuery, allPets)
     }
 
     // Fetch pets from Supabase on load
@@ -204,6 +113,7 @@ fun AdoptSearchResultsScreen(
                     age = it.age ?: "",
                     type = it.type,
                     location = it.address ?: "",
+                    photo = it.photo,
                     photo1 = it.photo1,
                     photo2 = it.photo2,
                     photo3 = it.photo3,
@@ -224,8 +134,12 @@ fun AdoptSearchResultsScreen(
     // Pagination state
     var currentPage by remember { mutableStateOf(1) }
     val petsPerPage = 8
-    val totalPages = (filteredPets.size + petsPerPage - 1) / petsPerPage
-    val pagedPets = filteredPets.drop((currentPage - 1) * petsPerPage).take(petsPerPage)
+    val totalPages = remember(filteredPets) { 
+        if (filteredPets.isEmpty()) 1 else (filteredPets.count() + petsPerPage - 1) / petsPerPage 
+    }
+    val pagedPets = remember(filteredPets, currentPage) {
+        filteredPets.drop((currentPage - 1) * petsPerPage).take(petsPerPage)
+    }
 
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences(com.sysinteg.pawlly.utils.Constants.PAWLLY_PREFS, android.content.Context.MODE_PRIVATE) }
@@ -242,7 +156,6 @@ fun AdoptSearchResultsScreen(
 
     Scaffold(
         containerColor = White,
-        // Removed topBar, will add search row in scrollable content
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -270,11 +183,11 @@ fun AdoptSearchResultsScreen(
                                 contentDescription = "Search"
                             )
                         },
-                        placeholder = { Text("Search...") },
+                        placeholder = { Text("Search by name...") },
                         shape = CircleShape,
                         singleLine = true,
                         modifier = Modifier
-                            .weight(1f)
+                            .fillMaxWidth()
                             .padding(vertical = 4.dp),
                         colors = TextFieldDefaults.outlinedTextFieldColors(
                             containerColor = Color.White,
@@ -284,47 +197,8 @@ fun AdoptSearchResultsScreen(
                         textStyle = androidx.compose.ui.text.TextStyle(color = Color.Black),
                         keyboardOptions = KeyboardOptions(
                             imeAction = ImeAction.Search
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onSearch = {
-                                scope.launch {
-                                    searchPetsByName(searchQuery)
-                                }
-                            }
                         )
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Box {
-                        Button(
-                            onClick = { showFilterSheet = true },
-                            colors = ButtonDefaults.buttonColors(containerColor = Purple),
-                            shape = RoundedCornerShape(50),
-                            modifier = Modifier.height(48.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.FilterList,
-                                contentDescription = "",
-                                tint = Color.White
-                            )
-                        }
-                        // Green dot indicator when filters are active
-                        if (animalType != "Dog" || gender != "Male" || age != 2f) {
-                            Box(
-                                modifier = Modifier
-                                    .size(10.dp)
-                                    .background(Color.White, CircleShape)
-                                    .align(Alignment.TopEnd)
-                                    .offset(x = 2.dp, y = 2.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(8.dp)
-                                        .background(Color.Green, CircleShape)
-                                        .align(Alignment.Center)
-                                )
-                            }
-                        }
-                    }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 if (petsLoading) {
@@ -342,7 +216,7 @@ fun AdoptSearchResultsScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No pets found. Try adjusting your filters!",
+                            text = "No pets found matching your search.",
                             color = Color.Gray,
                             fontSize = 18.sp
                         )
@@ -437,112 +311,6 @@ fun AdoptSearchResultsScreen(
                                 )
                             }
                         }
-                    }
-                }
-            }
-            // Modal Bottom Sheet for Filters
-            if (showFilterSheet) {
-                ModalBottomSheet(
-                    onDismissRequest = { showFilterSheet = false },
-                    containerColor = Purple,
-                    contentColor = Color(0xFFEDE7F6)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("Filter Pets", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 22.sp, textAlign = TextAlign.Center)
-                        Spacer(Modifier.height(16.dp))
-                        // Animal Type
-                        Text("Type", color = Color(0xFFEDE7F6), fontWeight = FontWeight.Bold)
-                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            listOf("Dog", "Cat").forEach { type ->
-                                FilterChip(
-                                    selected = animalType == type,
-                                    onClick = { animalType = type },
-                                    label = { Text(type, color = Color.White) },
-                                    shape = RoundedCornerShape(50),
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        containerColor = if (animalType == type) Color.White.copy(alpha = 0.2f) else Color.Transparent
-                                    )
-                                )
-                            }
-                        }
-                        Spacer(Modifier.height(16.dp))
-                        // Gender
-                        Text("Gender", color = Color(0xFFEDE7F6), fontWeight = FontWeight.Bold)
-                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            listOf("Male", "Female").forEach { g ->
-                                FilterChip(
-                                    selected = gender == g,
-                                    onClick = { gender = g },
-                                    label = { Text(g, color = Color.White) },
-                                    shape = RoundedCornerShape(50),
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        containerColor = if (gender == g) Color.White.copy(alpha = 0.2f) else Color.Transparent
-                                    )
-                                )
-                            }
-                        }
-                        Spacer(Modifier.height(16.dp))
-                        // Age
-                        Text("Age", color = Color(0xFFEDE7F6), fontWeight = FontWeight.Bold)
-                        Slider(
-                            value = age,
-                            onValueChange = { age = it },
-                            valueRange = 0f..20f,
-                            steps = 19,
-                            colors = SliderDefaults.colors(
-                                thumbColor = Color.White,
-                                activeTrackColor = Color.White,
-                                inactiveTrackColor = Color.White.copy(alpha = 0.3f)
-                            )
-                        )
-                        val years = age.toInt()
-                        val months = ((age - years) * 12).toInt()
-                        val ageLabel = when {
-                            years == 0 && months > 0 -> "$months month${if (months > 1) "s" else ""}"
-                            years > 0 && months == 0 -> "$years year${if (years > 1) "s" else ""}"
-                            years > 0 && months > 0 -> "$years year${if (years > 1) "s" else ""} $months month${if (months > 1) "s" else ""}"
-                            else -> "0 months"
-                        }
-                        Text(ageLabel, color = Color.White)
-                        Spacer(Modifier.height(24.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            Button(
-                                onClick = {
-                                    filteredPets = applyFilters(allPets)
-                                    showFilterSheet = false
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                                shape = RoundedCornerShape(50),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text("Apply Filter", color = Purple, fontWeight = FontWeight.Bold)
-                            }
-                            Spacer(Modifier.width(16.dp))
-                            OutlinedButton(
-                                onClick = {
-                                    // Reset all filters to default values
-                                    animalType = "Dog"
-                                    gender = "Male"
-                                    age = 2f
-                                    filteredPets = allPets
-                                    showFilterSheet = false
-                                },
-                                border = ButtonDefaults.outlinedButtonBorder,
-                                shape = RoundedCornerShape(50),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text("Discard", color = Color.White, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                        Spacer(Modifier.height(8.dp))
                     }
                 }
             }

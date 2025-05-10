@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-@CrossOrigin(origins = "http://localhost:8080")
+@CrossOrigin(origins = "https://pawlly-mobilebackend.onrender.com")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {

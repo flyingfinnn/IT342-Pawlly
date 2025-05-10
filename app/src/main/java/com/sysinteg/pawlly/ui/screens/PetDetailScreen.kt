@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Height
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -81,6 +82,7 @@ fun PetDetailScreen(
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf("") }
     var editMode by remember { mutableStateOf(false) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
 
     // Edit fields
     var name by remember { mutableStateOf("") }
@@ -184,6 +186,19 @@ fun PetDetailScreen(
                             Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Purple)
                         }
                     },
+                    actions = {
+                        if (!editMode) {
+                            IconButton(
+                                onClick = { showDeleteConfirmation = true }
+                            ) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Delete Pet",
+                                    tint = Color.Red
+                                )
+                            }
+                        }
+                    },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = White)
                 )
             },
@@ -195,20 +210,36 @@ fun PetDetailScreen(
                     .padding(bottom = 48.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Button(
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
                         onClick = {
                             editPhotoUris = photoUris.toMutableList()
                             editMode = true
                         },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .padding(horizontal = 16.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Purple)
-                ) {
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Purple)
+                    ) {
                         Text("Edit Pet Details", color = White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     }
+                    Button(
+                        onClick = { showDeleteConfirmation = true },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                    ) {
+                        Text("Delete Pet", color = White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    }
+                }
             }
         }
     ) { innerPadding ->
@@ -851,5 +882,40 @@ fun PetDetailScreen(
             }
             Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+
+    // Delete Confirmation Dialog
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text("Delete Pet") },
+            text = { Text("Are you sure you want to delete this pet? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        coroutineScope.launch {
+                            try {
+                                val response = userApi.deletePet(petId)
+                                if (response.isSuccessful) {
+                                    onBack()
+                                } else {
+                                    error = "Failed to delete pet: ${response.code()}"
+                                }
+                            } catch (e: Exception) {
+                                error = e.message ?: "Failed to delete pet"
+                            }
+                            showDeleteConfirmation = false
+                        }
+                    }
+                ) {
+                    Text("Delete", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 } 

@@ -68,7 +68,14 @@ fun PetCard(
             modifier = Modifier.fillMaxSize()
         ) {
             // Full-bleed image
-            if (!pet.photo1Thumb.isNullOrEmpty() || !pet.photo1.isNullOrEmpty()) {
+            if (!pet.photo.isNullOrEmpty()) {
+                AsyncImage(
+                    model = pet.photo,
+                    contentDescription = pet.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else if (!pet.photo1Thumb.isNullOrEmpty() || !pet.photo1.isNullOrEmpty()) {
                 AsyncImage(
                     model = pet.photo1Thumb ?: pet.photo1,
                     contentDescription = pet.name,

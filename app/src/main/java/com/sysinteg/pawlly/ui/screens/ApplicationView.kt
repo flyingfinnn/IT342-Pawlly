@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -48,6 +49,7 @@ fun ApplicationView(
     var error by remember { mutableStateOf<String?>(null) }
     var showAcceptDialog by remember { mutableStateOf(false) }
     var showDenyDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     var actionLoading by remember { mutableStateOf(false) }
     var actionError by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf<String?>(null) }
@@ -115,6 +117,20 @@ fun ApplicationView(
                         )
                     }
                 },
+                actions = {
+                    // Show delete button for outgoing applications
+                    if (!isOwnerView && application?.status?.equals("pending", ignoreCase = true) == true) {
+                        IconButton(
+                            onClick = { showDeleteDialog = true }
+                        ) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Delete Application",
+                                tint = Color.Red
+                            )
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = BoneWhite,
                     titleContentColor = Color.Black
@@ -146,7 +162,7 @@ fun ApplicationView(
                         modifier = Modifier.weight(1f),
                         enabled = !actionLoading
                     ) {
-                        Text("Reject", color = Color.White, fontFamily = Inter, fontWeight = FontWeight.Bold)
+                        Text("Deny", color = Color.White, fontFamily = Inter, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -363,7 +379,7 @@ fun ApplicationView(
                         actionError = null
                         scope.launch {
                             try {
-                                val response = userApi.updateAdoptionStatus(applicationId, mapOf("status" to "accepted"))
+                                val response = userApi.updateAdoptionStatus(applicationId, mapOf("status" to "ACCEPTED_REHOME"))
                                 if (response.isSuccessful) {
                                     actionLoading = false
                                     successMessage = "Application accepted successfully!"
@@ -391,8 +407,8 @@ fun ApplicationView(
     if (showDenyDialog) {
         AlertDialog(
             onDismissRequest = { showDenyDialog = false },
-            title = { Text("Reject Application", fontFamily = Inter, fontWeight = FontWeight.Bold) },
-            text = { Text("Are you sure you want to reject this application?", fontFamily = Inter) },
+            title = { Text("Deny Application", fontFamily = Inter, fontWeight = FontWeight.Bold) },
+            text = { Text("Are you sure you want to deny this application?", fontFamily = Inter) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -401,18 +417,18 @@ fun ApplicationView(
                         actionError = null
                         scope.launch {
                             try {
-                                val response = userApi.updateAdoptionStatus(applicationId, mapOf("status" to "rejected"))
+                                val response = userApi.updateAdoptionStatus(applicationId, mapOf("status" to "DENIED_REHOME"))
                                 if (response.isSuccessful) {
                                     actionLoading = false
-                                    successMessage = "Application rejected successfully!"
+                                    successMessage = "Application denied successfully!"
                                     onStatusChanged?.invoke()
                                 } else {
                                     actionLoading = false
-                                    actionError = "Failed to reject application."
+                                    actionError = "Failed to deny application."
                                 }
                             } catch (e: Exception) {
                                 actionLoading = false
-                                actionError = e.message ?: "Failed to reject application."
+                                actionError = e.message ?: "Failed to deny application."
                             }
                         }
                     },
@@ -422,6 +438,45 @@ fun ApplicationView(
             },
             dismissButton = {
                 TextButton(onClick = { showDenyDialog = false }) { Text("Cancel", fontFamily = Inter) }
+            }
+        )
+    }
+    // Delete Confirmation Dialog
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Application", fontFamily = Inter, fontWeight = FontWeight.Bold) },
+            text = { Text("Are you sure you want to delete this application? This action cannot be undone.", fontFamily = Inter) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteDialog = false
+                        actionLoading = true
+                        actionError = null
+                        scope.launch {
+                            try {
+                                val response = userApi.deleteAdoptionApplication(applicationId)
+                                if (response.isSuccessful) {
+                                    actionLoading = false
+                                    successMessage = "Application deleted successfully!"
+                                    onStatusChanged?.invoke()
+                                    onBack()
+                                } else {
+                                    actionLoading = false
+                                    actionError = "Failed to delete application."
+                                }
+                            } catch (e: Exception) {
+                                actionLoading = false
+                                actionError = e.message ?: "Failed to delete application."
+                            }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                    enabled = !actionLoading
+                ) { Text("Delete", color = Color.White, fontFamily = Inter) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel", fontFamily = Inter) }
             }
         )
     }

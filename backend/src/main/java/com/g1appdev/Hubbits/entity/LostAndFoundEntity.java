@@ -15,8 +15,8 @@ public class LostAndFoundEntity {
     @Column(name = "reporttype", nullable = false, columnDefinition = "VARCHAR(255) DEFAULT 'lost'")
     private String reporttype = "lost";
 
-    @Column(name = "petcategory")
-    private String petcategory;
+    @Column(name = "petname")
+    private String petname;
 
     @Temporal(TemporalType.DATE)
     @Column(name = "datereported")
@@ -38,10 +38,10 @@ public class LostAndFoundEntity {
     }
 
     // Constructor with fields
-    public LostAndFoundEntity(String reporttype, String petcategory, Date datereported, String lastseen,
+    public LostAndFoundEntity(String reporttype, String petname, Date datereported, String lastseen,
                               String description) {
         this.reporttype = reporttype;
-        this.petcategory = petcategory;
+        this.petname = petname;
         this.datereported = datereported;
         this.lastseen = lastseen;
         this.description = description;
@@ -64,12 +64,12 @@ public class LostAndFoundEntity {
         this.reporttype = reporttype;
     }
 
-    public String getPetcategory() {
-        return petcategory;
+    public String getPetname() {
+        return petname;
     }
 
-    public void setPetcategory(String petcategory) {
-        this.petcategory = petcategory;
+    public void setPetname(String petname) {
+        this.petname = petname;
     }
 
     public Date getDatereported() {

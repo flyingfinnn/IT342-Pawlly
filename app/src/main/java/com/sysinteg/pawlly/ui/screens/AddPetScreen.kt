@@ -104,7 +104,6 @@ fun AddPetScreen(
     var breed by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var gender by remember { mutableStateOf("") }
-    var status by remember { mutableStateOf("") }
     var type by remember { mutableStateOf("") }
     var weight by remember { mutableStateOf("") }
     var color by remember { mutableStateOf("") }
@@ -114,14 +113,10 @@ fun AddPetScreen(
     var userName by remember { mutableStateOf("") }
     var photoUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var genderExpanded by remember { mutableStateOf(false) }
-    var statusExpanded by remember { mutableStateOf(false) }
     var typeExpanded by remember { mutableStateOf(false) }
-    var statusType by remember { mutableStateOf(StatusType.None) }
-    var showStatusChip by remember { mutableStateOf(false) }
     var showImageDialog by remember { mutableStateOf(false) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     val genderOptions = listOf("Male", "Female")
-    val statusOptions = listOf("Available", "Not Available")
     val typeOptions = listOf("Dog", "Cat")
     val submissionData = "2024-06-01"
     val photoPickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -200,15 +195,6 @@ fun AddPetScreen(
         }
     }
 
-    LaunchedEffect(statusType) {
-        if (statusType != StatusType.None) {
-            showStatusChip = true
-            delay(3000)
-            showStatusChip = false
-            statusType = StatusType.None
-        }
-    }
-
     var isSubmitting by remember { mutableStateOf(false) }
     var submitError by remember { mutableStateOf("") }
 
@@ -229,7 +215,7 @@ fun AddPetScreen(
                     .padding(top = 16.dp, end = 16.dp),
                 contentAlignment = Alignment.TopEnd
             ) {
-                AnimatedStatusChip(visible = showStatusChip, status = statusType)
+                AnimatedStatusChip(visible = false, status = StatusType.None)
             }
             Column(
                 modifier = Modifier
@@ -574,42 +560,6 @@ fun AddPetScreen(
                             }
                         }
                     }
-                    // Status Dropdown
-                    ExposedDropdownMenuBox(
-                        expanded = statusExpanded,
-                        onExpandedChange = { statusExpanded = !statusExpanded }
-                    ) {
-                        OutlinedTextField(
-                            value = status,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Status") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(),
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = statusExpanded) },
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = Color.Black,
-                                unfocusedTextColor = Color.Black,
-                                focusedBorderColor = Purple,
-                                unfocusedBorderColor = Color.Gray
-                            )
-                        )
-                        ExposedDropdownMenu(
-                            expanded = statusExpanded,
-                            onDismissRequest = { statusExpanded = false }
-                        ) {
-                            statusOptions.forEach { option ->
-                                DropdownMenuItem(
-                                    text = { Text(option) },
-                                    onClick = {
-                                        status = option
-                                        statusExpanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
                     OutlinedTextField(
                         value = description,
                         onValueChange = { description = it },
@@ -639,7 +589,7 @@ fun AddPetScreen(
                                 val ageBody = age.toRequestBody("text/plain".toMediaTypeOrNull())
                                 val genderBody = gender.toRequestBody("text/plain".toMediaTypeOrNull())
                                 val descriptionBody = description.toRequestBody("text/plain".toMediaTypeOrNull())
-                                val statusBody = status.toRequestBody("text/plain".toMediaTypeOrNull())
+                                val statusBody = "PENDING_REHOME".toRequestBody("text/plain".toMediaTypeOrNull())
                                 val userNameBody = userName.toRequestBody("text/plain".toMediaTypeOrNull())
                                 val addressBody = address.toRequestBody("text/plain".toMediaTypeOrNull())
                                 val contactNumberBody = contactNumber.toRequestBody("text/plain".toMediaTypeOrNull())
@@ -680,11 +630,11 @@ fun AddPetScreen(
                                         age = ageBody,
                                         gender = genderBody,
                                         description = descriptionBody,
+                                        status = statusBody,
                                         photo1 = photoParts[0],
                                         photo2 = photoParts[1],
                                         photo3 = photoParts[2],
                                         photo4 = photoParts[3],
-                                        status = statusBody,
                                         userName = userNameBody,
                                         address = addressBody,
                                         contactNumber = contactNumberBody,
