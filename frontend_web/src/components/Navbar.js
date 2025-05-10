@@ -10,9 +10,9 @@ import {
     MenuItem,
 } from "@mui/material";
 import PurrLogo from "../assets/logo_colored.png";
-import NotificationsIcon from "@mui/icons-material/Notifications";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+// import NotificationsIcon from "@mui/icons-material/Notifications"; // Import for NotificationsIcon if it were used
 import AuthModal from "./AuthModal";
 import { useUser } from "./UserContext";
 
