@@ -18,6 +18,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
 const PostCard = ({ item, fetchLostItems, onEdit }) => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -25,6 +26,9 @@ const PostCard = ({ item, fetchLostItems, onEdit }) => {
   const [isAdmin, setIsAdmin] = useState(false); // Admin role check
   const [creatorUsername, setCreatorUsername] = useState("Unknown");
   const [openDialog, setOpenDialog] = useState(false);
+  const [formData, setFormData] = useState({
+    datereported: item.datereported,
+  });
 
   useEffect(() => {
     // Fetch the creator's username
@@ -85,6 +89,9 @@ const PostCard = ({ item, fetchLostItems, onEdit }) => {
   const handleEdit = () => {
     onEdit(item);
   };
+
+  const date = new Date();
+  const formatted = date.toISOString().split('T')[0]; // "yyyy-MM-dd"
 
   return (
     <Card
@@ -148,9 +155,16 @@ const PostCard = ({ item, fetchLostItems, onEdit }) => {
         <Typography color="#7f71f5" fontSize="12px">
           Date Reported
         </Typography>
-        <Typography color="secondary" fontWeight="bold" sx={{ ml: 2 }}>
-          {item.datereported}
-        </Typography>
+        <DatePicker
+          label="Date Reported"
+          value={formData.datereported}
+          onChange={(date) => {
+            // date is a Date object
+            const mmddyyyy = date.toLocaleDateString("en-US"); // MM/dd/yyyy
+            setFormData({ ...formData, datereported: mmddyyyy }); //hghvnvnh
+          }}
+          format="MM/dd/yyyy"
+        />
         <Typography
           color="#7f71f5"
           fontStyle="italic"
