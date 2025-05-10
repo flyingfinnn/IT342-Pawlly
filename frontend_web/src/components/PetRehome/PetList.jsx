@@ -27,23 +27,17 @@ const DEFAULT_PET_PLACEHOLDER_IMAGE_NAME = "default-pet-placeholder.png";
 const DEFAULT_PET_IMAGE_URL = SUPABASE_BUCKET_URL + DEFAULT_PET_PLACEHOLDER_IMAGE_NAME;
 
 function getPetPhotos(pet) {
-  const potentialPhotoSources = [
-    pet.photo,
-    pet.photo1,
-    pet.photo2,
-    pet.photo3,
-    pet.photo4,
-  ];
+  let imageUrl = null;
+  const photo1Source = pet.photo1;
 
-  const validImageUrls = potentialPhotoSources
-    .filter(source => source && String(source).trim() !== "") // Filter out empty or invalid sources
-    .map(source => {
-      const path = String(source);
-      // Prepend Supabase bucket URL if it's not already a full HTTP/HTTPS URL
-      return path.startsWith("http") ? path : SUPABASE_BUCKET_URL + path;
-    });
+  if (photo1Source && String(photo1Source).trim() !== "") {
+    const path = String(photo1Source);
+    // Prepend Supabase bucket URL if it's not already a full HTTP/HTTPS URL
+    imageUrl = path.startsWith("http") ? path : SUPABASE_BUCKET_URL + path;
+  }
 
-  return validImageUrls.length > 0 ? validImageUrls : [DEFAULT_PET_IMAGE_URL];
+  // If photo1 provided an image, use it; otherwise, use the default.
+  return imageUrl ? [imageUrl] : [DEFAULT_PET_IMAGE_URL];
 }
 
 const PetList = ({ onPetAdded }) => {
