@@ -189,23 +189,6 @@ const Navbar = () => {
                 </Box>
 
                 <Box sx={{ display: "flex", alignItems: "center", paddingRight: "100px" }}>
-                    <IconButton
-                        color="primary"
-                        sx={{
-                            marginX: 1,
-                            padding: "10px 15px",
-                            backgroundColor: "white",
-                            color: "primary.main",
-                            cursor: "pointer",
-                            borderRadius: "50px",
-                            border: "2px solid",
-                            borderColor: "primary.main",
-                            "&:hover": { backgroundColor: "lightgray" },
-                        }}
-                    >
-                        <NotificationsIcon />
-                    </IconButton>
-
                     {user ? (
                         <>
                             <Box
