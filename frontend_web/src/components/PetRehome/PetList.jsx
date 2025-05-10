@@ -24,22 +24,25 @@ const SUPABASE_BUCKET_URL = "https://qceuawxsrnqadkfscraj.supabase.co/storage/v1
 const RENDER_URL = "https://pawlly-y4wm.onrender.com/uploads/pets/";
 
 function getPetPhotos(pet) {
-  // 1. If the main photo is present, use it (Render URL or full URL)
-  if (pet.photo && pet.photo.trim() !== '') {
-    if (pet.photo.startsWith('http')) {
-      return [pet.photo];
-    }
-    // If it's just a filename, prepend the Render URL
-    return [RENDER_URL + pet.photo];
-  }
-
-  // 2. If photo is NULL, check photo1-photo4 (Supabase)
+  // Always prefer Supabase photo1-photo4 if available
   const photoFields = [pet.photo1, pet.photo2, pet.photo3, pet.photo4];
   const validPhotos = photoFields
     .filter(path => path && path.trim() !== '')
     .map(path => path.startsWith('http') ? path : SUPABASE_BUCKET_URL + path);
 
-  return validPhotos;
+  if (validPhotos.length > 0) {
+    return validPhotos;
+  }
+
+  // If no Supabase photos, use the main photo (Render URL or full URL)
+  if (pet.photo && pet.photo.trim() !== '') {
+    if (pet.photo.startsWith('http')) {
+      return [pet.photo];
+    }
+    return [RENDER_URL + pet.photo];
+  }
+
+  return [];
 }
 
 const PetList = ({ onPetAdded }) => {
