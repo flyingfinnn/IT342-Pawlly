@@ -29,6 +29,7 @@ const RehomeForm = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [ageError, setAgeError] = useState(""); 
   const [contactError, setContactError] = useState(""); 
+  const [photos, setPhotos] = useState([null, null, null, null]);
 
   const fileInputRef = useRef(null); 
 
@@ -84,22 +85,31 @@ const RehomeForm = () => {
     }));
   };
 
-  
+  const handlePhotoChange = (index, file) => {
+    setPhotos(prev => {
+      const updated = [...prev];
+      updated[index] = file;
+      return updated;
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+    if (!photos.some(photo => photo)) {
+      setErrorMessage("Please attach at least one photo.");
+      return;
+    }
+    setErrorMessage("");
     const form = new FormData();
+    photos.forEach((photo, idx) => {
+      if (photo) form.append(`photo${idx === 0 ? "" : idx+1}`, photo);
+    });
     form.append("name", formData.name);
     form.append("type", formData.type);
     form.append("breed", formData.breed);
     form.append("age", formData.age);
     form.append("gender", formData.gender);
     form.append("description", formData.description);
-    form.append("photo", formData.photo);
-    form.append("photo1", formData.photo1);
-    form.append("photo2", formData.photo2);
-    form.append("photo3", formData.photo3);
-    form.append("photo4", formData.photo4);
     form.append("photo1_thumb", formData.photo1_thumb);
     form.append("userName", formData.userName);
     form.append("address", formData.address);
@@ -258,39 +268,28 @@ const RehomeForm = () => {
           {/* Multiple photo upload fields */}
           <input
             type="file"
-            name="photo"
-            onChange={handleChange}
             accept="image/*"
+            onChange={e => handlePhotoChange(0, e.target.files[0])}
             required
             ref={fileInputRef}
             style={{ marginBottom: "8px", display: "block" }}
           />
           <input
             type="file"
-            name="photo1"
-            onChange={handleChange}
             accept="image/*"
+            onChange={e => handlePhotoChange(1, e.target.files[0])}
             style={{ marginBottom: "8px", display: "block" }}
           />
           <input
             type="file"
-            name="photo2"
-            onChange={handleChange}
             accept="image/*"
+            onChange={e => handlePhotoChange(2, e.target.files[0])}
             style={{ marginBottom: "8px", display: "block" }}
           />
           <input
             type="file"
-            name="photo3"
-            onChange={handleChange}
             accept="image/*"
-            style={{ marginBottom: "8px", display: "block" }}
-          />
-          <input
-            type="file"
-            name="photo4"
-            onChange={handleChange}
-            accept="image/*"
+            onChange={e => handlePhotoChange(3, e.target.files[0])}
             style={{ marginBottom: "8px", display: "block" }}
           />
           <input
@@ -300,6 +299,7 @@ const RehomeForm = () => {
             accept="image/*"
             style={{ marginBottom: "16px", display: "block" }}
           />
+          {errorMessage && <div style={{color: 'red'}}>{errorMessage}</div>}
         </div>
 
         {/* Adopter's Info */}
