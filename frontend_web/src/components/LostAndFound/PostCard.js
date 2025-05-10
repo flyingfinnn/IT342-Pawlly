@@ -93,6 +93,10 @@ const PostCard = ({ item, fetchLostItems, onEdit }) => {
   const date = new Date();
   const formatted = date.toISOString().split('T')[0]; // "yyyy-MM-dd"
 
+  const formattedDate = item.datereported
+    ? new Date(item.datereported).toLocaleDateString("en-US")
+    : "";
+
   return (
     <Card
       sx={{
@@ -155,16 +159,9 @@ const PostCard = ({ item, fetchLostItems, onEdit }) => {
         <Typography color="#7f71f5" fontSize="12px">
           Date Reported
         </Typography>
-        <DatePicker
-          label="Date Reported"
-          value={formData.datereported}
-          onChange={(date) => {
-            // date is a Date object
-            const mmddyyyy = date.toLocaleDateString("en-US"); // MM/dd/yyyy
-            setFormData({ ...formData, datereported: mmddyyyy }); //hghvnvnh
-          }}
-          format="MM/dd/yyyy"
-        />
+        <Typography color="secondary" fontWeight="bold" sx={{ ml: 2 }}>
+          {formattedDate}
+        </Typography>
         <Typography
           color="#7f71f5"
           fontStyle="italic"
