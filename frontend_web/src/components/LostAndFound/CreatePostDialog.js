@@ -82,7 +82,13 @@ const CreatePostDialog = ({
   
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    // For datereported, ensure value is always yyyy-MM-dd
+    if (name === "datereported" && value) {
+      // value from input type="date" is already yyyy-MM-dd
+      setFormData({ ...formData, [name]: value });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleImageUpload = (e) => {
@@ -120,6 +126,7 @@ const CreatePostDialog = ({
     const dataToSubmit = new FormData();
     dataToSubmit.append("reporttype", formData.reporttype || "lost");
     dataToSubmit.append("petcategory", formData.petcategory);
+    // Always send datereported as yyyy-MM-dd
     dataToSubmit.append("datereported", formData.datereported);
     dataToSubmit.append("lastseen", formData.lastseen);
     dataToSubmit.append("description", formData.description);
