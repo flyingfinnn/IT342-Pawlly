@@ -20,6 +20,18 @@ import axios from "axios";
 import { useUser } from '../UserContext';
 import AuthModal from '../AuthModal';
 
+const SUPABASE_BUCKET_URL = "https://<your-project-ref>.supabase.co/storage/v1/object/public/<bucket-name>/";
+
+function getPetPhotos(pet) {
+  // If photo is present, use it
+  if (pet.photo) return [pet.photo];
+  // Otherwise, check photo1-photo4
+  const photoFields = [pet.photo1, pet.photo2, pet.photo3, pet.photo4];
+  return photoFields
+    .filter(Boolean)
+    .map(path => path.startsWith("http") ? path : SUPABASE_BUCKET_URL + path);
+}
+
 const PetList = ({ onPetAdded }) => {
   const { user } = useUser();
   const [openAdoption, setOpenAdoption] = useState(false);
@@ -103,8 +115,6 @@ const PetList = ({ onPetAdded }) => {
     setOpenRehome(false);
   };
 
-
-
   return (
     <>
       <div style={styles.pageContainer}>
@@ -144,15 +154,7 @@ const PetList = ({ onPetAdded }) => {
                   },
                 }}
               >
-                {pet.photo ? (
-                  <CardMedia
-                    component="img"
-                    height="180"
-                    image={pet.photo}
-                    alt={pet.breed}
-                    sx={{ objectFit: "cover", borderTopLeftRadius: 16, borderTopRightRadius: 16 }}
-                  />
-                ) : (
+                {getPetPhotos(pet).length === 0 ? (
                   <Box
                     sx={{
                       height: 180,
@@ -168,6 +170,14 @@ const PetList = ({ onPetAdded }) => {
                       No Image Available
                     </Typography>
                   </Box>
+                ) : (
+                  <CardMedia
+                    component="img"
+                    height="180"
+                    image={getPetPhotos(pet)[0]}
+                    alt={pet.breed}
+                    sx={{ objectFit: "cover", borderTopLeftRadius: 16, borderTopRightRadius: 16 }}
+                  />
                 )}
 
                 <CardContent sx={{ flexGrow: 1, p: 2 }}>
