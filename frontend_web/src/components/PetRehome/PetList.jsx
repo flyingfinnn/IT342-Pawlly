@@ -21,15 +21,23 @@ import { useUser } from '../UserContext';
 import AuthModal from '../AuthModal';
 
 const SUPABASE_BUCKET_URL = "https://qceuawxsrnqadkfscraj.supabase.co/storage/v1/object/public/petimage/";
+// Define the name of your default placeholder image in the Supabase bucket
+// Make sure an image with this name (e.g., "default-pet-placeholder.png") exists in your Supabase storage at the above path.
+const DEFAULT_PET_PLACEHOLDER_IMAGE_NAME = "default-pet-placeholder.png"; 
+const DEFAULT_PET_IMAGE_URL = SUPABASE_BUCKET_URL + DEFAULT_PET_PLACEHOLDER_IMAGE_NAME;
 
 function getPetPhotos(pet) {
-  // If photo is present, use it
-  if (pet.photo) return [pet.photo];
-  // Otherwise, check photo1-photo4
-  const photoFields = [pet.photo1, pet.photo2, pet.photo3, pet.photo4];
-  return photoFields
-    .filter(Boolean)
-    .map(path => path.startsWith("http") ? path : SUPABASE_BUCKET_URL + path);
+  let imageUrl = null;
+  const photo1Source = pet.photo1;
+
+  if (photo1Source && String(photo1Source).trim() !== "") {
+    const path = String(photo1Source);
+    // Prepend Supabase bucket URL if it's not already a full HTTP/HTTPS URL
+    imageUrl = path.startsWith("http") ? path : SUPABASE_BUCKET_URL + path;
+  }
+
+  // If photo1 provided an image, use it; otherwise, use the default.
+  return imageUrl ? [imageUrl] : [DEFAULT_PET_IMAGE_URL];
 }
 
 const PetList = ({ onPetAdded }) => {
@@ -137,109 +145,99 @@ const PetList = ({ onPetAdded }) => {
 
         <div style={styles.listContainer}>
           {pets.length > 0 ? (
-            pets.map((pet) => (
-              <Card
-                key={pet.petId}
-                sx={{
-                  width: 320,
-                  height: "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  borderRadius: 4,
-                  boxShadow: 3,
-                  transition: "transform 0.2s ease, box-shadow 0.3s ease",
-                  "&:hover": {
-                    transform: "scale(1.02)",
-                    boxShadow: 6,
-                  },
-                }}
-              >
-                {getPetPhotos(pet).length === 0 ? (
-                  <Box
-                    sx={{
-                      height: 180,
-                      backgroundColor: "#f0f0f0",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      borderTopLeftRadius: 16,
-                      borderTopRightRadius: 16,
-                    }}
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      No Image Available
-                    </Typography>
-                  </Box>
-                ) : (
+            pets.map((pet) => {
+              // console.log(`Processing pet: ${pet.name}, photo1 value: '${pet.photo1}'`); // Add this line for debugging
+              const petImageUrls = getPetPhotos(pet);
+              const displayImageUrl = petImageUrls[0];
+              const altText = displayImageUrl === DEFAULT_PET_IMAGE_URL
+                              ? "Default placeholder for pet image"
+                              : (pet.name || pet.breed || "Image of pet");
+              return (
+                <Card
+                  key={pet.petId}
+                  sx={{
+                    width: 320,
+                    height: "auto",
+                    display: "flex",
+                    flexDirection: "column",
+                    borderRadius: 4,
+                    boxShadow: 3,
+                    transition: "transform 0.2s ease, box-shadow 0.3s ease",
+                    "&:hover": {
+                      transform: "scale(1.02)",
+                      boxShadow: 6,
+                    },
+                  }}
+                >
                   <CardMedia
                     component="img"
                     height="180"
-                    image={getPetPhotos(pet)[0]}
-                    alt={pet.breed}
+                    image={displayImageUrl}
+                    alt={altText}
                     sx={{ objectFit: "cover", borderTopLeftRadius: 16, borderTopRightRadius: 16 }}
                   />
-                )}
 
-                <CardContent sx={{ flexGrow: 1, p: 2 }}>
-                  <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
-                    <Chip label={pet.type} color="secondary" size="small" />
-                    <Chip label={pet.breed} variant="outlined" size="small" />
-                  </Stack>
+                  <CardContent sx={{ flexGrow: 1, p: 2 }}>
+                    <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+                      <Chip label={pet.type} color="secondary" size="small" />
+                      <Chip label={pet.breed} variant="outlined" size="small" />
+                    </Stack>
 
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Name
-                  </Typography>
-                  <Typography variant="body1" fontWeight="bold" gutterBottom>
-                    {pet.name}
-                  </Typography>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Name
+                    </Typography>
+                    <Typography variant="body1" fontWeight="bold" gutterBottom>
+                      {pet.name}
+                    </Typography>
 
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Age & Gender
-                  </Typography>
-                  <Typography variant="body2" gutterBottom>
-                    {pet.age} years | {pet.gender}
-                  </Typography>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Age & Gender
+                    </Typography>
+                    <Typography variant="body2" gutterBottom>
+                      {pet.age} years | {pet.gender}
+                    </Typography>
 
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Description
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.primary"
-                    sx={{
-                      fontStyle: "italic",
-                      overflow: "hidden",
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                    }}
-                  >
-                    {pet.description}
-                  </Typography>
-                </CardContent>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Description
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.primary"
+                      sx={{
+                        fontStyle: "italic",
+                        overflow: "hidden",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                      }}
+                    >
+                      {pet.description}
+                    </Typography>
+                  </CardContent>
 
-                <Box sx={{ p: 2, pt: 0, mt: "auto" }}>
-                  <ToggleButton
-                    value="adopt"
-                    fullWidth
-                    onClick={() => handleCardClick(pet)}
-                    sx={{
-                      borderRadius: "25px",
-                      border: "2px solid",
-                      borderColor: "#685ccc",
-                      backgroundColor: "#685ccc",
-                      color: "#fff",
-                      "&:hover": {
-                        backgroundColor: "white",
-                        color: "#685ccc",
-                      },
-                    }}
-                  >
-                    Adopt Pet
-                  </ToggleButton>
-                </Box>
-              </Card>
-            ))
+                  <Box sx={{ p: 2, pt: 0, mt: "auto" }}>
+                    <ToggleButton
+                      value="adopt"
+                      fullWidth
+                      onClick={() => handleCardClick(pet)}
+                      sx={{
+                        borderRadius: "25px",
+                        border: "2px solid",
+                        borderColor: "#685ccc",
+                        backgroundColor: "#685ccc",
+                        color: "#fff",
+                        "&:hover": {
+                          backgroundColor: "white",
+                          color: "#685ccc",
+                        },
+                      }}
+                    >
+                      Adopt Pet
+                    </ToggleButton>
+                  </Box>
+                </Card>
+              );
+            })
           ) : (
             <Typography variant="body1" color="#5A20A8" fontWeight="bold">
               No pets available for adoption at the moment.
