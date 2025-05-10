@@ -229,16 +229,6 @@ fun PetDetailScreen(
                     ) {
                         Text("Edit Pet Details", color = White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     }
-                    Button(
-                        onClick = { showDeleteConfirmation = true },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                    ) {
-                        Text("Delete Pet", color = White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                    }
                 }
             }
         }

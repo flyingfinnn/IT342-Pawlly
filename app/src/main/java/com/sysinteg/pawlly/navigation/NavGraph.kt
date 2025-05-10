@@ -489,8 +489,8 @@ fun NavGraph(navController: NavHostController) {
                     coroutineScope.launch {
                         viewModel.submitAdoptionApplication(userId, petId, petName) { success ->
                             if (success) {
-                            navController.navigate(Screen.AdoptFinish.route) {
-                                popUpTo("adopt/process") { inclusive = true }
+                                navController.navigate(Screen.AdoptFinish.route) {
+                                    popUpTo(Screen.AdoptStart.route) { inclusive = true }
                                 }
                             } else {
                                 Toast.makeText(context, "Failed to submit application. Please try again.", Toast.LENGTH_LONG).show()
@@ -503,12 +503,25 @@ fun NavGraph(navController: NavHostController) {
         composable(Screen.AdoptFinish.route) {
             AdoptFinishScreen(
                 onBack = { navController.popBackStack() },
-                onGoToHome = { navController.navigate(Screen.Home.route) }
+                onGoToHome = { 
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.AdoptStart.route) { inclusive = true }
+                    }
+                },
+                onGoToProfile = {
+                    navController.navigate(Screen.Profile.route + "?editMode=false") {
+                        popUpTo(Screen.AdoptStart.route) { inclusive = true }
+                    }
+                }
             )
         }
         composable("add_pet") {
             AddPetScreen(
-                onPetAdded = { navController.popBackStack() }
+                onPetAdded = {
+                    navController.navigate(Screen.Profile.route + "?editMode=false") {
+                        popUpTo(Screen.Profile.route) { inclusive = true }
+                    }
+                }
             )
         }
         composable("pet_detail/{petId}") { backStackEntry ->
@@ -549,9 +562,12 @@ fun NavGraph(navController: NavHostController) {
             val context = LocalContext.current
             val prefs = context.getSharedPreferences(PAWLLY_PREFS, Context.MODE_PRIVATE)
             val userId = prefs.getLong("user_id", 0L)
-            
             AddReport(
-                onBack = { navController.popBackStack() },
+                onBack = {
+                    navController.navigate(Screen.LostAndFoundHome.route) {
+                        popUpTo(Screen.LostAndFoundHome.route) { inclusive = true }
+                    }
+                },
                 creatorId = userId.toInt()
             )
         }

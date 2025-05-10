@@ -29,6 +29,7 @@ import retrofit2.http.Query
 import retrofit2.http.DELETE
 import retrofit2.Response
 import com.sysinteg.pawlly.model.LostAndFound
+import okhttp3.ResponseBody
 
 // Data class for signup request
 data class UserSignupRequest(
@@ -325,7 +326,7 @@ interface UserApi {
         @Query("description") description: String,
         @Query("creatorid") creatorId: Int,
         @Query("imagefile") imageFile: MultipartBody.Part?
-    ): Response<LostAndFound>
+    ): Response<ResponseBody>
 
     @PUT("lostandfound/{id}")
     suspend fun updateLostAndFoundReport(

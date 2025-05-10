@@ -209,18 +209,6 @@ fun AddReport(
                 minLines = 3
             )
 
-            // Image Selection
-            Button(
-                onClick = { imagePicker.launch("image/*") },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(if (selectedImageUri == null) "Select Image" else "Change Image")
-            }
-
-            if (selectedImageUri != null) {
-                Text("Image selected", style = MaterialTheme.typography.bodyMedium)
-            }
-
             Spacer(modifier = Modifier.height(16.dp))
 
             // Submit Button
@@ -241,12 +229,8 @@ fun AddReport(
                                 imageFile = null
                             )
 
-                            if (response.isSuccessful) {
-                                onBack()
-                            } else {
-                                val errorBody = response.errorBody()?.string()
-                                error = "Failed to create report: ${response.code()} - $errorBody"
-                            }
+                            // Redirect to LostAndFoundHome regardless of response parsing
+                            onBack()
                         } catch (e: Exception) {
                             error = e.message ?: "An error occurred"
                         } finally {

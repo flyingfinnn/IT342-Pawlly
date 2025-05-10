@@ -87,7 +87,7 @@ fun LostAndFoundHome(
                         items(reports) { report ->
                             ReportCard(
                                 report = report,
-                                onClick = { onReportClick(report.reportid) }
+                                onClick = { onReportClick(report.reportid ?: -1) }
                             )
                         }
                     }

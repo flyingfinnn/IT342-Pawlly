@@ -43,10 +43,10 @@ fun ReportCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${report.reporttype.uppercase()} #${report.reportid}",
+                    text = "${report.reporttype?.uppercase() ?: ""} #${report.reportid ?: -1}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (report.reporttype.equals("lost", ignoreCase = true)) Color.Red else Color.Green
+                    color = if (report.reporttype?.equals("lost", ignoreCase = true) == true) Color.Red else Color.Green
                 )
                 Text(
                     text = "Date: ${report.datereported}",
@@ -59,7 +59,7 @@ fun ReportCard(
             
             // Pet Name
             Text(
-                text = "Pet: ${report.petname}",
+                text = "Pet: ${report.petname ?: "Unknown"}",
                 style = MaterialTheme.typography.bodyMedium
             )
             

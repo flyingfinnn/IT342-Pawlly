@@ -108,26 +108,26 @@ fun ReportView(
                     ) {
                         // Report Type and ID
                         Text(
-                            text = "${report!!.reporttype.uppercase()} #${report!!.reportid}",
+                            text = "${report!!.reporttype?.uppercase() ?: ""} #${report!!.reportid ?: -1}",
                             style = MaterialTheme.typography.headlineMedium,
-                            color = if (report!!.reporttype.equals("lost", ignoreCase = true)) Color.Red else Color.Green
+                            color = if (report!!.reporttype?.equals("lost", ignoreCase = true) == true) Color.Red else Color.Green
                         )
 
                         // Date Reported
                         Text(
-                            text = "Date Reported: ${report!!.datereported}",
+                            text = "Date Reported: ${report!!.datereported ?: "Unknown"}",
                             style = MaterialTheme.typography.bodyLarge
                         )
 
                         // Pet Name
                         Text(
-                            text = "Pet: ${report!!.petname}",
+                            text = "Pet: ${report!!.petname ?: "Unknown"}",
                             style = MaterialTheme.typography.bodyLarge
                         )
 
                         // Last Seen Location
                         Text(
-                            text = "Last Seen: ${report!!.lastseen}",
+                            text = "Last Seen: ${report!!.lastseen ?: "Unknown"}",
                             style = MaterialTheme.typography.bodyLarge
                         )
 
@@ -137,7 +137,7 @@ fun ReportView(
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            text = report!!.description,
+                            text = report!!.description ?: "",
                             style = MaterialTheme.typography.bodyLarge
                         )
 
@@ -192,12 +192,12 @@ fun ReportView(
                 scope.launch {
                     try {
                         val response = userApi.updateLostAndFoundReport(
-                            id = updatedReport.reportid,
-                            reportType = updatedReport.reporttype,
-                            petName = updatedReport.petname,
-                            dateReported = updatedReport.datereported,
-                            lastSeen = updatedReport.lastseen,
-                            description = updatedReport.description
+                            id = updatedReport.reportid ?: -1,
+                            reportType = updatedReport.reporttype ?: "LOST",
+                            petName = updatedReport.petname ?: "Unknown",
+                            dateReported = updatedReport.datereported ?: "Unknown",
+                            lastSeen = updatedReport.lastseen ?: "Unknown",
+                            description = updatedReport.description ?: ""
                         )
                         if (response.isSuccessful) {
                             report = updatedReport.copy(imageurl = report!!.imageurl)
@@ -221,10 +221,10 @@ fun EditReportDialog(
     onDismiss: () -> Unit,
     onSave: (LostAndFound) -> Unit
 ) {
-    var reportType by remember { mutableStateOf(report.reporttype) }
-    var petName by remember { mutableStateOf(report.petname) }
-    var lastSeen by remember { mutableStateOf(report.lastseen) }
-    var description by remember { mutableStateOf(report.description) }
+    var reportType by remember { mutableStateOf(report.reporttype ?: "LOST") }
+    var petName by remember { mutableStateOf(report.petname ?: "Unknown") }
+    var lastSeen by remember { mutableStateOf(report.lastseen ?: "Unknown") }
+    var description by remember { mutableStateOf(report.description ?: "") }
 
     AlertDialog(
         onDismissRequest = onDismiss,

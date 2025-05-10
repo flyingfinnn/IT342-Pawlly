@@ -20,7 +20,6 @@ import androidx.compose.ui.graphics.Color
 fun PawllyNavBar(
     selectedScreen: String,
     onNavHome: () -> Unit,
-    onNavNotifications: () -> Unit,
     onNavProfile: () -> Unit
 ) {
     Row(
@@ -29,11 +28,6 @@ fun PawllyNavBar(
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        NavBarItem(
-            icon = Icons.Default.Notifications,
-            isSelected = selectedScreen == "Notifications",
-            onClick = onNavNotifications
-        )
         NavBarItem(
             icon = Icons.Default.Home,
             isSelected = selectedScreen == "Home",

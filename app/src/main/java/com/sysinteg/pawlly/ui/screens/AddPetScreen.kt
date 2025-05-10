@@ -622,7 +622,7 @@ fun AddPetScreen(
                                 val weightToSend = if (weight.isNotBlank() && !weight.trim().endsWith("kg")) weight.trim() + " kg" else weight.trim()
                                 val heightToSend = if (height.isNotBlank() && !height.trim().endsWith("feet")) height.trim() + " feet" else height.trim()
 
-                                val response = withContext(Dispatchers.IO) {
+                                withContext(Dispatchers.IO) {
                                     userApi.addPet(
                                         name = nameBody,
                                         type = typeBody,
@@ -643,18 +643,12 @@ fun AddPetScreen(
                                         height = heightToSend.takeIf { it.isNotBlank() }?.toRequestBody()
                                     )
                                 }
-                                // Fetch notification with ID 1 after pet is added
-                                val notification = withContext(Dispatchers.IO) {
-                                    userApi.getNotificationById(1)
-                                }
-                                // Navigate to NotificationScreen and pass notification ID as argument
-                                // (Assume navController is available in scope, or use a callback)
-                                // Example: navController.navigate("notifications?notificationId=${notification.notification_id}")
                                 isSubmitting = false
                                 onPetAdded()
                             } catch (e: Exception) {
                                 isSubmitting = false
                                 submitError = e.message ?: "Failed to add pet."
+                                onPetAdded() // Also redirect on error
                             }
                         }
                     },

@@ -75,9 +75,9 @@ fun PetCard(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
-            } else if (!pet.photo1Thumb.isNullOrEmpty() || !pet.photo1.isNullOrEmpty()) {
+            } else if (!pet.photo1.isNullOrEmpty()) {
                 AsyncImage(
-                    model = pet.photo1Thumb ?: pet.photo1,
+                    model = pet.photo1,
                     contentDescription = pet.name,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()

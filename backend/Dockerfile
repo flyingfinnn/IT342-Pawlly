@@ -1,28 +1,33 @@
 # Build stage
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+FROM maven:3.8.4-openjdk-17-slim AS build
 WORKDIR /app
-COPY pom.xml .
-COPY src ./src
-RUN mvn clean package -DskipTests spring-boot:repackage
 
-# Production stage
-FROM eclipse-temurin:17-jre-jammy
+# Copy pom.xml and download dependencies
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# Copy source code
+COPY src ./src
+
+# Build the application
+RUN mvn package -DskipTests
+
+# Run stage
+FROM openjdk:17-slim
 WORKDIR /app
+
+# Copy the built jar from build stage
 COPY --from=build /app/target/*.jar app.jar
 
-# Create a non-root user (Linux compatible)
-RUN groupadd -r spring && useradd -r -g spring spring
-USER spring
-
-# Expose the port the app runs on
-EXPOSE 8080
+# Create directory for uploads
+RUN mkdir -p /app/uploads
 
 # Set environment variables
-ENV JAVA_OPTS="-Xmx512m -Xms256m"
+ENV SPRING_PROFILES_ACTIVE=prod
+ENV UPLOAD_DIR=/app/uploads
 
-# Add health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8080/actuator/health || exit 1
+# Expose the application port
+EXPOSE 8080
 
 # Run the application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"] 
+ENTRYPOINT ["java", "-jar", "app.jar"] 

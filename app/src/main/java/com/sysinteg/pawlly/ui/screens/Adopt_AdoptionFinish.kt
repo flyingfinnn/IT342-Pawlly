@@ -23,7 +23,8 @@ import com.sysinteg.pawlly.ui.theme.Inter
 @Composable
 fun AdoptFinishScreen(
     onBack: () -> Unit,
-    onGoToHome: () -> Unit
+    onGoToHome: () -> Unit,
+    onGoToProfile: () -> Unit
 ) {
         Column(
             modifier = Modifier
@@ -71,6 +72,25 @@ fun AdoptFinishScreen(
             Text(
                 "Return to Home",
                 color = White,
+                fontFamily = Inter,
+                fontWeight = FontWeight.Medium
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(
+            onClick = onGoToProfile,
+            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .border(1.dp, Purple, RoundedCornerShape(8.dp))
+        ) {
+            Text(
+                "Go to Profile",
+                color = Purple,
                 fontFamily = Inter,
                 fontWeight = FontWeight.Medium
             )
