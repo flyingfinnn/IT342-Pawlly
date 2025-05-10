@@ -23,13 +23,20 @@ import AuthModal from '../AuthModal';
 const SUPABASE_BUCKET_URL = "https://qceuawxsrnqadkfscraj.supabase.co/storage/v1/object/public/petimage/";
 
 function getPetPhotos(pet) {
-  // If photo is present, use it
+  // If photo is present, use it directly (it's already a full Render URL)
   if (pet.photo) return [pet.photo];
+  
   // Otherwise, check photo1-photo4
   const photoFields = [pet.photo1, pet.photo2, pet.photo3, pet.photo4];
   return photoFields
     .filter(Boolean)
-    .map(path => path.startsWith("http") ? path : SUPABASE_BUCKET_URL + path);
+    .map(path => {
+      // If it's already a full URL (either Render or Supabase), use it as is
+      if (path.startsWith('http')) return path;
+      
+      // If it's just a filename, prepend the Supabase bucket URL
+      return SUPABASE_BUCKET_URL + path;
+    });
 }
 
 const PetList = ({ onPetAdded }) => {
