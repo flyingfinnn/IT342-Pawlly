@@ -18,7 +18,6 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
 const PostCard = ({ item, fetchLostItems, onEdit }) => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -26,15 +25,12 @@ const PostCard = ({ item, fetchLostItems, onEdit }) => {
   const [isAdmin, setIsAdmin] = useState(false); // Admin role check
   const [creatorUsername, setCreatorUsername] = useState("Unknown");
   const [openDialog, setOpenDialog] = useState(false);
-  const [formData, setFormData] = useState({
-    datereported: item.datereported,
-  });
 
   useEffect(() => {
     // Fetch the creator's username
     const fetchCreatorUsername = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users/${item.creatorid}`);
+        const response = await axios.get(`http://localhost:8080/api/users/${item.creatorid}`);
         if (response.status === 200) {
           setCreatorUsername(response.data.username);
         } else {
@@ -63,7 +59,7 @@ const PostCard = ({ item, fetchLostItems, onEdit }) => {
   const handleDelete = async () => {
     console.log("Attempting to delete report ID:", item.reportid);
     try {
-      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/api/lostandfound/${item.reportid}`, {
+      await axios.delete(`http://localhost:8080/api/lostandfound/${item.reportid}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`, // Ensure token is sent
         },
@@ -90,13 +86,6 @@ const PostCard = ({ item, fetchLostItems, onEdit }) => {
     onEdit(item);
   };
 
-  const date = new Date();
-  const formatted = date.toISOString().split('T')[0]; // "yyyy-MM-dd"
-
-  const formattedDate = item.datereported
-    ? new Date(item.datereported).toLocaleDateString("en-US")
-    : "";
-
   return (
     <Card
       sx={{
@@ -105,8 +94,8 @@ const PostCard = ({ item, fetchLostItems, onEdit }) => {
         flexDirection: "column",
         boxShadow: 5,
         backgroundImage: item.imageurl
-        ? `url(${process.env.REACT_APP_BACKEND_URL}${item.imageurl})`
-        : `url(${process.env.REACT_APP_BACKEND_URL}/images/default_image.jpg)`,
+          ? `url(http://localhost:8080${item.imageurl})`
+          : `url(http://localhost:8080/images/default_image.jpg)`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         color: "white",
@@ -160,7 +149,7 @@ const PostCard = ({ item, fetchLostItems, onEdit }) => {
           Date Reported
         </Typography>
         <Typography color="secondary" fontWeight="bold" sx={{ ml: 2 }}>
-          {formattedDate}
+          {item.datereported}
         </Typography>
         <Typography
           color="#7f71f5"
