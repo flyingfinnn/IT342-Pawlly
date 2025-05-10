@@ -18,6 +18,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import birdImage from "../../images/bird.jpg"; // Import the local image
 
 const PostCard = ({ item, fetchLostItems, onEdit }) => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -93,7 +94,7 @@ const PostCard = ({ item, fetchLostItems, onEdit }) => {
         display: "flex",
         flexDirection: "column",
         boxShadow: 5,
-        backgroundImage: `url(${process.env.REACT_APP_FRONTEND_URL}/images/bird.jpg)`, // Always use bird.jpg
+        backgroundImage: `url(${birdImage})`, // Use the imported local image
         backgroundSize: "cover",
         backgroundPosition: "center",
         color: "white",
