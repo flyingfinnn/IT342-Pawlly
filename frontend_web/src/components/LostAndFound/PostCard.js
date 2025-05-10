@@ -161,7 +161,7 @@ const PostCard = ({ item, fetchLostItems, onEdit }) => {
           onChange={(date) => {
             // date is a Date object
             const mmddyyyy = date.toLocaleDateString("en-US"); // MM/dd/yyyy
-            setFormData({ ...formData, datereported: mmddyyyy });
+            setFormData({ ...formData, datereported: mmddyyyy }); //hghvnvnh
           }}
           format="MM/dd/yyyy"
         />
