@@ -20,7 +20,7 @@ import axios from "axios";
 import { useUser } from '../UserContext';
 import AuthModal from '../AuthModal';
 
-const SUPABASE_BUCKET_URL = "https://<your-project-ref>.supabase.co/storage/v1/object/public/<bucket-name>/";
+const SUPABASE_BUCKET_URL = "https://qceuawxsrnqadkfscraj.supabase.co/storage/v1/object/public/petimage/";
 
 function getPetPhotos(pet) {
   // If photo is present, use it
