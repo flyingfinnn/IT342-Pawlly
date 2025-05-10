@@ -93,7 +93,7 @@ const PostCard = ({ item, fetchLostItems, onEdit }) => {
         display: "flex",
         flexDirection: "column",
         boxShadow: 5,
-        backgroundImage: `url(${process.env.REACT_APP_BACKEND_URL}/images/bird.jpg)`, // Always use bird.jpg
+        backgroundImage: `url(${process.env.REACT_APP_FRONTEND_URL}/images/bird.jpg)`, // Always use bird.jpg
         backgroundSize: "cover",
         backgroundPosition: "center",
         color: "white",
