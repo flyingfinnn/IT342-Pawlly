@@ -9,20 +9,31 @@ public class AdoptionEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "adoptionid") // Assuming DB column is adoption_id
     private Long adoptionID;
 
+    @Column(name = "adoption_date") // Assuming DB column is adoption_date
     private LocalDate adoptionDate;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status") // Assuming DB column is status, if it were e.g. adoption_status, adjust here
     private Status status;
 
-    private String name;                
-    private String address;             
-    private String contactNumber;      
-    private String petType;             
-    private String breed;               
-    private String description;         
-    private LocalDate submissionDate;   
+    @Column(name = "name") // Assuming DB column is name
+    private String name;
+    @Column(name = "address") // Assuming DB column is address
+    private String address;
+    @Column(name = "contact_number") // Explicitly mapping to snake_case
+    private String contactNumber;
+    @Column(name = "pet_type") // Explicitly mapping to snake_case
+    private String petType;
+    @Column(name = "breed") // Assuming DB column is breed
+    private String breed;
+    @Column(name = "description") // Assuming DB column is description
+    private String description;
+    @Column(name = "submission_date") // Assuming DB column is submission_date
+    private LocalDate submissionDate;
+    @Column(name = "photo") // Assuming DB column is photo
     private String photo;
 
     public enum Status {

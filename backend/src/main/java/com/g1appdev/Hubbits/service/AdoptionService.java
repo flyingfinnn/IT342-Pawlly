@@ -1,5 +1,6 @@
 package com.g1appdev.Hubbits.service;
 
+// import com.g1appdev.Hubbits.exception.ResourceNotFoundException; // Example import
 import com.g1appdev.Hubbits.entity.AdoptionEntity;
 import com.g1appdev.Hubbits.repository.AdoptionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,26 +32,26 @@ public class AdoptionService {
     }
 
     // Update adoption by ID
-    public AdoptionEntity updateAdoption(Long id, AdoptionEntity adoption) {
+    public AdoptionEntity updateAdoption(Long id, AdoptionEntity adoptionDetails) {
         Optional<AdoptionEntity> existingAdoptionOpt = adoptionRepository.findById(id);
         if (existingAdoptionOpt.isPresent()) {
             AdoptionEntity existingAdoption = existingAdoptionOpt.get();
 
             // Update the fields
-            existingAdoption.setAdoptionDate(adoption.getAdoptionDate());
-            existingAdoption.setStatus(adoption.getStatus());
-            existingAdoption.setName(adoption.getName()); 
-            existingAdoption.setAddress(adoption.getAddress());
-            existingAdoption.setContactNumber(adoption.getContactNumber());
-            existingAdoption.setPetType(adoption.getPetType());
-            existingAdoption.setBreed(adoption.getBreed()); 
-            existingAdoption.setDescription(adoption.getDescription());
-            existingAdoption.setSubmissionDate(adoption.getSubmissionDate());
-            existingAdoption.setPhoto(adoption.getPhoto()); 
+            existingAdoption.setAdoptionDate(adoptionDetails.getAdoptionDate());
+            existingAdoption.setStatus(adoptionDetails.getStatus());
+            existingAdoption.setName(adoptionDetails.getName());
+            existingAdoption.setAddress(adoptionDetails.getAddress());
+            existingAdoption.setContactNumber(adoptionDetails.getContactNumber());
+            existingAdoption.setPetType(adoptionDetails.getPetType());
+            existingAdoption.setBreed(adoptionDetails.getBreed());
+            existingAdoption.setDescription(adoptionDetails.getDescription());
+            existingAdoption.setSubmissionDate(adoptionDetails.getSubmissionDate());
+            existingAdoption.setPhoto(adoptionDetails.getPhoto());
 
             return adoptionRepository.save(existingAdoption);
         }
-        return null;
+        throw new RuntimeException("Adoption not found with id: " + id); // Or a custom ResourceNotFoundException
     }
 
     // Delete adoption by ID
@@ -59,6 +60,8 @@ public class AdoptionService {
             adoptionRepository.deleteById(id);
             return true;
         }
-        return false; // Return false if not found
+        // Consider throwing an exception if not found, for consistency with update,
+        // or if the client needs to distinguish between "deleted" and "not found to delete".
+        return false; 
     }
 }
