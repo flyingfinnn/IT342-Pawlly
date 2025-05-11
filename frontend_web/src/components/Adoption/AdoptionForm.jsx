@@ -20,8 +20,20 @@ const ModernAdoptionForm = ({ pet }) => {
   const { user } = useUser();
   const [formData, setFormData] = useState({
     user_id: user ? user.userId : '',
+    // Adopter details - to be collected by new form fields
+    name: '', // Adopter's Name
+    address: '', // Adopter's Address
+    contactNumber: '', // Adopter's Contact Number
+
+    // Pet details - to be populated from `pet` prop
     pet_id: pet?.pid || '',
-    pet_name: pet?.name || '',
+    petName: pet?.name || '', // Name of the pet being adopted
+    petType: pet?.type || '',
+    breed: pet?.breed || '',
+    description: pet?.description || '', // Pet's description
+    photo: pet?.photo || '', // Pet's photo URL
+
+    // Application specific details
     household_type: '',
     household_ownership: '',
     num_adults: '',
@@ -32,9 +44,6 @@ const ModernAdoptionForm = ({ pet }) => {
     hours_alone_per_day: '',
     reason_for_adoption: '',
     status: 'PENDING',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    accept_or_reject: '',
   });
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -44,13 +53,20 @@ const ModernAdoptionForm = ({ pet }) => {
       setFormData((prev) => ({
         ...prev,
         pet_id: pet.pid,
-        pet_name: pet.name,
+        petName: pet.name,
+        petType: pet.type,
+        breed: pet.breed,
+        description: pet.description,
+        photo: pet.photo,
       }));
     }
     if (user) {
       setFormData((prev) => ({
         ...prev,
         user_id: user.userId,
+        // Potentially prefill adopter name/contact from user profile if available
+        // name: user.fullName || '',
+        // contactNumber: user.phone || '',
       }));
     }
   }, [pet, user]);
@@ -70,7 +86,8 @@ const ModernAdoptionForm = ({ pet }) => {
       await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/adoptions`, formData);
       setSuccessMessage('Adoption application submitted successfully!');
       resetForm();
-    } catch (error) {
+    } catch (err) {
+      console.error("Failed to submit adoption application:", err.response?.data || err.message || err);
       setErrorMessage('Failed to submit the adoption application.');
     }
   };
@@ -78,8 +95,17 @@ const ModernAdoptionForm = ({ pet }) => {
   const resetForm = () => {
     setFormData({
       user_id: user ? user.userId : '',
+      name: '',
+      address: '',
+      contactNumber: '',
+
       pet_id: pet?.pid || '',
-      pet_name: pet?.name || '',
+      petName: pet?.name || '',
+      petType: pet?.type || '',
+      breed: pet?.breed || '',
+      description: pet?.description || '',
+      photo: pet?.photo || '',
+
       household_type: '',
       household_ownership: '',
       num_adults: '',
@@ -90,9 +116,6 @@ const ModernAdoptionForm = ({ pet }) => {
       hours_alone_per_day: '',
       reason_for_adoption: '',
       status: 'PENDING',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      accept_or_reject: '',
     });
   };
 
@@ -127,6 +150,33 @@ const ModernAdoptionForm = ({ pet }) => {
             <Typography variant="h4" color="primary" fontWeight="bold" gutterBottom>
               Adoption Application
             </Typography>
+            <TextField
+              label="Your Full Name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              required
+            />
+            <TextField
+              label="Your Address"
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              required
+            />
+            <TextField
+              label="Your Contact Number"
+              name="contactNumber"
+              value={formData.contactNumber}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              required
+            />
             <TextField
               label="Household Type"
               name="household_type"
